@@ -20,17 +20,31 @@
 #include <gtk/gtk.h>
 #include <gmodule.h>
 #include <glib.h>
+#include "java-menu.h"
+#include "java-projects-popup.h"
 
 G_MODULE_EXPORT void activate   (CodeSlayer *codeslayer);
 G_MODULE_EXPORT void deactivate (CodeSlayer *codeslayer);
 
+static GtkWidget *menu;
+static GtkWidget *projects_popup;
+
 G_MODULE_EXPORT void
 activate (CodeSlayer *codeslayer)
 {
-  g_print ("activate java plugin\n");
+  GtkAccelGroup *accel_group;
+  accel_group = codeslayer_get_menubar_accel_group (codeslayer);
+  menu = java_menu_new (accel_group);
+  
+  projects_popup = java_projects_popup_new ();
+  
+  codeslayer_add_to_menubar (codeslayer, GTK_MENU_ITEM (menu));
+  codeslayer_add_to_projects_popup (codeslayer, GTK_MENU_ITEM (projects_popup));
 }
 
 G_MODULE_EXPORT void 
 deactivate (CodeSlayer *codeslayer)
 {
+  codeslayer_remove_from_menubar (codeslayer, GTK_MENU_ITEM (menu));
+  codeslayer_remove_from_projects_popup (codeslayer, GTK_MENU_ITEM (projects_popup));
 }

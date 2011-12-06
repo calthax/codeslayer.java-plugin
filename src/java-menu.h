@@ -16,40 +16,39 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_MENU_H__
-#define	__AUTOTOOLS_MENU_H__
+#ifndef __JAVA_MENU_H__
+#define	__JAVA_MENU_H__
 
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_MENU_TYPE            (autotools_menu_get_type ())
-#define AUTOTOOLS_MENU(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_MENU_TYPE, AutotoolsMenu))
-#define AUTOTOOLS_MENU_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_MENU_TYPE, AutotoolsMenuClass))
-#define IS_AUTOTOOLS_MENU(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_MENU_TYPE))
-#define IS_AUTOTOOLS_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_MENU_TYPE))
+#define JAVA_MENU_TYPE            (java_menu_get_type ())
+#define JAVA_MENU(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_MENU_TYPE, JavaMenu))
+#define JAVA_MENU_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_MENU_TYPE, JavaMenuClass))
+#define IS_JAVA_MENU(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_MENU_TYPE))
+#define IS_JAVA_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_MENU_TYPE))
 
-typedef struct _AutotoolsMenu AutotoolsMenu;
-typedef struct _AutotoolsMenuClass AutotoolsMenuClass;
+typedef struct _JavaMenu JavaMenu;
+typedef struct _JavaMenuClass JavaMenuClass;
 
-struct _AutotoolsMenu
+struct _JavaMenu
 {
   GtkMenuItem parent_instance;
 };
 
-struct _AutotoolsMenuClass
+struct _JavaMenuClass
 {
   GtkMenuItemClass parent_class;
 
-  void (*make) (AutotoolsMenu *menu);
-  void (*make_install) (AutotoolsMenu *menu);
-  void (*make_clean) (AutotoolsMenu *menu);
+  void (*compile) (JavaMenu *menu);
+  void (*clean) (JavaMenu *menu);
 };
 
-GType autotools_menu_get_type (void) G_GNUC_CONST;
+GType java_menu_get_type (void) G_GNUC_CONST;
   
-GtkWidget*  autotools_menu_new  (GtkAccelGroup *accel_group);
+GtkWidget*  java_menu_new  (GtkAccelGroup *accel_group);
                                             
 G_END_DECLS
 
-#endif /* __AUTOTOOLS_MENU_H__ */
+#endif /* __JAVA_MENU_H__ */

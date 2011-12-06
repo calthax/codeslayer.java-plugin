@@ -16,42 +16,39 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_PROJECTS_POPUP_H__
-#define	__AUTOTOOLS_PROJECTS_POPUP_H__
+#ifndef __JAVA_PROJECTS_POPUP_H__
+#define	__JAVA_PROJECTS_POPUP_H__
 
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_PROJECTS_POPUP_TYPE            (autotools_projects_popup_get_type ())
-#define AUTOTOOLS_PROJECTS_POPUP(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_PROJECTS_POPUP_TYPE, AutotoolsProjectsPopup))
-#define AUTOTOOLS_PROJECTS_POPUP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_PROJECTS_POPUP_TYPE, AutotoolsProjectsPopupClass))
-#define IS_AUTOTOOLS_PROJECTS_POPUP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_PROJECTS_POPUP_TYPE))
-#define IS_AUTOTOOLS_PROJECTS_POPUP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_PROJECTS_POPUP_TYPE))
+#define JAVA_PROJECTS_POPUP_TYPE            (java_projects_popup_get_type ())
+#define JAVA_PROJECTS_POPUP(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_PROJECTS_POPUP_TYPE, JavaProjectsPopup))
+#define JAVA_PROJECTS_POPUP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_PROJECTS_POPUP_TYPE, JavaProjectsPopupClass))
+#define IS_JAVA_PROJECTS_POPUP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_PROJECTS_POPUP_TYPE))
+#define IS_JAVA_PROJECTS_POPUP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_PROJECTS_POPUP_TYPE))
 
-typedef struct _AutotoolsProjectsPopup AutotoolsProjectsPopup;
-typedef struct _AutotoolsProjectsPopupClass AutotoolsProjectsPopupClass;
+typedef struct _JavaProjectsPopup JavaProjectsPopup;
+typedef struct _JavaProjectsPopupClass JavaProjectsPopupClass;
 
-struct _AutotoolsProjectsPopup
+struct _JavaProjectsPopup
 {
   GtkMenuItem parent_instance;
 };
 
-struct _AutotoolsProjectsPopupClass
+struct _JavaProjectsPopupClass
 {
   GtkMenuItemClass parent_class;
 
-  void (*make) (AutotoolsProjectsPopup *menu);
-  void (*make_install) (AutotoolsProjectsPopup *menu);
-  void (*make_clean) (AutotoolsProjectsPopup *menu);
-  void (*configure) (AutotoolsProjectsPopup *menu);
-  void (*autoreconf) (AutotoolsProjectsPopup *menu);
+  void (*compile) (JavaProjectsPopup *menu);
+  void (*clean) (JavaProjectsPopup *menu);
 };
 
-GType autotools_projects_popup_get_type (void) G_GNUC_CONST;
+GType java_projects_popup_get_type (void) G_GNUC_CONST;
   
-GtkWidget*  autotools_projects_popup_new  (void);
+GtkWidget*  java_projects_popup_new  (void);
                                             
 G_END_DECLS
 
-#endif /* __AUTOTOOLS_PROJECTS_POPUP_H__ */
+#endif /* __JAVA_PROJECTS_POPUP_H__ */

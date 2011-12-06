@@ -1,5 +1,6 @@
-libjavacodeslayerplugin_la-java-plugin.lo: \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-plugin.c \
+libjavacodeslayerplugin_la-java-projects-popup.lo: \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-projects-popup.c \
+ /usr/include/gtk-3.0/gdk/gdkkeysyms.h \
  /usr/local/include/codeslayer/codeslayer.h \
  /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gdk/gdk.h \
  /usr/include/gtk-3.0/gdk/gdkconfig.h /usr/include/glib-2.0/glib.h \
@@ -253,8 +254,8 @@ libjavacodeslayerplugin_la-java-plugin.lo: \
  /usr/include/gtk-3.0/gdk/gdkcursor.h \
  /usr/include/gtk-3.0/gdk/gdkdisplaymanager.h \
  /usr/include/gtk-3.0/gdk/gdkenumtypes.h \
- /usr/include/gtk-3.0/gdk/gdkkeys.h /usr/include/gtk-3.0/gdk/gdkkeysyms.h \
- /usr/include/gtk-3.0/gdk/gdkmain.h /usr/include/gtk-3.0/gdk/gdkpango.h \
+ /usr/include/gtk-3.0/gdk/gdkkeys.h /usr/include/gtk-3.0/gdk/gdkmain.h \
+ /usr/include/gtk-3.0/gdk/gdkpango.h \
  /usr/include/gtk-3.0/gdk/gdkproperty.h \
  /usr/include/gtk-3.0/gdk/gdkrectangle.h \
  /usr/include/gtk-3.0/gdk/gdkselection.h \
@@ -521,8 +522,9 @@ libjavacodeslayerplugin_la-java-plugin.lo: \
  /usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutterrenderer.h \
  /usr/include/gtksourceview-3.0/gtksourceview/gtksourcemarkattributes.h \
  /usr/local/include/codeslayer/codeslayer-menuitem.h \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-menu.h \
  /home/jeff/workspace/codeslayer.java-plugin/src/java-projects-popup.h
+
+/usr/include/gtk-3.0/gdk/gdkkeysyms.h:
 
 /usr/local/include/codeslayer/codeslayer.h:
 
@@ -1140,8 +1142,6 @@ libjavacodeslayerplugin_la-java-plugin.lo: \
 
 /usr/include/gtk-3.0/gdk/gdkkeys.h:
 
-/usr/include/gtk-3.0/gdk/gdkkeysyms.h:
-
 /usr/include/gtk-3.0/gdk/gdkmain.h:
 
 /usr/include/gtk-3.0/gdk/gdkpango.h:
@@ -1707,7 +1707,5 @@ libjavacodeslayerplugin_la-java-plugin.lo: \
 /usr/include/gtksourceview-3.0/gtksourceview/gtksourcemarkattributes.h:
 
 /usr/local/include/codeslayer/codeslayer-menuitem.h:
-
-/home/jeff/workspace/codeslayer.java-plugin/src/java-menu.h:
 
 /home/jeff/workspace/codeslayer.java-plugin/src/java-projects-popup.h:
