@@ -521,7 +521,11 @@ libjavacodeslayerplugin_la-java-plugin.lo: \
  /usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutterrenderer.h \
  /usr/include/gtksourceview-3.0/gtksourceview/gtksourcemarkattributes.h \
  /usr/local/include/codeslayer/codeslayer-menuitem.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-engine.h \
  /home/jeff/workspace/codeslayer.java-plugin/src/java-menu.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-notebook.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h \
  /home/jeff/workspace/codeslayer.java-plugin/src/java-projects-popup.h
 
 /usr/local/include/codeslayer/codeslayer.h:
@@ -1708,6 +1712,14 @@ libjavacodeslayerplugin_la-java-plugin.lo: \
 
 /usr/local/include/codeslayer/codeslayer-menuitem.h:
 
+/home/jeff/workspace/codeslayer.java-plugin/src/java-engine.h:
+
 /home/jeff/workspace/codeslayer.java-plugin/src/java-menu.h:
+
+/home/jeff/workspace/codeslayer.java-plugin/src/java-notebook.h:
+
+/home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h:
+
+/home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h:
 
 /home/jeff/workspace/codeslayer.java-plugin/src/java-projects-popup.h:

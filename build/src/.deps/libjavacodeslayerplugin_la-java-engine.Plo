@@ -1,26 +1,27 @@
-libjavacodeslayerplugin_la-java-project-properties.lo: \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.c \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h \
+libjavacodeslayerplugin_la-java-engine.lo: \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-engine.c \
+ /usr/local/include/codeslayer/codeslayer-utils.h /usr/include/locale.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h \
+ /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stddef.h \
+ /usr/include/bits/locale.h /usr/include/xlocale.h /usr/include/libintl.h \
+ /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stdarg.h \
  /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gdk/gdk.h \
  /usr/include/gtk-3.0/gdk/gdkconfig.h /usr/include/glib-2.0/glib.h \
  /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
  /usr/lib/glib-2.0/include/glibconfig.h \
  /usr/include/glib-2.0/glib/gmacros.h \
- /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stddef.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include-fixed/limits.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include-fixed/syslimits.h \
- /usr/include/limits.h /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h /usr/include/bits/posix1_lim.h \
+ /usr/include/limits.h /usr/include/bits/posix1_lim.h \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/float.h \
  /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/types.h \
- /usr/include/bits/typesizes.h /usr/include/xlocale.h \
- /usr/include/glib-2.0/glib/garray.h \
+ /usr/include/bits/typesizes.h /usr/include/glib-2.0/glib/garray.h \
  /usr/include/glib-2.0/glib/gasyncqueue.h \
  /usr/include/glib-2.0/glib/gthread.h /usr/include/glib-2.0/glib/gerror.h \
- /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stdarg.h \
  /usr/include/glib-2.0/glib/gquark.h /usr/include/glib-2.0/glib/gutils.h \
  /usr/include/glib-2.0/glib/gatomic.h \
  /usr/include/glib-2.0/glib/gbacktrace.h /usr/include/signal.h \
@@ -489,6 +490,7 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
  /usr/include/gtk-3.0/gtk/gtkvscale.h \
  /usr/include/gtk-3.0/gtk/gtkvscrollbar.h \
  /usr/include/gtk-3.0/gtk/gtkvseparator.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-engine.h \
  /usr/local/include/codeslayer/codeslayer.h \
  /usr/local/include/codeslayer/codeslayer-menubar.h \
  /usr/local/include/codeslayer/codeslayer-groups.h \
@@ -522,9 +524,33 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
  /usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutterrenderer.h \
  /usr/include/gtksourceview-3.0/gtksourceview/gtksourcemarkattributes.h \
  /usr/local/include/codeslayer/codeslayer-menuitem.h \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-notebook.h
 
-/home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h:
+/usr/local/include/codeslayer/codeslayer-utils.h:
+
+/usr/include/locale.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stddef.h:
+
+/usr/include/bits/locale.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/libintl.h:
+
+/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stdarg.h:
 
 /usr/include/gtk-3.0/gtk/gtk.h:
 
@@ -542,23 +568,11 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
 
 /usr/include/glib-2.0/glib/gmacros.h:
 
-/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stddef.h:
-
 /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include-fixed/limits.h:
 
 /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include-fixed/syslimits.h:
 
 /usr/include/limits.h:
-
-/usr/include/features.h:
-
-/usr/include/sys/cdefs.h:
-
-/usr/include/bits/wordsize.h:
-
-/usr/include/gnu/stubs.h:
-
-/usr/include/gnu/stubs-64.h:
 
 /usr/include/bits/posix1_lim.h:
 
@@ -578,8 +592,6 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
 
 /usr/include/bits/typesizes.h:
 
-/usr/include/xlocale.h:
-
 /usr/include/glib-2.0/glib/garray.h:
 
 /usr/include/glib-2.0/glib/gasyncqueue.h:
@@ -587,8 +599,6 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
 /usr/include/glib-2.0/glib/gthread.h:
 
 /usr/include/glib-2.0/glib/gerror.h:
-
-/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include/stdarg.h:
 
 /usr/include/glib-2.0/glib/gquark.h:
 
@@ -1644,6 +1654,8 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
 
 /usr/include/gtk-3.0/gtk/gtkvseparator.h:
 
+/home/jeff/workspace/codeslayer.java-plugin/src/java-engine.h:
+
 /usr/local/include/codeslayer/codeslayer.h:
 
 /usr/local/include/codeslayer/codeslayer-menubar.h:
@@ -1710,4 +1722,8 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
 
 /usr/local/include/codeslayer/codeslayer-menuitem.h:
 
+/home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h:
+
 /home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h:
+
+/home/jeff/workspace/codeslayer.java-plugin/src/java-notebook.h:

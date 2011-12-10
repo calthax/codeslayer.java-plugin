@@ -16,65 +16,65 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "autotools-notebook-page.h"
+#include "java-notebook-page.h"
 
-static void autotools_notebook_page_class_init    (AutotoolsNotebookPageClass *klass);
-static void autotools_notebook_page_init          (AutotoolsNotebookPage      *notebook_page);
-static void autotools_notebook_page_finalize      (AutotoolsNotebookPage      *notebook_page);
+static void java_notebook_page_class_init  (JavaNotebookPageClass *klass);
+static void java_notebook_page_init        (JavaNotebookPage      *notebook_page);
+static void java_notebook_page_finalize    (JavaNotebookPage      *notebook_page);
 
-static void add_output                            (AutotoolsNotebookPage      *notebook_page, 
-                                                   GtkWidget                  *output);
-static void add_buttons                           (AutotoolsNotebookPage      *notebook_page, 
-                                                   GtkWidget                  *output);
-static void clear_action                          (GtkWidget *output);
+static void add_output                     (JavaNotebookPage      *notebook_page, 
+                                            GtkWidget             *output);
+static void add_buttons                    (JavaNotebookPage      *notebook_page, 
+                                            GtkWidget             *output);
+static void clear_action                   (GtkWidget             *output);
 
-#define AUTOTOOLS_NOTEBOOK_PAGE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), AUTOTOOLS_NOTEBOOK_PAGE_TYPE, AutotoolsNotebookPagePrivate))
+#define JAVA_NOTEBOOK_PAGE_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_NOTEBOOK_PAGE_TYPE, JavaNotebookPagePrivate))
 
-typedef struct _AutotoolsNotebookPagePrivate AutotoolsNotebookPagePrivate;
+typedef struct _JavaNotebookPagePrivate JavaNotebookPagePrivate;
 
-struct _AutotoolsNotebookPagePrivate
+struct _JavaNotebookPagePrivate
 {
   GtkWidget *output;
 };
 
-G_DEFINE_TYPE (AutotoolsNotebookPage, autotools_notebook_page, GTK_TYPE_HBOX)
+G_DEFINE_TYPE (JavaNotebookPage, java_notebook_page, GTK_TYPE_HBOX)
 
 static void
-autotools_notebook_page_class_init (AutotoolsNotebookPageClass *klass)
+java_notebook_page_class_init (JavaNotebookPageClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->finalize = (GObjectFinalizeFunc) autotools_notebook_page_finalize;
-  g_type_class_add_private (klass, sizeof (AutotoolsNotebookPagePrivate));
+  gobject_class->finalize = (GObjectFinalizeFunc) java_notebook_page_finalize;
+  g_type_class_add_private (klass, sizeof (JavaNotebookPagePrivate));
 }
 
 static void
-autotools_notebook_page_init (AutotoolsNotebookPage *notebook_page) {}
+java_notebook_page_init (JavaNotebookPage *notebook_page) {}
 
 static void
-autotools_notebook_page_finalize (AutotoolsNotebookPage *notebook_page)
+java_notebook_page_finalize (JavaNotebookPage *notebook_page)
 {
-  G_OBJECT_CLASS (autotools_notebook_page_parent_class)->finalize (G_OBJECT(notebook_page));
+  G_OBJECT_CLASS (java_notebook_page_parent_class)->finalize (G_OBJECT(notebook_page));
 }
 
 GtkWidget*
-autotools_notebook_page_new (GtkWidget *output)
+java_notebook_page_new (GtkWidget *output)
 {
-  AutotoolsNotebookPagePrivate *priv;
+  JavaNotebookPagePrivate *priv;
   GtkWidget *notebook_page;
   
-  notebook_page = g_object_new (autotools_notebook_page_get_type (), NULL);
-  priv = AUTOTOOLS_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page);
+  notebook_page = g_object_new (java_notebook_page_get_type (), NULL);
+  priv = JAVA_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page);
   priv->output = output;
   
-  add_output (AUTOTOOLS_NOTEBOOK_PAGE (notebook_page), output);
-  add_buttons (AUTOTOOLS_NOTEBOOK_PAGE (notebook_page), output);
+  add_output (JAVA_NOTEBOOK_PAGE (notebook_page), output);
+  add_buttons (JAVA_NOTEBOOK_PAGE (notebook_page), output);
 
   return notebook_page;
 }
 
 static void 
-add_buttons (AutotoolsNotebookPage *notebook_page, 
+add_buttons (JavaNotebookPage *notebook_page, 
              GtkWidget             *output)
 {
   GtkWidget *table;
@@ -102,7 +102,7 @@ add_buttons (AutotoolsNotebookPage *notebook_page,
 }
 
 static void 
-add_output (AutotoolsNotebookPage *notebook_page, 
+add_output (JavaNotebookPage *notebook_page, 
             GtkWidget             *output)
 {
   GtkWidget *scrolled_window;
@@ -124,7 +124,7 @@ clear_action (GtkWidget *output)
 }
 
 GtkWidget*
-autotools_notebook_page_get_output (AutotoolsNotebookPage *notebook_page)
+java_notebook_page_get_output (JavaNotebookPage *notebook_page)
 {
-  return AUTOTOOLS_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page)->output;
+  return JAVA_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page)->output;
 }

@@ -16,20 +16,20 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "autotools-notebook-tab.h"
+#include "java-notebook-tab.h"
 
-static void autotools_notebook_tab_class_init    (AutotoolsNotebookTabClass *klass);
-static void autotools_notebook_tab_init          (AutotoolsNotebookTab      *notebook_tab);
-static void autotools_notebook_tab_finalize      (AutotoolsNotebookTab      *notebook_tab);
+static void java_notebook_tab_class_init  (JavaNotebookTabClass *klass);
+static void java_notebook_tab_init        (JavaNotebookTab      *notebook_tab);
+static void java_notebook_tab_finalize    (JavaNotebookTab      *notebook_tab);
 
-static void close_action                         (AutotoolsNotebookTab      *notebook_tab);
+static void close_action                  (JavaNotebookTab      *notebook_tab);
 
-#define AUTOTOOLS_NOTEBOOK_TAB_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), AUTOTOOLS_NOTEBOOK_TAB_TYPE, AutotoolsNotebookTabPrivate))
+#define JAVA_NOTEBOOK_TAB_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_NOTEBOOK_TAB_TYPE, JavaNotebookTabPrivate))
 
-typedef struct _AutotoolsNotebookTabPrivate AutotoolsNotebookTabPrivate;
+typedef struct _JavaNotebookTabPrivate JavaNotebookTabPrivate;
 
-struct _AutotoolsNotebookTabPrivate
+struct _JavaNotebookTabPrivate
 {
   GtkWidget *notebook_page;
   GtkWidget *notebook;
@@ -41,53 +41,53 @@ enum
   LAST_SIGNAL
 };
 
-static guint autotools_notebook_tab_signals[LAST_SIGNAL] = { 0 };
+static guint java_notebook_tab_signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (AutotoolsNotebookTab, autotools_notebook_tab, GTK_TYPE_HBOX)
+G_DEFINE_TYPE (JavaNotebookTab, java_notebook_tab, GTK_TYPE_HBOX)
      
 static void
-autotools_notebook_tab_class_init (AutotoolsNotebookTabClass *klass)
+java_notebook_tab_class_init (JavaNotebookTabClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  autotools_notebook_tab_signals[CLOSE] =
+  java_notebook_tab_signals[CLOSE] =
     g_signal_new ("close", 
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
-                  G_STRUCT_OFFSET (AutotoolsNotebookTabClass, close),
+                  G_STRUCT_OFFSET (JavaNotebookTabClass, close),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gobject_class->finalize = (GObjectFinalizeFunc) autotools_notebook_tab_finalize;
+  gobject_class->finalize = (GObjectFinalizeFunc) java_notebook_tab_finalize;
 
-  g_type_class_add_private (klass, sizeof (AutotoolsNotebookTabPrivate));
+  g_type_class_add_private (klass, sizeof (JavaNotebookTabPrivate));
 }
 
 static void
-autotools_notebook_tab_init (AutotoolsNotebookTab *notebook_tab)
+java_notebook_tab_init (JavaNotebookTab *notebook_tab)
 {
   gtk_box_set_homogeneous (GTK_BOX (notebook_tab), FALSE);
   gtk_box_set_spacing (GTK_BOX (notebook_tab), 0);
 }
 
 static void
-autotools_notebook_tab_finalize (AutotoolsNotebookTab *notebook_tab)
+java_notebook_tab_finalize (JavaNotebookTab *notebook_tab)
 {
-  G_OBJECT_CLASS (autotools_notebook_tab_parent_class)->finalize ( G_OBJECT (notebook_tab));
+  G_OBJECT_CLASS (java_notebook_tab_parent_class)->finalize ( G_OBJECT (notebook_tab));
 }
 
 GtkWidget*
-autotools_notebook_tab_new (GtkWidget   *notebook, 
+java_notebook_tab_new (GtkWidget   *notebook, 
                             const gchar *label)
 {
-  AutotoolsNotebookTabPrivate *priv;
+  JavaNotebookTabPrivate *priv;
   GtkWidget *notebook_tab;
   GtkWidget *text;
   GtkWidget *button;
   GtkWidget *image;
   
-  notebook_tab = g_object_new (autotools_notebook_tab_get_type (), NULL);
-  priv = AUTOTOOLS_NOTEBOOK_TAB_GET_PRIVATE (notebook_tab);
+  notebook_tab = g_object_new (java_notebook_tab_get_type (), NULL);
+  priv = JAVA_NOTEBOOK_TAB_GET_PRIVATE (notebook_tab);
   priv->notebook = notebook;
 
   text = gtk_label_new (label);
@@ -120,22 +120,22 @@ autotools_notebook_tab_new (GtkWidget   *notebook,
 }
 
 static void
-close_action (AutotoolsNotebookTab *notebook_tab)
+close_action (JavaNotebookTab *notebook_tab)
 {
   g_signal_emit_by_name ((gpointer) notebook_tab, "close");
 }
 
 GtkWidget*
-autotools_notebook_tab_get_notebook_page (AutotoolsNotebookTab *notebook_tab)
+java_notebook_tab_get_notebook_page (JavaNotebookTab *notebook_tab)
 {
-  return AUTOTOOLS_NOTEBOOK_TAB_GET_PRIVATE (notebook_tab)->notebook_page;
+  return JAVA_NOTEBOOK_TAB_GET_PRIVATE (notebook_tab)->notebook_page;
 }
 
 void
-autotools_notebook_tab_set_notebook_page (AutotoolsNotebookTab *notebook_tab,
-                                          GtkWidget            *notebook_page)
+java_notebook_tab_set_notebook_page (JavaNotebookTab *notebook_tab,
+                                     GtkWidget       *notebook_page)
 {
-  AutotoolsNotebookTabPrivate *priv;
-  priv = AUTOTOOLS_NOTEBOOK_TAB_GET_PRIVATE (notebook_tab);
+  JavaNotebookTabPrivate *priv;
+  priv = JAVA_NOTEBOOK_TAB_GET_PRIVATE (notebook_tab);
   priv->notebook_page = notebook_page;
 }

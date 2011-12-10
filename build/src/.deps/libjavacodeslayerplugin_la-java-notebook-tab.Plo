@@ -1,6 +1,6 @@
-libjavacodeslayerplugin_la-java-project-properties.lo: \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.c \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h \
+libjavacodeslayerplugin_la-java-notebook-tab.lo: \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-notebook-tab.c \
+ /home/jeff/workspace/codeslayer.java-plugin/src/java-notebook-tab.h \
  /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gdk/gdk.h \
  /usr/include/gtk-3.0/gdk/gdkconfig.h /usr/include/glib-2.0/glib.h \
  /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
@@ -488,43 +488,9 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
  /usr/include/gtk-3.0/gtk/gtkvpaned.h \
  /usr/include/gtk-3.0/gtk/gtkvscale.h \
  /usr/include/gtk-3.0/gtk/gtkvscrollbar.h \
- /usr/include/gtk-3.0/gtk/gtkvseparator.h \
- /usr/local/include/codeslayer/codeslayer.h \
- /usr/local/include/codeslayer/codeslayer-menubar.h \
- /usr/local/include/codeslayer/codeslayer-groups.h \
- /usr/local/include/codeslayer/codeslayer-group.h \
- /usr/local/include/codeslayer/codeslayer-project.h \
- /usr/local/include/codeslayer/codeslayer-plugin.h \
- /usr/local/include/codeslayer/codeslayer-plugins.h \
- /usr/local/include/codeslayer/codeslayer-preferences.h \
- /usr/local/include/codeslayer/codeslayer-notebook.h \
- /usr/local/include/codeslayer/codeslayer-document.h \
- /usr/local/include/codeslayer/codeslayer-projects-selection.h \
- /usr/local/include/codeslayer/codeslayer-projects.h \
- /usr/local/include/codeslayer/codeslayer-project-properties.h \
- /usr/local/include/codeslayer/codeslayer-side-pane.h \
- /usr/local/include/codeslayer/codeslayer-abstract-pane.h \
- /usr/local/include/codeslayer/codeslayer-bottom-pane.h \
- /usr/local/include/codeslayer/codeslayer-editor.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourceview.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcebuffer.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcelanguage.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcemark.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcestylescheme.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcestyle.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourceundomanager.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletion.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletioninfo.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletionprovider.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletionproposal.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletioncontext.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutter.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutterrenderer.h \
- /usr/include/gtksourceview-3.0/gtksourceview/gtksourcemarkattributes.h \
- /usr/local/include/codeslayer/codeslayer-menuitem.h \
- /home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h
+ /usr/include/gtk-3.0/gtk/gtkvseparator.h
 
-/home/jeff/workspace/codeslayer.java-plugin/src/java-project-properties.h:
+/home/jeff/workspace/codeslayer.java-plugin/src/java-notebook-tab.h:
 
 /usr/include/gtk-3.0/gtk/gtk.h:
 
@@ -1643,71 +1609,3 @@ libjavacodeslayerplugin_la-java-project-properties.lo: \
 /usr/include/gtk-3.0/gtk/gtkvscrollbar.h:
 
 /usr/include/gtk-3.0/gtk/gtkvseparator.h:
-
-/usr/local/include/codeslayer/codeslayer.h:
-
-/usr/local/include/codeslayer/codeslayer-menubar.h:
-
-/usr/local/include/codeslayer/codeslayer-groups.h:
-
-/usr/local/include/codeslayer/codeslayer-group.h:
-
-/usr/local/include/codeslayer/codeslayer-project.h:
-
-/usr/local/include/codeslayer/codeslayer-plugin.h:
-
-/usr/local/include/codeslayer/codeslayer-plugins.h:
-
-/usr/local/include/codeslayer/codeslayer-preferences.h:
-
-/usr/local/include/codeslayer/codeslayer-notebook.h:
-
-/usr/local/include/codeslayer/codeslayer-document.h:
-
-/usr/local/include/codeslayer/codeslayer-projects-selection.h:
-
-/usr/local/include/codeslayer/codeslayer-projects.h:
-
-/usr/local/include/codeslayer/codeslayer-project-properties.h:
-
-/usr/local/include/codeslayer/codeslayer-side-pane.h:
-
-/usr/local/include/codeslayer/codeslayer-abstract-pane.h:
-
-/usr/local/include/codeslayer/codeslayer-bottom-pane.h:
-
-/usr/local/include/codeslayer/codeslayer-editor.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourceview.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcebuffer.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcelanguage.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcemark.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcestylescheme.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcestyle.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourceundomanager.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletion.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletioninfo.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletionprovider.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletionproposal.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcecompletioncontext.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutter.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcegutterrenderer.h:
-
-/usr/include/gtksourceview-3.0/gtksourceview/gtksourcemarkattributes.h:
-
-/usr/local/include/codeslayer/codeslayer-menuitem.h:
-
-/home/jeff/workspace/codeslayer.java-plugin/src/java-configuration.h:

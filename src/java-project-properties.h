@@ -16,48 +16,48 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_PROJECT_PROPERTIES_H__
-#define	__AUTOTOOLS_PROJECT_PROPERTIES_H__
+#ifndef __JAVA_PROJECT_PROPERTIES_H__
+#define	__JAVA_PROJECT_PROPERTIES_H__
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
-#include "autotools-configuration.h"
+#include "java-configuration.h"
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_PROJECT_PROPERTIES_TYPE            (autotools_project_properties_get_type ())
-#define AUTOTOOLS_PROJECT_PROPERTIES(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_PROJECT_PROPERTIES_TYPE, AutotoolsProjectProperties))
-#define AUTOTOOLS_PROJECT_PROPERTIES_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_PROJECT_PROPERTIES_TYPE, AutotoolsProjectPropertiesClass))
-#define IS_AUTOTOOLS_PROJECT_PROPERTIES(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_PROJECT_PROPERTIES_TYPE))
-#define IS_AUTOTOOLS_PROJECT_PROPERTIES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_PROJECT_PROPERTIES_TYPE))
+#define JAVA_PROJECT_PROPERTIES_TYPE            (java_project_properties_get_type ())
+#define JAVA_PROJECT_PROPERTIES(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_PROJECT_PROPERTIES_TYPE, JavaProjectProperties))
+#define JAVA_PROJECT_PROPERTIES_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_PROJECT_PROPERTIES_TYPE, JavaProjectPropertiesClass))
+#define IS_JAVA_PROJECT_PROPERTIES(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_PROJECT_PROPERTIES_TYPE))
+#define IS_JAVA_PROJECT_PROPERTIES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_PROJECT_PROPERTIES_TYPE))
 
-typedef struct _AutotoolsProjectProperties AutotoolsProjectProperties;
-typedef struct _AutotoolsProjectPropertiesClass AutotoolsProjectPropertiesClass;
+typedef struct _JavaProjectProperties JavaProjectProperties;
+typedef struct _JavaProjectPropertiesClass JavaProjectPropertiesClass;
 
-struct _AutotoolsProjectProperties
+struct _JavaProjectProperties
 {
   GtkVBox parent_instance;
 };
 
-struct _AutotoolsProjectPropertiesClass
+struct _JavaProjectPropertiesClass
 {
   GtkVBoxClass parent_class;
   
-  void (*save_configuration) (AutotoolsProjectProperties *project_properties);  
+  void (*save_configuration) (JavaProjectProperties *project_properties);  
 };
 
-GType autotools_project_properties_get_type (void) G_GNUC_CONST;
+GType java_project_properties_get_type (void) G_GNUC_CONST;
      
-GtkWidget*  autotools_project_properties_new  (void);
+GtkWidget*  java_project_properties_new  (void);
 
-void autotools_project_properties_opened      (AutotoolsProjectProperties *project_properties,
-                                               AutotoolsConfiguration     *configuration, 
-                                               CodeSlayerProject          *project);
+void java_project_properties_opened      (JavaProjectProperties *project_properties,
+                                          JavaConfiguration     *configuration, 
+                                          CodeSlayerProject     *project);
 
-void autotools_project_properties_saved       (AutotoolsProjectProperties *project_properties,
-                                               AutotoolsConfiguration     *configuration, 
-                                               CodeSlayerProject          *project);
+void java_project_properties_saved       (JavaProjectProperties *project_properties,
+                                          JavaConfiguration     *configuration, 
+                                          CodeSlayerProject     *project);
 
 G_END_DECLS
 
-#endif /* __AUTOTOOLS_PROJECT_PROPERTIES_H__ */
+#endif /* __JAVA_PROJECT_PROPERTIES_H__ */

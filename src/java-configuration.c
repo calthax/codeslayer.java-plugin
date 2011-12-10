@@ -38,16 +38,22 @@ typedef struct _JavaConfigurationPrivate JavaConfigurationPrivate;
 struct _JavaConfigurationPrivate
 {
   gchar *project_key;
-  gchar *build_file;
-  gchar *build_directory;
+  gchar *ant_file;
+  gchar *build_folder;
+  gchar *lib_folder;
+  gchar *source_folder;
+  gchar *test_folder;
 };
 
 enum
 {
   PROP_0,
   PROP_PROJECT_KEY,
-  PROP_BUILD_FILE,
-  PROP_BUILD_DIRECTORY
+  PROP_ANT_FILE,
+  PROP_BUILD_FOLDER,
+  PROP_LIB_FOLDER,
+  PROP_SOURCE_FOLDER,
+  PROP_TEST_FOLDER
 };
 
 G_DEFINE_TYPE (JavaConfiguration, java_configuration, G_TYPE_OBJECT)
@@ -68,23 +74,42 @@ java_configuration_class_init (JavaConfigurationClass *klass)
                                    PROP_PROJECT_KEY,
                                    g_param_spec_string ("project_key", 
                                                         "Project Key",
-                                                        "Project Key Object", "",
+                                                        "Project Key", "",
                                                         G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, 
-                                   PROP_BUILD_FILE,
-                                   g_param_spec_string ("build_file",
-                                                        "Build File",
-                                                        "Build File Object",
-                                                        "",
+                                   PROP_ANT_FILE,
+                                   g_param_spec_string ("ant_file",
+                                                        "Ant File",
+                                                        "Ant File", "",
                                                         G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, 
-                                   PROP_BUILD_DIRECTORY,
-                                   g_param_spec_string ("build_directory",
-                                                        "Build Directory",
-                                                        "Build Directory Object",
-                                                        "",
+                                   PROP_BUILD_FOLDER,
+                                   g_param_spec_string ("build_folder",
+                                                        "Build Folder",
+                                                        "Build Folder", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_LIB_FOLDER,
+                                   g_param_spec_string ("lib_folder",
+                                                        "Lib Folder",
+                                                        "Lib Folder", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_SOURCE_FOLDER,
+                                   g_param_spec_string ("source_folder",
+                                                        "Source Folder",
+                                                        "Source Folder", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_TEST_FOLDER,
+                                   g_param_spec_string ("test_folder",
+                                                        "Test Path",
+                                                        "Test Path", "",
                                                         G_PARAM_READWRITE));
 }
 
@@ -94,8 +119,11 @@ java_configuration_init (JavaConfiguration *configuration)
   JavaConfigurationPrivate *priv;
   priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
   priv->project_key = NULL;
-  priv->build_file = NULL;
-  priv->build_directory = NULL;
+  priv->ant_file = NULL;
+  priv->build_folder = NULL;
+  priv->lib_folder = NULL;
+  priv->source_folder = NULL;
+  priv->test_folder = NULL;
 }
 
 static void
@@ -108,15 +136,30 @@ java_configuration_finalize (JavaConfiguration *configuration)
       g_free (priv->project_key);
       priv->project_key = NULL;
     }
-  if (priv->build_file)
+  if (priv->ant_file)
     {
-      g_free (priv->build_file);
-      priv->build_file = NULL;
+      g_free (priv->ant_file);
+      priv->ant_file = NULL;
     }
-  if (priv->build_directory)
+  if (priv->build_folder)
     {
-      g_free (priv->build_directory);
-      priv->build_directory = NULL;
+      g_free (priv->build_folder);
+      priv->build_folder = NULL;
+    }
+  if (priv->lib_folder)
+    {
+      g_free (priv->lib_folder);
+      priv->lib_folder = NULL;
+    }
+  if (priv->source_folder)
+    {
+      g_free (priv->source_folder);
+      priv->source_folder = NULL;
+    }
+  if (priv->test_folder)
+    {
+      g_free (priv->test_folder);
+      priv->test_folder = NULL;
     }
   G_OBJECT_CLASS (java_configuration_parent_class)->finalize (G_OBJECT (configuration));
 }
@@ -138,11 +181,20 @@ java_configuration_get_property (GObject    *object,
     case PROP_PROJECT_KEY:
       g_value_set_string (value, priv->project_key);
       break;
-    case PROP_BUILD_FILE:
-      g_value_set_string (value, priv->build_file);
+    case PROP_ANT_FILE:
+      g_value_set_string (value, priv->ant_file);
       break;
-    case PROP_BUILD_DIRECTORY:
-      g_value_set_string (value, priv->build_directory);
+    case PROP_BUILD_FOLDER:
+      g_value_set_string (value, priv->build_folder);
+      break;
+    case PROP_LIB_FOLDER:
+      g_value_set_string (value, priv->lib_folder);
+      break;
+    case PROP_SOURCE_FOLDER:
+      g_value_set_string (value, priv->source_folder);
+      break;
+    case PROP_TEST_FOLDER:
+      g_value_set_string (value, priv->test_folder);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -164,11 +216,20 @@ java_configuration_set_property (GObject      *object,
     case PROP_PROJECT_KEY:
       java_configuration_set_project_key (configuration, g_value_get_string (value));
       break;
-    case PROP_BUILD_FILE:
-      java_configuration_set_build_file (configuration, g_value_get_string (value));
+    case PROP_ANT_FILE:
+      java_configuration_set_ant_file (configuration, g_value_get_string (value));
       break;
-    case PROP_BUILD_DIRECTORY:
-      java_configuration_set_build_directory (configuration, g_value_get_string (value));
+    case PROP_BUILD_FOLDER:
+      java_configuration_set_build_folder (configuration, g_value_get_string (value));
+      break;
+    case PROP_LIB_FOLDER:
+      java_configuration_set_lib_folder (configuration, g_value_get_string (value));
+      break;
+    case PROP_SOURCE_FOLDER:
+      java_configuration_set_source_folder (configuration, g_value_get_string (value));
+      break;
+    case PROP_TEST_FOLDER:
+      java_configuration_set_test_folder (configuration, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -190,7 +251,7 @@ java_configuration_get_project_key (JavaConfiguration *configuration)
 
 void
 java_configuration_set_project_key (JavaConfiguration *configuration, 
-                                         const gchar             *project_key)
+                                    const gchar       *project_key)
 {
   JavaConfigurationPrivate *priv;
   priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
@@ -203,41 +264,101 @@ java_configuration_set_project_key (JavaConfiguration *configuration,
 }
 
 const gchar*
-java_configuration_get_build_file (JavaConfiguration *configuration)
+java_configuration_get_ant_file (JavaConfiguration *configuration)
 {
-  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->build_file;
+  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->ant_file;
 }
 
 void
-java_configuration_set_build_file (JavaConfiguration *configuration,
-                                   const gchar       *build_file)
+java_configuration_set_ant_file (JavaConfiguration *configuration,
+                                 const gchar       *ant_file)
 {
   JavaConfigurationPrivate *priv;
   priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
-  if (priv->build_file)
+  if (priv->ant_file)
     {
-      g_free (priv->build_file);
-      priv->build_file = NULL;
+      g_free (priv->ant_file);
+      priv->ant_file = NULL;
     }
-  priv->build_file = g_strdup (build_file);
+  priv->ant_file = g_strdup (ant_file);
 }
 
 const gchar*
-java_configuration_get_build_directory (JavaConfiguration *configuration)
+java_configuration_get_build_folder (JavaConfiguration *configuration)
 {
-  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->build_directory;
+  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->build_folder;
 }
 
 void
-java_configuration_set_build_directory (JavaConfiguration *configuration,
-                                             const gchar            *build_directory)
+java_configuration_set_build_folder (JavaConfiguration *configuration,
+                                     const gchar       *build_folder)
 {
   JavaConfigurationPrivate *priv;
   priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
-  if (priv->build_directory)
+  if (priv->build_folder)
     {
-      g_free (priv->build_directory);
-      priv->build_directory = NULL;
+      g_free (priv->build_folder);
+      priv->build_folder = NULL;
     }
-  priv->build_directory = g_strdup (build_directory);
+  priv->build_folder = g_strdup (build_folder);
+}
+
+const gchar*
+java_configuration_get_lib_folder (JavaConfiguration *configuration)
+{
+  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->lib_folder;
+}
+
+void
+java_configuration_set_lib_folder (JavaConfiguration *configuration,
+                                   const gchar       *lib_folder)
+{
+  JavaConfigurationPrivate *priv;
+  priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
+  if (priv->lib_folder)
+    {
+      g_free (priv->lib_folder);
+      priv->lib_folder = NULL;
+    }
+  priv->lib_folder = g_strdup (lib_folder);
+}
+
+const gchar*
+java_configuration_get_source_folder (JavaConfiguration *configuration)
+{
+  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->source_folder;
+}
+
+void
+java_configuration_set_source_folder (JavaConfiguration *configuration,
+                                    const gchar       *source_folder)
+{
+  JavaConfigurationPrivate *priv;
+  priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
+  if (priv->source_folder)
+    {
+      g_free (priv->source_folder);
+      priv->source_folder = NULL;
+    }
+  priv->source_folder = g_strdup (source_folder);
+}
+
+const gchar*
+java_configuration_get_test_folder (JavaConfiguration *configuration)
+{
+  return JAVA_CONFIGURATION_GET_PRIVATE (configuration)->test_folder;
+}
+
+void
+java_configuration_set_test_folder (JavaConfiguration *configuration,
+                                  const gchar       *test_folder)
+{
+  JavaConfigurationPrivate *priv;
+  priv = JAVA_CONFIGURATION_GET_PRIVATE (configuration);
+  if (priv->test_folder)
+    {
+      g_free (priv->test_folder);
+      priv->test_folder = NULL;
+    }
+  priv->test_folder = g_strdup (test_folder);
 }

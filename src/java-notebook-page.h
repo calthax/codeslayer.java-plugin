@@ -16,39 +16,38 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_NOTEBOOK_PAGE_H__
-#define	__AUTOTOOLS_NOTEBOOK_PAGE_H__
+#ifndef __JAVA_NOTEBOOK_PAGE_H__
+#define	__JAVA_NOTEBOOK_PAGE_H__
 
 #include <gtk/gtk.h>
-#include <codeslayer/codeslayer-document.h>
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_NOTEBOOK_PAGE_TYPE            (autotools_notebook_page_get_type ())
-#define AUTOTOOLS_NOTEBOOK_PAGE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_NOTEBOOK_PAGE_TYPE, AutotoolsNotebookPage))
-#define AUTOTOOLS_NOTEBOOK_PAGE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_NOTEBOOK_PAGE_TYPE, AutotoolsNotebookPageClass))
-#define IS_AUTOTOOLS_NOTEBOOK_PAGE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_NOTEBOOK_PAGE_TYPE))
-#define IS_AUTOTOOLS_NOTEBOOK_PAGE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_NOTEBOOK_PAGE_TYPE))
+#define JAVA_NOTEBOOK_PAGE_TYPE            (java_notebook_page_get_type ())
+#define JAVA_NOTEBOOK_PAGE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_NOTEBOOK_PAGE_TYPE, JavaNotebookPage))
+#define JAVA_NOTEBOOK_PAGE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_NOTEBOOK_PAGE_TYPE, JavaNotebookPageClass))
+#define IS_JAVA_NOTEBOOK_PAGE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_NOTEBOOK_PAGE_TYPE))
+#define IS_JAVA_NOTEBOOK_PAGE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_NOTEBOOK_PAGE_TYPE))
 
-typedef struct _AutotoolsNotebookPage AutotoolsNotebookPage;
-typedef struct _AutotoolsNotebookPageClass AutotoolsNotebookPageClass;
+typedef struct _JavaNotebookPage JavaNotebookPage;
+typedef struct _JavaNotebookPageClass JavaNotebookPageClass;
 
-struct _AutotoolsNotebookPage
+struct _JavaNotebookPage
 {
   GtkHBox parent_instance;
 };
 
-struct _AutotoolsNotebookPageClass
+struct _JavaNotebookPageClass
 {
   GtkHBoxClass parent_class;
 };
 
-GType autotools_notebook_page_get_type (void) G_GNUC_CONST;
+GType java_notebook_page_get_type (void) G_GNUC_CONST;
      
-GtkWidget*  autotools_notebook_page_new         (GtkWidget             *output);
+GtkWidget*  java_notebook_page_new         (GtkWidget             *output);
 
-GtkWidget*  autotools_notebook_page_get_output  (AutotoolsNotebookPage *notebook_page);
+GtkWidget*  java_notebook_page_get_output  (JavaNotebookPage *notebook_page);
 
 G_END_DECLS
 
-#endif /* __AUTOTOOLS_NOTEBOOK_PAGE_H__ */
+#endif /* __JAVA_NOTEBOOK_PAGE_H__ */

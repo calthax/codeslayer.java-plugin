@@ -16,43 +16,43 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_ENGINE_H__
-#define	__AUTOTOOLS_ENGINE_H__
+#ifndef __JAVA_ENGINE_H__
+#define	__JAVA_ENGINE_H__
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_ENGINE_TYPE            (autotools_engine_get_type ())
-#define AUTOTOOLS_ENGINE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_ENGINE_TYPE, AutotoolsEngine))
-#define AUTOTOOLS_ENGINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_ENGINE_TYPE, AutotoolsEngineClass))
-#define IS_AUTOTOOLS_ENGINE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_ENGINE_TYPE))
-#define IS_AUTOTOOLS_ENGINE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_ENGINE_TYPE))
+#define JAVA_ENGINE_TYPE            (java_engine_get_type ())
+#define JAVA_ENGINE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_ENGINE_TYPE, JavaEngine))
+#define JAVA_ENGINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_ENGINE_TYPE, JavaEngineClass))
+#define IS_JAVA_ENGINE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_ENGINE_TYPE))
+#define IS_JAVA_ENGINE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_ENGINE_TYPE))
 
-typedef struct _AutotoolsEngine AutotoolsEngine;
-typedef struct _AutotoolsEngineClass AutotoolsEngineClass;
+typedef struct _JavaEngine JavaEngine;
+typedef struct _JavaEngineClass JavaEngineClass;
 
-struct _AutotoolsEngine
+struct _JavaEngine
 {
   GObject parent_instance;
 };
 
-struct _AutotoolsEngineClass
+struct _JavaEngineClass
 {
   GObjectClass parent_class;
 };
 
-GType autotools_engine_get_type (void) G_GNUC_CONST;
+GType java_engine_get_type (void) G_GNUC_CONST;
 
-AutotoolsEngine*  autotools_engine_new (CodeSlayer *codeslayer,
-                                        GtkWidget  *menu,
-                                        GtkWidget  *project_properties,
-                                        GtkWidget  *projects_menu,
-                                        GtkWidget  *notebook);
+JavaEngine*  java_engine_new (CodeSlayer *codeslayer,
+                              GtkWidget  *menu,
+                              GtkWidget  *project_properties,
+                              GtkWidget  *projects_popup,
+                              GtkWidget  *notebook);
                                         
-void autotools_engine_load_configurations (AutotoolsEngine *engine);
+void java_engine_load_configurations (JavaEngine *engine);
 
 G_END_DECLS
 
-#endif /* _AUTOTOOLS_ENGINE_H */
+#endif /* _JAVA_ENGINE_H */

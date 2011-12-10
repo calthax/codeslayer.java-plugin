@@ -16,43 +16,43 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_NOTEBOOK_TAB_H__
-#define	__AUTOTOOLS_NOTEBOOK_TAB_H__
+#ifndef __JAVA_NOTEBOOK_TAB_H__
+#define	__JAVA_NOTEBOOK_TAB_H__
 
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_NOTEBOOK_TAB_TYPE            (autotools_notebook_tab_get_type ())
-#define AUTOTOOLS_NOTEBOOK_TAB(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_NOTEBOOK_TAB_TYPE, AutotoolsNotebookTab))
-#define AUTOTOOLS_NOTEBOOK_TAB_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_NOTEBOOK_TAB_TYPE, AutotoolsNotebookTabClass))
-#define IS_AUTOTOOLS_NOTEBOOK_TAB(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_NOTEBOOK_TAB_TYPE))
-#define IS_AUTOTOOLS_NOTEBOOK_TAB_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_NOTEBOOK_TAB_TYPE))
+#define JAVA_NOTEBOOK_TAB_TYPE            (java_notebook_tab_get_type ())
+#define JAVA_NOTEBOOK_TAB(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_NOTEBOOK_TAB_TYPE, JavaNotebookTab))
+#define JAVA_NOTEBOOK_TAB_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_NOTEBOOK_TAB_TYPE, JavaNotebookTabClass))
+#define IS_JAVA_NOTEBOOK_TAB(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_NOTEBOOK_TAB_TYPE))
+#define IS_JAVA_NOTEBOOK_TAB_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_NOTEBOOK_TAB_TYPE))
 
-typedef struct _AutotoolsNotebookTab AutotoolsNotebookTab;
-typedef struct _AutotoolsNotebookTabClass AutotoolsNotebookTabClass;
+typedef struct _JavaNotebookTab JavaNotebookTab;
+typedef struct _JavaNotebookTabClass JavaNotebookTabClass;
 
-struct _AutotoolsNotebookTab
+struct _JavaNotebookTab
 {
   GtkHBox parent_instance;
 };
 
-struct _AutotoolsNotebookTabClass
+struct _JavaNotebookTabClass
 {
   GtkHBoxClass parent_class;
 
-  void (*close) (AutotoolsNotebookTab *notebook_tab);
+  void (*close) (JavaNotebookTab *notebook_tab);
 };
 
-GType autotools_notebook_tab_get_type (void) G_GNUC_CONST;
+GType java_notebook_tab_get_type (void) G_GNUC_CONST;
   
-GtkWidget*  autotools_notebook_tab_new                (GtkWidget             *notebook, 
-                                                       const gchar           *label);
+GtkWidget*  java_notebook_tab_new                (GtkWidget        *notebook, 
+                                                  const gchar      *label);
 
-GtkWidget*  autotools_notebook_tab_get_notebook_page  (AutotoolsNotebookTab  *notebook_tab);
-void        autotools_notebook_tab_set_notebook_page  (AutotoolsNotebookTab  *notebook_tab, 
-                                                       GtkWidget             *notebook_page);
+GtkWidget*  java_notebook_tab_get_notebook_page  (JavaNotebookTab  *notebook_tab);
+void        java_notebook_tab_set_notebook_page  (JavaNotebookTab  *notebook_tab, 
+                                                  GtkWidget        *notebook_page);
 
 G_END_DECLS
 
-#endif /* __AUTOTOOLS_NOTEBOOK_TAB_H__ */
+#endif /* __JAVA_NOTEBOOK_TAB_H__ */

@@ -20,14 +20,20 @@
 #include <gtk/gtk.h>
 #include <gmodule.h>
 #include <glib.h>
+#include "java-engine.h"
 #include "java-menu.h"
+#include "java-notebook.h"
+#include "java-project-properties.h"
 #include "java-projects-popup.h"
 
 G_MODULE_EXPORT void activate   (CodeSlayer *codeslayer);
 G_MODULE_EXPORT void deactivate (CodeSlayer *codeslayer);
 
 static GtkWidget *menu;
+static GtkWidget *project_properties;
+static GtkWidget *notebook;
 static GtkWidget *projects_popup;
+static JavaEngine *engine;
 
 G_MODULE_EXPORT void
 activate (CodeSlayer *codeslayer)
@@ -36,10 +42,16 @@ activate (CodeSlayer *codeslayer)
   accel_group = codeslayer_get_menubar_accel_group (codeslayer);
   menu = java_menu_new (accel_group);
   
+  project_properties = java_project_properties_new ();
   projects_popup = java_projects_popup_new ();
+  notebook = java_notebook_new ();
+  engine = java_engine_new (codeslayer, menu, project_properties, projects_popup, notebook);
+  java_engine_load_configurations (engine);
   
   codeslayer_add_to_menubar (codeslayer, GTK_MENU_ITEM (menu));
   codeslayer_add_to_projects_popup (codeslayer, GTK_MENU_ITEM (projects_popup));
+  codeslayer_add_to_project_properties (codeslayer, project_properties, "Java");
+  codeslayer_add_to_bottom_pane (codeslayer, notebook, "Java");
 }
 
 G_MODULE_EXPORT void 
@@ -47,4 +59,7 @@ deactivate (CodeSlayer *codeslayer)
 {
   codeslayer_remove_from_menubar (codeslayer, GTK_MENU_ITEM (menu));
   codeslayer_remove_from_projects_popup (codeslayer, GTK_MENU_ITEM (projects_popup));
+  codeslayer_remove_from_project_properties (codeslayer, project_properties);
+  codeslayer_remove_from_bottom_pane (codeslayer, notebook);
+  g_object_unref (engine);
 }
