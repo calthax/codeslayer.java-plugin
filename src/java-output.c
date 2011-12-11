@@ -16,61 +16,53 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "autotools-output.h"
+#include "java-output.h"
 
-static void autotools_output_class_init      (AutotoolsOutputClass *klass);
-static void autotools_output_init            (AutotoolsOutput      *output);
-static void autotools_output_finalize        (AutotoolsOutput      *output);
+static void java_output_class_init  (JavaOutputClass *klass);
+static void java_output_init        (JavaOutput      *output);
+static void java_output_finalize    (JavaOutput      *output);
 
-#define AUTOTOOLS_OUTPUT_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), AUTOTOOLS_OUTPUT_TYPE, AutotoolsOutputPrivate))
+#define JAVA_OUTPUT_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_OUTPUT_TYPE, JavaOutputPrivate))
 
-typedef struct _AutotoolsOutputPrivate AutotoolsOutputPrivate;
+typedef struct _JavaOutputPrivate JavaOutputPrivate;
 
-struct _AutotoolsOutputPrivate
+struct _JavaOutputPrivate
 {
-  AutotoolsConfiguration *configuration;
+  JavaNotebookPageType page_type;
 };
 
-G_DEFINE_TYPE (AutotoolsOutput, autotools_output, GTK_TYPE_TEXT_VIEW)
+G_DEFINE_TYPE (JavaOutput, java_output, GTK_TYPE_TEXT_VIEW)
       
 static void 
-autotools_output_class_init (AutotoolsOutputClass *klass)
+java_output_class_init (JavaOutputClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) autotools_output_finalize;
-  g_type_class_add_private (klass, sizeof (AutotoolsOutputPrivate));
+  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_output_finalize;
+  g_type_class_add_private (klass, sizeof (JavaOutputPrivate));
 }
 
 static void
-autotools_output_init (AutotoolsOutput *output) 
+java_output_init (JavaOutput *output) 
 {
   gtk_text_view_set_editable (GTK_TEXT_VIEW (output), FALSE);
   gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (output), GTK_WRAP_WORD);
 }
 
 static void
-autotools_output_finalize (AutotoolsOutput *output)
+java_output_finalize (JavaOutput *output)
 {
-  G_OBJECT_CLASS (autotools_output_parent_class)->finalize (G_OBJECT (output));
+  G_OBJECT_CLASS (java_output_parent_class)->finalize (G_OBJECT (output));
 }
 
 GtkWidget*
-autotools_output_new (AutotoolsConfiguration *configuration)
+java_output_new (JavaNotebookPageType page_type)
 {
   GtkWidget *output;
-  AutotoolsOutputPrivate *priv;
+  JavaOutputPrivate *priv;
  
-  output = g_object_new (autotools_output_get_type (), NULL);
-  priv = AUTOTOOLS_OUTPUT_GET_PRIVATE (output);
-  priv->configuration = configuration;
+  output = g_object_new (java_output_get_type (), NULL);
+  priv = JAVA_OUTPUT_GET_PRIVATE (output);
+  priv->page_type = page_type;
   
   return output;
-}
-
-AutotoolsConfiguration* 
-autotools_output_get_configuration (AutotoolsOutput *output)
-{
-  AutotoolsOutputPrivate *priv;
-  priv = AUTOTOOLS_OUTPUT_GET_PRIVATE (output);
-  return priv->configuration;
 }

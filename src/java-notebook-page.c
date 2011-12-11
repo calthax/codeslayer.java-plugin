@@ -22,11 +22,11 @@ static void java_notebook_page_class_init  (JavaNotebookPageClass *klass);
 static void java_notebook_page_init        (JavaNotebookPage      *notebook_page);
 static void java_notebook_page_finalize    (JavaNotebookPage      *notebook_page);
 
-static void add_output                     (JavaNotebookPage      *notebook_page, 
-                                            GtkWidget             *output);
+static void add_widget                     (JavaNotebookPage      *notebook_page, 
+                                            GtkWidget             *widget);
 static void add_buttons                    (JavaNotebookPage      *notebook_page, 
-                                            GtkWidget             *output);
-static void clear_action                   (GtkWidget             *output);
+                                            GtkWidget             *widget);
+static void clear_action                   (GtkWidget             *widget);
 
 #define JAVA_NOTEBOOK_PAGE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_NOTEBOOK_PAGE_TYPE, JavaNotebookPagePrivate))
@@ -35,7 +35,7 @@ typedef struct _JavaNotebookPagePrivate JavaNotebookPagePrivate;
 
 struct _JavaNotebookPagePrivate
 {
-  GtkWidget *output;
+  GtkWidget *widget;
 };
 
 G_DEFINE_TYPE (JavaNotebookPage, java_notebook_page, GTK_TYPE_HBOX)
@@ -58,24 +58,24 @@ java_notebook_page_finalize (JavaNotebookPage *notebook_page)
 }
 
 GtkWidget*
-java_notebook_page_new (GtkWidget *output)
+java_notebook_page_new (GtkWidget *widget)
 {
   JavaNotebookPagePrivate *priv;
   GtkWidget *notebook_page;
   
   notebook_page = g_object_new (java_notebook_page_get_type (), NULL);
   priv = JAVA_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page);
-  priv->output = output;
+  priv->widget = widget;
   
-  add_output (JAVA_NOTEBOOK_PAGE (notebook_page), output);
-  add_buttons (JAVA_NOTEBOOK_PAGE (notebook_page), output);
+  add_widget (JAVA_NOTEBOOK_PAGE (notebook_page), widget);
+  add_buttons (JAVA_NOTEBOOK_PAGE (notebook_page), widget);
 
   return notebook_page;
 }
 
 static void 
 add_buttons (JavaNotebookPage *notebook_page, 
-             GtkWidget             *output)
+             GtkWidget             *widget)
 {
   GtkWidget *table;
   GtkWidget *clear_button;
@@ -98,33 +98,33 @@ add_buttons (JavaNotebookPage *notebook_page,
   gtk_box_pack_start (GTK_BOX (notebook_page), table, FALSE, FALSE, 2);
   
   g_signal_connect_swapped (G_OBJECT (clear_button), "clicked",
-                            G_CALLBACK (clear_action), output);
+                            G_CALLBACK (clear_action), widget);
 }
 
 static void 
-add_output (JavaNotebookPage *notebook_page, 
-            GtkWidget             *output)
+add_widget (JavaNotebookPage *notebook_page, 
+            GtkWidget        *widget)
 {
   GtkWidget *scrolled_window;
 
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-  gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (output));
+  gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (widget));
 
   gtk_box_pack_start (GTK_BOX (notebook_page), scrolled_window, TRUE, TRUE, 0);
 }
 
 static void
-clear_action (GtkWidget *output)
+clear_action (GtkWidget *widget)
 {
   GtkTextBuffer *buffer;
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (output));
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget));
   gtk_text_buffer_set_text (buffer, "", -1);
 }
 
 GtkWidget*
-java_notebook_page_get_output (JavaNotebookPage *notebook_page)
+java_notebook_page_get_widget (JavaNotebookPage *notebook_page)
 {
-  return JAVA_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page)->output;
+  return JAVA_NOTEBOOK_PAGE_GET_PRIVATE (notebook_page)->widget;
 }

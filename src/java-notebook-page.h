@@ -44,9 +44,9 @@ struct _JavaNotebookPageClass
 
 GType java_notebook_page_get_type (void) G_GNUC_CONST;
      
-GtkWidget*  java_notebook_page_new         (GtkWidget             *output);
+GtkWidget*  java_notebook_page_new         (GtkWidget        *widget);
 
-GtkWidget*  java_notebook_page_get_output  (JavaNotebookPage *notebook_page);
+GtkWidget*  java_notebook_page_get_widget  (JavaNotebookPage *notebook_page);
 
 G_END_DECLS
 

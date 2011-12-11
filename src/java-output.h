@@ -16,39 +16,37 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __AUTOTOOLS_OUTPUT_H__
-#define	__AUTOTOOLS_OUTPUT_H__
+#ifndef __JAVA_OUTPUT_H__
+#define	__JAVA_OUTPUT_H__
 
 #include <gtk/gtk.h>
-#include "autotools-configuration.h"
+#include "java-notebook.h"
 
 G_BEGIN_DECLS
 
-#define AUTOTOOLS_OUTPUT_TYPE            (autotools_output_get_type ())
-#define AUTOTOOLS_OUTPUT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), AUTOTOOLS_OUTPUT_TYPE, AutotoolsOutput))
-#define AUTOTOOLS_OUTPUT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), AUTOTOOLS_OUTPUT_TYPE, AutotoolsOutputClass))
-#define IS_AUTOTOOLS_OUTPUT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), AUTOTOOLS_OUTPUT_TYPE))
-#define IS_AUTOTOOLS_OUTPUT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), AUTOTOOLS_OUTPUT_TYPE))
+#define JAVA_OUTPUT_TYPE            (java_output_get_type ())
+#define JAVA_OUTPUT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), JAVA_OUTPUT_TYPE, JavaOutput))
+#define JAVA_OUTPUT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), JAVA_OUTPUT_TYPE, JavaOutputClass))
+#define IS_JAVA_OUTPUT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_OUTPUT_TYPE))
+#define IS_JAVA_OUTPUT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_OUTPUT_TYPE))
 
-typedef struct _AutotoolsOutput AutotoolsOutput;
-typedef struct _AutotoolsOutputClass AutotoolsOutputClass;
+typedef struct _JavaOutput JavaOutput;
+typedef struct _JavaOutputClass JavaOutputClass;
 
-struct _AutotoolsOutput
+struct _JavaOutput
 {
   GtkTextView parent_instance;
 };
 
-struct _AutotoolsOutputClass
+struct _JavaOutputClass
 {
   GtkTextViewClass parent_class;
 };
 
-GType autotools_output_get_type (void) G_GNUC_CONST;
+GType java_output_get_type (void) G_GNUC_CONST;
 
-GtkWidget*  autotools_output_new  (AutotoolsConfiguration *configuration);
-
-AutotoolsConfiguration* autotools_output_get_configuration (AutotoolsOutput *output);
+GtkWidget*  java_output_new  (JavaNotebookPageType page_type);
 
 G_END_DECLS
 
-#endif /* __AUTOTOOLS_OUTPUT_H__ */
+#endif /* __JAVA_OUTPUT_H__ */

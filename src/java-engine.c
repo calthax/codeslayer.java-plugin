@@ -18,6 +18,7 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-engine.h"
+#include "java-output.h"
 #include "java-project-properties.h"
 #include "java-configuration.h"
 #include "java-notebook.h"
@@ -27,16 +28,30 @@ static void java_engine_init                                (JavaEngine        *
 static void java_engine_finalize                            (JavaEngine        *engine);
 
 static JavaConfiguration* get_configuration_by_project_key  (JavaEngine        *engine, 
-                                                                  const gchar            *project_key);
-static void project_properties_opened_action                     (JavaEngine        *engine,
-                                                                  CodeSlayerProject      *project);
-static void project_properties_saved_action                      (JavaEngine        *engine,
-                                                                  CodeSlayerProject      *project);
+                                                             const gchar       *project_key);
+static void project_properties_opened_action                (JavaEngine        *engine,
+                                                             CodeSlayerProject *project);
+static void project_properties_saved_action                 (JavaEngine        *engine,
+                                                             CodeSlayerProject *project);
                                                                         
-static void save_configuration_action                            (JavaEngine        *engine,
-                                                                  JavaConfiguration *configuration);
+static void save_configuration_action                       (JavaEngine        *engine,
+                                                             JavaConfiguration *configuration);
                                                                   
-static gchar* get_configuration_file_path                        (JavaEngine        *engine);
+static gchar* get_configuration_file_path                   (JavaEngine        *engine);
+
+static void compile_action                                  (JavaEngine        *engine);
+/*static void project_compile_action                (JavacEngine       *engine, 
+                                                   GList             *selections);
+
+static void clean_action                          (JavacEngine       *engine);
+static void project_clean_action                  (JavacEngine       *engine, 
+                                                   GList             *selections);
+
+static void execute_clean                         (JavacOutput       *output);*/
+
+static void execute_compile                                 (JavaOutput        *output);
+static void run_command                                     (JavaOutput        *output,
+                                                             gchar             *command);
                                                    
 #define JAVA_ENGINE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_ENGINE_TYPE, JavaEnginePrivate))
@@ -118,6 +133,18 @@ java_engine_new (CodeSlayer *codeslayer,
 
   g_signal_connect_swapped (G_OBJECT (project_properties), "save-configuration",
                             G_CALLBACK (save_configuration_action), engine);
+                            
+  g_signal_connect_swapped (G_OBJECT (menu), "compile",
+                            G_CALLBACK (compile_action), engine);
+
+  /*g_signal_connect_swapped (G_OBJECT (projects_menu), "compile",
+                            G_CALLBACK (project_compile_action), engine);
+
+  g_signal_connect_swapped (G_OBJECT (menu), "clean",
+                            G_CALLBACK (clean_action), engine);
+
+  g_signal_connect_swapped (G_OBJECT (projects_menu), "clean",
+                            G_CALLBACK (project_clean_action), engine);*/
 
   return engine;
 }
@@ -269,4 +296,162 @@ get_configuration_file_path (JavaEngine *engine)
   g_free (folder_path);
   
   return file_path;
+}
+
+static void
+compile_action (JavaEngine *engine)
+{
+  JavaEnginePrivate *priv;
+  GtkWidget *output;  
+
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);
+
+  output = java_output_new (JAVA_NOTEBOOK_PAGE_TYPE_COMPILER);
+  if (output)
+    {
+      /*codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);*/
+      /*javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
+                                                GTK_WIDGET (output));*/
+      java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output, "Compile");
+      g_thread_create ((GThreadFunc) execute_compile, JAVA_OUTPUT (output), FALSE, NULL);
+    }
+}
+
+/*static void
+project_compile_action (JavacEngine *engine, 
+                        GList       *selections)
+{
+  JavacEnginePrivate *priv;
+  JavacOutput *output;
+  CodeSlayerProject *project;
+
+  priv = JAVAC_ENGINE_GET_PRIVATE (engine);
+  
+  project = get_selections_project (selections);
+  output = get_output_by_project (engine, project);
+  if (output)
+    {
+      codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
+      javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
+                                            GTK_WIDGET (output));
+      g_thread_create ((GThreadFunc) execute_compile, output, FALSE, NULL);    
+    }
+}
+
+static void
+clean_action (JavacEngine *engine)
+{
+  JavacEnginePrivate *priv;
+  JavacOutput *output;  
+
+  priv = JAVAC_ENGINE_GET_PRIVATE (engine);
+
+  output =  get_output_by_active_editor (engine);
+  if (output)
+    {
+      codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
+      javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
+                                                GTK_WIDGET (output));
+      g_thread_create ((GThreadFunc) execute_clean, output, FALSE, NULL);
+    }
+}
+
+static void
+project_clean_action (JavacEngine *engine, 
+                      GList       *selections)
+{
+  JavacEnginePrivate *priv;
+  JavacOutput *output;  
+  CodeSlayerProject *project;
+
+  priv = JAVAC_ENGINE_GET_PRIVATE (engine);
+  
+  project = get_selections_project (selections);
+  output =  get_output_by_project (engine, project);
+  if (output)
+    {
+      codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
+      javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
+                                                GTK_WIDGET (output));
+      g_thread_create ((GThreadFunc) execute_clean, output, FALSE, NULL);
+    }
+}
+
+static CodeSlayerProject*
+get_selections_project (GList *selections)
+{
+  if (selections != NULL)
+    {
+      CodeSlayerProjectsSelection *selection = selections->data;
+      return codeslayer_projects_selection_get_project (CODESLAYER_PROJECTS_SELECTION (selection));
+    }
+  return NULL;  
+}
+*/
+
+static void
+execute_compile (JavaOutput *output)
+{
+  /*CodeSlayerProject *project;*/
+  /*const gchar *build_file_path;*/
+  gchar *command;
+  gchar *dirname = "/home/jeff/workspace/jmesa";
+  
+  /*project = java_output_get_project (output);
+  build_file_path = codeslayer_project_get_build_file_path (project);
+  dirname = g_path_get_dirname (build_file_path);*/
+  
+  command = g_strconcat ("cd ", dirname, "; ant compile 2>&1", NULL);
+  run_command (output, command);
+  g_free (command);
+  /*g_free (dirname);*/
+}
+
+/*static void
+execute_clean (JavacOutput *output)
+{
+  CodeSlayerProject *project;
+  const gchar *build_file_path;
+  gchar *command;
+  gchar *dirname;
+  
+  project = javac_output_get_project (output);
+  build_file_path = codeslayer_project_get_build_file_path (project);
+  dirname = g_path_get_dirname (build_file_path);
+  
+  command = g_strconcat ("cd ", dirname, "; ant clean 2>&1", NULL);
+  run_command (output, command);
+  g_free (command);
+  g_free (dirname);
+}*/
+
+static void
+run_command (JavaOutput *output,
+             gchar      *command)
+{
+  GtkTextBuffer *buffer;
+  GtkTextIter iter;
+  GtkTextMark *text_mark;
+  char out[BUFSIZ];
+  FILE *file;
+  
+  gdk_threads_enter ();
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (output));
+  gtk_text_buffer_set_text (buffer, "", -1);
+  gdk_threads_leave ();
+  
+  file = popen (command, "r");
+  if (file != NULL)
+    {
+      while (fgets (out, BUFSIZ, file))
+        {
+          gdk_threads_enter ();
+          gtk_text_buffer_get_end_iter (buffer, &iter);
+          gtk_text_buffer_insert (buffer, &iter, out, -1);
+          text_mark = gtk_text_buffer_create_mark (buffer, NULL, &iter, TRUE);
+          gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (output), text_mark, 0.0, FALSE, 0, 0);
+          gdk_threads_leave ();
+        }
+      pclose (file);
+    }
 }

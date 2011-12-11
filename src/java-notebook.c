@@ -67,14 +67,14 @@ java_notebook_new (void)
 }
 
 void 
-java_notebook_add_output (JavaNotebook *notebook, 
-                          GtkWidget         *output,
-                          const gchar       *label)
+java_notebook_add_page (JavaNotebook *notebook, 
+                        GtkWidget    *page,
+                        const gchar  *label)
 {
   GtkWidget *notebook_page;
   GtkWidget *notebook_tab;
   
-  notebook_page = java_notebook_page_new (output);
+  notebook_page = java_notebook_page_new (page);
   notebook_tab = java_notebook_tab_new (GTK_WIDGET (notebook), label);
   
   java_notebook_tab_set_notebook_page (JAVA_NOTEBOOK_TAB (notebook_tab), 
@@ -102,4 +102,26 @@ close_action (JavaNotebookTab *notebook_tab,
                                     GTK_WIDGET (notebook_page));
   gtk_notebook_remove_page (GTK_NOTEBOOK (notebook), page_num);
 }
-                                   
+
+GtkWidget*  
+java_notebook_get_page_by_type (JavaNotebook         *notebook, 
+                                JavaNotebookPageType  page_type)
+{
+  gint pages;
+  gint i;
+  
+  pages = gtk_notebook_get_n_pages (GTK_NOTEBOOK (notebook));
+
+  for (i = 0; i < pages; i++)
+    {
+      /*GtkWidget *notebook_page;
+      GtkWidget *widget;
+      notebook_page = gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook), i);
+      widget = autotools_notebook_page_get_widget (AUTOTOOLS_NOTEBOOK_PAGE (notebook_page));
+      if (autotools_output_get_configuration (AUTOTOOLS_OUTPUT (output)) == configuration)
+        return output;*/
+    }
+    
+  return NULL;
+}   
+                                  

@@ -43,14 +43,22 @@ struct _JavaNotebookClass
   GtkNotebookClass parent_class;
 };
 
+typedef enum
+{
+  JAVA_NOTEBOOK_PAGE_TYPE_COMPILER
+} JavaNotebookPageType;
+
 GType
 java_notebook_get_type (void) G_GNUC_CONST;
   
-GtkWidget*  java_notebook_new         (void);
+GtkWidget*  java_notebook_new               (void);
 
-void        java_notebook_add_output  (JavaNotebook  *notebook, 
-                                       GtkWidget     *output, 
-                                       const gchar   *label);
+void        java_notebook_add_page          (JavaNotebook          *notebook, 
+                                             GtkWidget             *page, 
+                                             const gchar           *label);
+                                     
+GtkWidget*  java_notebook_get_page_by_type  (JavaNotebook          *notebook, 
+                                             JavaNotebookPageType   page_type);
 
 G_END_DECLS
 
