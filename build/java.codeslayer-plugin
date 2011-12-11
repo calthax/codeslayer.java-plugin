@@ -1,9 +1,0 @@
-[plugin]
-lib=libjavacodeslayerplugin
-version=2.0.0
-name=Java
-description=A plugin to compile, debug and navigate Java source code.
-authors=Jeff Johnston <jeff.johnston.mn@gmail.com>
-copyright=Copyright © 2011 Jeff Johnston
-website=http://codeslayer.org
-
