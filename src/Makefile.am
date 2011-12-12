@@ -8,6 +8,8 @@ lib_LTLIBRARIES = libjavacodeslayerplugin.la
 libjavacodeslayerplugin_la_SOURCES = \
     java-engine.h \
     java-engine.c \
+    java-page.h \
+    java-page.c \
     java-output.h \
     java-output.c \
     java-configuration.h \

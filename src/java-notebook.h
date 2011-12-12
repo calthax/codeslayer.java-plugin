@@ -21,6 +21,7 @@
 
 #include <gtk/gtk.h>
 #include "java-configuration.h"
+#include "java-page.h"
 
 G_BEGIN_DECLS
 
@@ -43,22 +44,17 @@ struct _JavaNotebookClass
   GtkNotebookClass parent_class;
 };
 
-typedef enum
-{
-  JAVA_NOTEBOOK_PAGE_TYPE_COMPILER
-} JavaNotebookPageType;
-
 GType
 java_notebook_get_type (void) G_GNUC_CONST;
   
 GtkWidget*  java_notebook_new               (void);
 
-void        java_notebook_add_page          (JavaNotebook          *notebook, 
-                                             GtkWidget             *page, 
-                                             const gchar           *label);
+void        java_notebook_add_page          (JavaNotebook *notebook, 
+                                             GtkWidget    *page, 
+                                             const gchar  *label);
                                      
-GtkWidget*  java_notebook_get_page_by_type  (JavaNotebook          *notebook, 
-                                             JavaNotebookPageType   page_type);
+GtkWidget*  java_notebook_get_page_by_type  (JavaNotebook *notebook, 
+                                             JavaPageType  page_type);
 
 G_END_DECLS
 

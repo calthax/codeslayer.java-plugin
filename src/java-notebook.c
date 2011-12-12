@@ -104,8 +104,8 @@ close_action (JavaNotebookTab *notebook_tab,
 }
 
 GtkWidget*  
-java_notebook_get_page_by_type (JavaNotebook         *notebook, 
-                                JavaNotebookPageType  page_type)
+java_notebook_get_page_by_type (JavaNotebook *notebook, 
+                                JavaPageType  page_type)
 {
   gint pages;
   gint i;
@@ -114,14 +114,14 @@ java_notebook_get_page_by_type (JavaNotebook         *notebook,
 
   for (i = 0; i < pages; i++)
     {
-      /*GtkWidget *notebook_page;
+      GtkWidget *notebook_page;
       GtkWidget *widget;
       notebook_page = gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook), i);
-      widget = autotools_notebook_page_get_widget (AUTOTOOLS_NOTEBOOK_PAGE (notebook_page));
-      if (autotools_output_get_configuration (AUTOTOOLS_OUTPUT (output)) == configuration)
-        return output;*/
+      widget = java_notebook_page_get_widget (JAVA_NOTEBOOK_PAGE (notebook_page));
+      if (java_page_get_page_type (JAVA_PAGE (widget)) == page_type)
+        return widget;
     }
     
   return NULL;
-}   
-                                  
+}
+                                 

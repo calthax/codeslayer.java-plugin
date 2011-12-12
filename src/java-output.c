@@ -18,9 +18,12 @@
 
 #include "java-output.h"
 
-static void java_output_class_init  (JavaOutputClass *klass);
-static void java_output_init        (JavaOutput      *output);
-static void java_output_finalize    (JavaOutput      *output);
+static void java_page_interface_init          (gpointer         page, 
+                                               gpointer         data);
+static JavaPageType java_output_get_page_type (JavaOutput      *output);                                      
+static void java_output_class_init            (JavaOutputClass *klass);
+static void java_output_init                  (JavaOutput      *output);
+static void java_output_finalize              (JavaOutput      *output);
 
 #define JAVA_OUTPUT_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_OUTPUT_TYPE, JavaOutputPrivate))
@@ -29,10 +32,25 @@ typedef struct _JavaOutputPrivate JavaOutputPrivate;
 
 struct _JavaOutputPrivate
 {
-  JavaNotebookPageType page_type;
+  JavaPageType page_type;
 };
 
-G_DEFINE_TYPE (JavaOutput, java_output, GTK_TYPE_TEXT_VIEW)
+/*G_DEFINE_TYPE (JavaOutput, java_output, GTK_TYPE_TEXT_VIEW)*/
+
+G_DEFINE_TYPE_EXTENDED (JavaOutput,
+                        java_output,
+                        GTK_TYPE_TEXT_VIEW,
+                        0,
+                        G_IMPLEMENT_INTERFACE (JAVA_PAGE_TYPE ,
+                                               java_page_interface_init));
+      
+static void
+java_page_interface_init (gpointer page, 
+                          gpointer data)
+{
+  JavaPageInterface *page_interface = (JavaPageInterface*) page;
+  page_interface->get_page_type = (JavaPageType (*) (JavaPage *obj)) java_output_get_page_type;
+}
       
 static void 
 java_output_class_init (JavaOutputClass *klass)
@@ -55,7 +73,7 @@ java_output_finalize (JavaOutput *output)
 }
 
 GtkWidget*
-java_output_new (JavaNotebookPageType page_type)
+java_output_new (JavaPageType page_type)
 {
   GtkWidget *output;
   JavaOutputPrivate *priv;
@@ -65,4 +83,12 @@ java_output_new (JavaNotebookPageType page_type)
   priv->page_type = page_type;
   
   return output;
+}
+
+static JavaPageType 
+java_output_get_page_type (JavaOutput *output)
+{
+  JavaOutputPrivate *priv;
+  priv = JAVA_OUTPUT_GET_PRIVATE (output);
+  return priv->page_type;
 }

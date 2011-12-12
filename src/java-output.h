@@ -20,7 +20,7 @@
 #define	__JAVA_OUTPUT_H__
 
 #include <gtk/gtk.h>
-#include "java-notebook.h"
+#include "java-page.h"
 
 G_BEGIN_DECLS
 
@@ -45,7 +45,7 @@ struct _JavaOutputClass
 
 GType java_output_get_type (void) G_GNUC_CONST;
 
-GtkWidget*  java_output_new  (JavaNotebookPageType page_type);
+GtkWidget*  java_output_new  (JavaPageType page_type);
 
 G_END_DECLS
 

@@ -18,6 +18,7 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-engine.h"
+#include "java-page.h"
 #include "java-output.h"
 #include "java-project-properties.h"
 #include "java-configuration.h"
@@ -50,8 +51,17 @@ static void project_clean_action                  (JavacEngine       *engine,
 static void execute_clean                         (JavacOutput       *output);*/
 
 static void execute_compile                                 (JavaOutput        *output);
-static void run_command                                     (JavaOutput        *output,
+static void run_output_command                              (JavaOutput        *output,
                                                              gchar             *command);
+                                                             
+/*static CodeSlayerProject* get_selections_project            (GList             *selections);*/
+static JavaOutput* get_output_by_active_editor              (JavaEngine        *engine,
+                                                             JavaPageType       page_type);
+static JavaOutput* get_output_by_project                    (JavaEngine        *engine, 
+                                                             CodeSlayerProject *project,
+                                                             JavaPageType       page_type);
+                          
+#define CONFIGURATION "CONFIGURATION"
                                                    
 #define JAVA_ENGINE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_ENGINE_TYPE, JavaEnginePrivate))
@@ -175,8 +185,8 @@ java_engine_load_configurations (JavaEngine *engine)
 }
 
 static JavaConfiguration*
-get_configuration_by_project_key (JavaEngine *engine, 
-                                  const gchar     *project_key)
+get_configuration_by_project_key (JavaEngine  *engine, 
+                                  const gchar *project_key)
 {
   JavaEnginePrivate *priv;
   GList *list;
@@ -218,7 +228,7 @@ project_properties_opened_action (JavaEngine        *engine,
 }
 
 static void
-project_properties_saved_action (JavaEngine   *engine,
+project_properties_saved_action (JavaEngine        *engine,
                                  CodeSlayerProject *project)
 {
   JavaEnginePrivate *priv;
@@ -302,18 +312,18 @@ static void
 compile_action (JavaEngine *engine)
 {
   JavaEnginePrivate *priv;
-  GtkWidget *output;  
+  JavaOutput *output;  
 
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
-  output = java_output_new (JAVA_NOTEBOOK_PAGE_TYPE_COMPILER);
+  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILE);
+                         
   if (output)
     {
-      /*codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);*/
-      /*javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
+      codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
+      /*autotools_notebook_select_page_by_output (AUTOTOOLS_NOTEBOOK (priv->notebook), 
                                                 GTK_WIDGET (output));*/
-      java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output, "Compile");
-      g_thread_create ((GThreadFunc) execute_compile, JAVA_OUTPUT (output), FALSE, NULL);
+      g_thread_create ((GThreadFunc) execute_compile, output, FALSE, NULL);    
     }
 }
 
@@ -392,19 +402,20 @@ get_selections_project (GList *selections)
 static void
 execute_compile (JavaOutput *output)
 {
-  /*CodeSlayerProject *project;*/
-  /*const gchar *build_file_path;*/
+  JavaConfiguration *configuration;
+  const gchar *ant_file;
   gchar *command;
-  gchar *dirname = "/home/jeff/workspace/jmesa";
+  gchar *dirname;
   
-  /*project = java_output_get_project (output);
-  build_file_path = codeslayer_project_get_build_file_path (project);
-  dirname = g_path_get_dirname (build_file_path);*/
+  configuration = g_object_get_data (G_OBJECT (output), CONFIGURATION);
+  
+  ant_file = java_configuration_get_ant_file (configuration);
+  dirname = g_path_get_dirname (ant_file);
   
   command = g_strconcat ("cd ", dirname, "; ant compile 2>&1", NULL);
-  run_command (output, command);
+  run_output_command (output, command);
   g_free (command);
-  /*g_free (dirname);*/
+  g_free (dirname);
 }
 
 /*static void
@@ -420,14 +431,101 @@ execute_clean (JavacOutput *output)
   dirname = g_path_get_dirname (build_file_path);
   
   command = g_strconcat ("cd ", dirname, "; ant clean 2>&1", NULL);
-  run_command (output, command);
+  run_output_command (output, command);
   g_free (command);
   g_free (dirname);
 }*/
 
+/*static CodeSlayerProject*
+get_selections_project (GList *selections)
+{
+  if (selections != NULL)
+    {
+      CodeSlayerProjectsSelection *selection = selections->data;
+      return codeslayer_projects_selection_get_project (CODESLAYER_PROJECTS_SELECTION (selection));
+    }
+  return NULL;  
+}*/
+
+static JavaOutput*
+get_output_by_active_editor (JavaEngine   *engine, 
+                             JavaPageType  page_type)
+{
+  JavaEnginePrivate *priv;
+  CodeSlayer *codeslayer;
+  CodeSlayerProject *project;
+  
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);
+  codeslayer = priv->codeslayer;
+  
+  project = codeslayer_get_active_editor_project (codeslayer);
+  if (project == NULL)
+    {
+      GtkWidget *dialog;
+      dialog =  gtk_message_dialog_new (NULL, 
+                                        GTK_DIALOG_MODAL,
+                                        GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
+                                        "There are no open editors. Not able to determine what project to execute command against.");
+      gtk_dialog_run (GTK_DIALOG (dialog));
+      gtk_widget_destroy (dialog);
+      return NULL;
+    }
+
+  return get_output_by_project (engine, project, page_type);
+}
+
+static JavaOutput*
+get_output_by_project (JavaEngine        *engine,
+                       CodeSlayerProject *project,
+                       JavaPageType       page_type)
+{
+  JavaEnginePrivate *priv;
+  GtkWidget  *notebook;
+  const gchar *project_key;
+  const gchar *project_name;
+  JavaConfiguration *configuration;
+  GtkWidget *output;
+  
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);
+  notebook = priv->notebook;
+  
+  project_key = codeslayer_project_get_key (project);
+  project_name = codeslayer_project_get_name (project);
+  configuration = get_configuration_by_project_key (engine, project_key);
+  
+  if (configuration == NULL)
+    {
+      GtkWidget *dialog;
+      gchar *msg;
+      msg = g_strconcat ("There is no configuration for project ", 
+                         project_name, ".", NULL);      
+      dialog =  gtk_message_dialog_new (NULL, 
+                                        GTK_DIALOG_MODAL,
+                                        GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
+                                        msg, 
+                                        NULL);
+      gtk_dialog_run (GTK_DIALOG (dialog));
+      gtk_widget_destroy (dialog);
+      g_free (msg);
+      return NULL;
+    }
+  
+  output = java_notebook_get_page_by_type (JAVA_NOTEBOOK (notebook), page_type);
+  
+  if (output == NULL)
+    {
+      output = java_output_new (JAVA_PAGE_TYPE_COMPILE);
+      java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output, "Compile");
+    }
+    
+  g_object_set_data (G_OBJECT (output), CONFIGURATION, configuration);    
+
+  return JAVA_OUTPUT (output);
+}
+
 static void
-run_command (JavaOutput *output,
-             gchar      *command)
+run_output_command (JavaOutput *output,
+                    gchar      *command)
 {
   GtkTextBuffer *buffer;
   GtkTextIter iter;
