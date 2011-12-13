@@ -61,8 +61,6 @@ static JavaOutput* get_output_by_project                    (JavaEngine        *
                                                              CodeSlayerProject *project,
                                                              JavaPageType       page_type);
                           
-#define CONFIGURATION "CONFIGURATION"
-                                                   
 #define JAVA_ENGINE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_ENGINE_TYPE, JavaEnginePrivate))
 
@@ -406,8 +404,7 @@ execute_compile (JavaOutput *output)
   const gchar *ant_file;
   gchar *command;
   
-  configuration = g_object_get_data (G_OBJECT (output), CONFIGURATION);
-  
+  configuration = java_page_get_configuration (JAVA_PAGE (output));
   ant_file = java_configuration_get_ant_file (configuration);
   
   command = g_strconcat ("ant -f ", ant_file, " compile 2>&1", NULL);
@@ -422,8 +419,7 @@ execute_clean (JavaOutput *output)
   const gchar *ant_file;
   gchar *command;
   
-  configuration = g_object_get_data (G_OBJECT (output), CONFIGURATION);
-  
+  configuration = java_page_get_configuration (JAVA_PAGE (output));
   ant_file = java_configuration_get_ant_file (configuration);
   
   command = g_strconcat ("ant -f ", ant_file, " clean 2>&1", NULL);
@@ -502,7 +498,7 @@ get_output_by_project (JavaEngine        *engine,
       java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output, "Compile");
     }
     
-  g_object_set_data (G_OBJECT (output), CONFIGURATION, configuration);    
+  java_page_set_configuration (JAVA_PAGE (output), configuration);
 
   return JAVA_OUTPUT (output);
 }

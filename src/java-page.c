@@ -48,3 +48,16 @@ java_page_get_page_type (JavaPage *page)
 {
   return JAVA_PAGE_GET_INTERFACE (page)->get_page_type (page);
 }
+
+JavaConfiguration*  
+java_page_get_configuration (JavaPage *page)
+{
+  return JAVA_PAGE_GET_INTERFACE (page)->get_configuration (page);
+}
+
+void
+java_page_set_configuration (JavaPage          *page, 
+                             JavaConfiguration *configuration)
+{
+  JAVA_PAGE_GET_INTERFACE (page)->set_configuration (page, configuration);
+}

@@ -18,12 +18,15 @@
 
 #include "java-output.h"
 
-static void java_page_interface_init          (gpointer         page, 
-                                               gpointer         data);
-static JavaPageType java_output_get_page_type (JavaOutput      *output);                                      
-static void java_output_class_init            (JavaOutputClass *klass);
-static void java_output_init                  (JavaOutput      *output);
-static void java_output_finalize              (JavaOutput      *output);
+static void java_page_interface_init                     (gpointer           page, 
+                                                          gpointer           data);
+static void java_output_class_init                       (JavaOutputClass   *klass);
+static void java_output_init                             (JavaOutput        *output);
+static void java_output_finalize                         (JavaOutput        *output);
+static JavaPageType java_output_get_page_type            (JavaOutput        *output);                                      
+static JavaConfiguration* java_output_get_configuration  (JavaOutput        *output);
+static void java_output_set_configuration                (JavaOutput        *output, 
+                                                          JavaConfiguration *configuration);
 
 #define JAVA_OUTPUT_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_OUTPUT_TYPE, JavaOutputPrivate))
@@ -32,7 +35,8 @@ typedef struct _JavaOutputPrivate JavaOutputPrivate;
 
 struct _JavaOutputPrivate
 {
-  JavaPageType page_type;
+  JavaPageType       page_type;
+  JavaConfiguration *configuration;
 };
 
 /*G_DEFINE_TYPE (JavaOutput, java_output, GTK_TYPE_TEXT_VIEW)*/
@@ -50,6 +54,8 @@ java_page_interface_init (gpointer page,
 {
   JavaPageInterface *page_interface = (JavaPageInterface*) page;
   page_interface->get_page_type = (JavaPageType (*) (JavaPage *obj)) java_output_get_page_type;
+  page_interface->get_configuration = (JavaConfiguration* (*) (JavaPage *obj)) java_output_get_configuration;
+  page_interface->set_configuration = (void (*) (JavaPage *obj, JavaConfiguration*)) java_output_set_configuration;
 }
       
 static void 
@@ -92,3 +98,20 @@ java_output_get_page_type (JavaOutput *output)
   priv = JAVA_OUTPUT_GET_PRIVATE (output);
   return priv->page_type;
 }
+
+static JavaConfiguration* 
+java_output_get_configuration (JavaOutput *output)
+{
+  JavaOutputPrivate *priv;
+  priv = JAVA_OUTPUT_GET_PRIVATE (output);
+  return priv->configuration;
+}
+
+static void 
+java_output_set_configuration (JavaOutput        *output, 
+                               JavaConfiguration *configuration)
+{
+  JavaOutputPrivate *priv;
+  priv = JAVA_OUTPUT_GET_PRIVATE (output);
+  priv->configuration = configuration;
+}                               

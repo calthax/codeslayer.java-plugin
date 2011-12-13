@@ -20,6 +20,7 @@
 #define	__JAVA_PAGE_H__
 
 #include <gtk/gtk.h>
+#include "java-configuration.h"
 
 G_BEGIN_DECLS
 
@@ -41,11 +42,17 @@ struct _JavaPageInterface
   GTypeInterface parent;
   
   JavaPageType (*get_page_type) (JavaPage *page);
+  JavaConfiguration* (*get_configuration) (JavaPage *page);
+  void (*set_configuration) (JavaPage *page, JavaConfiguration *configuration);
 };
 
 GType java_page_get_type (void);
 
-JavaPageType  java_page_get_page_type  (JavaPage *page);
+JavaPageType        java_page_get_page_type      (JavaPage          *page);
+
+JavaConfiguration*  java_page_get_configuration  (JavaPage          *page);
+void                java_page_set_configuration  (JavaPage          *page, 
+                                                  JavaConfiguration *configuration);
 
 G_END_DECLS
 
