@@ -54,7 +54,7 @@ void java_project_properties_opened      (JavaProjectProperties *project_propert
                                           JavaConfiguration     *configuration, 
                                           CodeSlayerProject     *project);
 
-void java_project_properties_saved       (JavaProjectProperties *project_properties,
+gboolean java_project_properties_saved   (JavaProjectProperties *project_properties,
                                           JavaConfiguration     *configuration, 
                                           CodeSlayerProject     *project);
 

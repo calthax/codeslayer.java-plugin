@@ -44,26 +44,26 @@ struct _JavaConfigurationClass
 
 GType java_configuration_get_type (void) G_GNUC_CONST;
 
-JavaConfiguration*  java_configuration_new                  (void);
+JavaConfiguration*  java_configuration_new                (void);
 
-const gchar*        java_configuration_get_project_key   (JavaConfiguration *configuration);
-void                java_configuration_set_project_key   (JavaConfiguration *configuration,
-                                                          const gchar       *project_key);
-const gchar*        java_configuration_get_ant_file      (JavaConfiguration *configuration);
-void                java_configuration_set_ant_file      (JavaConfiguration *configuration,
-                                                          const gchar       *ant_file);
-const gchar*        java_configuration_get_build_folder  (JavaConfiguration *configuration);
-void                java_configuration_set_build_folder  (JavaConfiguration *configuration,
-                                                          const gchar       *build_folder);
-const gchar*        java_configuration_get_lib_folder    (JavaConfiguration *configuration);
-void                java_configuration_set_lib_folder    (JavaConfiguration *configuration,
-                                                          const gchar       *lib_folder);
-const gchar*        java_configuration_get_source_folder   (JavaConfiguration *source_folder);
-void                java_configuration_set_source_folder   (JavaConfiguration *configuration,
-                                                          const gchar       *source_folder);
-const gchar*        java_configuration_get_test_folder     (JavaConfiguration *test_folder);
-void                java_configuration_set_test_folder     (JavaConfiguration *configuration,
-                                                          const gchar       *test_folder);
+const gchar*        java_configuration_get_project_key    (JavaConfiguration *configuration);
+void                java_configuration_set_project_key    (JavaConfiguration *configuration,
+                                                           const gchar       *project_key);
+const gchar*        java_configuration_get_ant_file       (JavaConfiguration *configuration);
+void                java_configuration_set_ant_file       (JavaConfiguration *configuration,
+                                                           const gchar       *ant_file);
+const gchar*        java_configuration_get_build_folder   (JavaConfiguration *configuration);
+void                java_configuration_set_build_folder   (JavaConfiguration *configuration,
+                                                           const gchar       *build_folder);
+const gchar*        java_configuration_get_lib_folder     (JavaConfiguration *configuration);
+void                java_configuration_set_lib_folder     (JavaConfiguration *configuration,
+                                                           const gchar       *lib_folder);
+const gchar*        java_configuration_get_source_folder  (JavaConfiguration *configuration);
+void                java_configuration_set_source_folder  (JavaConfiguration *configuration,
+                                                           const gchar       *source_folder);
+const gchar*        java_configuration_get_test_folder    (JavaConfiguration *test_folder);
+void                java_configuration_set_test_folder    (JavaConfiguration *configuration,
+                                                           const gchar       *test_folder);
 
 G_END_DECLS
 

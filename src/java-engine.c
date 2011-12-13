@@ -34,6 +34,7 @@ static void project_properties_opened_action                (JavaEngine        *
                                                              CodeSlayerProject *project);
 static void project_properties_saved_action                 (JavaEngine        *engine,
                                                              CodeSlayerProject *project);
+static void save_ant_build_properties                       (JavaConfiguration *configuration);
                                                                         
 static void save_configuration_action                       (JavaEngine        *engine,
                                                              JavaConfiguration *configuration);
@@ -238,8 +239,53 @@ project_properties_saved_action (JavaEngine        *engine,
   project_key = codeslayer_project_get_key (project);
   configuration = get_configuration_by_project_key (engine, project_key);
   
-  java_project_properties_saved (JAVA_PROJECT_PROPERTIES (priv->project_properties),
-                                      configuration, project);
+  if (java_project_properties_saved (JAVA_PROJECT_PROPERTIES (priv->project_properties), 
+                                     configuration, project))
+    {
+      save_ant_build_properties (configuration);    
+    }
+}
+
+static void
+save_ant_build_properties (JavaConfiguration *configuration)
+{
+  GString *string;
+  const gchar *ant_file;
+  gchar *dirname;
+  gchar *file_path;
+  GFile *file;
+  gchar *contents;
+
+  ant_file = java_configuration_get_ant_file (configuration);
+  dirname = g_path_get_dirname (ant_file);
+  file_path = g_build_filename (dirname, "build.properties", NULL);
+
+  string = g_string_new ("");
+  string = g_string_append (string, "\nsrc=");
+  string = g_string_append (string, java_configuration_get_source_folder (configuration));
+  string = g_string_append (string, "\ntest=");
+  string = g_string_append (string, java_configuration_get_test_folder (configuration));
+  string = g_string_append (string, "\nlib=");
+  string = g_string_append (string, java_configuration_get_lib_folder (configuration));
+  string = g_string_append (string, "\nbuild=");
+  string = g_string_append (string, java_configuration_get_build_folder (configuration));
+  
+  file = g_file_new_for_path (file_path);
+  if (!g_file_query_exists (file, NULL))
+    {
+      GFileIOStream *stream;           
+      stream = g_file_create_readwrite (file, G_FILE_CREATE_NONE, NULL, NULL);
+      if (g_io_stream_close (G_IO_STREAM (stream), NULL, NULL))
+        g_object_unref (stream);
+    }
+
+  contents = g_string_free (string, FALSE);
+
+  g_file_set_contents (file_path, contents, -1, NULL);
+  g_object_unref (file);
+  g_free (contents);
+  g_free (file_path);
+  g_free (dirname);
 }
 
 static void

@@ -348,7 +348,7 @@ lib_folder_icon_action (GtkEntry              *lib_folder_entry,
 }
 
 static void 
-source_folder_icon_action (GtkEntry              *source_folder_entry,
+source_folder_icon_action (GtkEntry            *source_folder_entry,
                          GtkEntryIconPosition   icon_pos,
                          GdkEvent              *event,
                          JavaProjectProperties *project_properties)
@@ -390,7 +390,7 @@ source_folder_icon_action (GtkEntry              *source_folder_entry,
 }
 
 static void 
-test_folder_icon_action (GtkEntry              *test_folder_entry,
+test_folder_icon_action (GtkEntry            *test_folder_entry,
                        GtkEntryIconPosition   icon_pos,
                        GdkEvent              *event,
                        JavaProjectProperties *project_properties)
@@ -471,10 +471,10 @@ java_project_properties_opened (JavaProjectProperties *project_properties,
     }
 }
 
-void 
+gboolean 
 java_project_properties_saved (JavaProjectProperties *project_properties,
                                JavaConfiguration     *configuration, 
-                               CodeSlayerProject          *project)
+                               CodeSlayerProject     *project)
 {
   JavaProjectPropertiesPrivate *priv;
   gchar *ant_file;
@@ -510,7 +510,7 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
           g_free (lib_folder);
           g_free (source_folder);
           g_free (test_folder);
-          return;
+          return FALSE;
         }
 
       java_configuration_set_ant_file (configuration, ant_file);
@@ -544,6 +544,7 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
   g_free (lib_folder);
   g_free (source_folder);
   g_free (test_folder);
+  return TRUE;
 }
 
 static gboolean
