@@ -41,20 +41,20 @@ static void save_configuration_action                       (JavaEngine        *
 static gchar* get_configuration_file_path                   (JavaEngine        *engine);
 
 static void compile_action                                  (JavaEngine        *engine);
-/*static void project_compile_action                (JavacEngine       *engine, 
-                                                   GList             *selections);
+static void project_compile_action                          (JavaEngine        *engine, 
+                                                             GList             *selections);
 
-static void clean_action                          (JavacEngine       *engine);
-static void project_clean_action                  (JavacEngine       *engine, 
-                                                   GList             *selections);
+static void clean_action                                    (JavaEngine        *engine);
+static void project_clean_action                            (JavaEngine        *engine, 
+                                                             GList             *selections);
 
-static void execute_clean                         (JavacOutput       *output);*/
+static void execute_clean                                   (JavaOutput        *output);
 
 static void execute_compile                                 (JavaOutput        *output);
 static void run_output_command                              (JavaOutput        *output,
                                                              gchar             *command);
                                                              
-/*static CodeSlayerProject* get_selections_project            (GList             *selections);*/
+static CodeSlayerProject* get_selections_project            (GList             *selections);
 static JavaOutput* get_output_by_active_editor              (JavaEngine        *engine,
                                                              JavaPageType       page_type);
 static JavaOutput* get_output_by_project                    (JavaEngine        *engine, 
@@ -147,14 +147,14 @@ java_engine_new (CodeSlayer *codeslayer,
   g_signal_connect_swapped (G_OBJECT (menu), "compile",
                             G_CALLBACK (compile_action), engine);
 
-  /*g_signal_connect_swapped (G_OBJECT (projects_menu), "compile",
+  g_signal_connect_swapped (G_OBJECT (projects_popup), "compile",
                             G_CALLBACK (project_compile_action), engine);
 
   g_signal_connect_swapped (G_OBJECT (menu), "clean",
                             G_CALLBACK (clean_action), engine);
 
-  g_signal_connect_swapped (G_OBJECT (projects_menu), "clean",
-                            G_CALLBACK (project_clean_action), engine);*/
+  g_signal_connect_swapped (G_OBJECT (projects_popup), "clean",
+                            G_CALLBACK (project_clean_action), engine);
 
   return engine;
 }
@@ -316,74 +316,75 @@ compile_action (JavaEngine *engine)
 
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
-  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILE);
+  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILER);
                          
   if (output)
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
-      /*autotools_notebook_select_page_by_output (AUTOTOOLS_NOTEBOOK (priv->notebook), 
-                                                GTK_WIDGET (output));*/
+      java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
+                                         JAVA_PAGE_TYPE_COMPILER);
       g_thread_create ((GThreadFunc) execute_compile, output, FALSE, NULL);    
     }
 }
 
-/*static void
-project_compile_action (JavacEngine *engine, 
+static void
+project_compile_action (JavaEngine *engine, 
                         GList       *selections)
 {
-  JavacEnginePrivate *priv;
-  JavacOutput *output;
+  JavaEnginePrivate *priv;
+  JavaOutput *output;
   CodeSlayerProject *project;
 
-  priv = JAVAC_ENGINE_GET_PRIVATE (engine);
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);
   
   project = get_selections_project (selections);
-  output = get_output_by_project (engine, project);
+  output = get_output_by_project (engine, project, JAVA_PAGE_TYPE_COMPILER);
   if (output)
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
-      javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
-                                            GTK_WIDGET (output));
+      java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
+                                         JAVA_PAGE_TYPE_COMPILER);
       g_thread_create ((GThreadFunc) execute_compile, output, FALSE, NULL);    
     }
 }
 
 static void
-clean_action (JavacEngine *engine)
+clean_action (JavaEngine *engine)
 {
-  JavacEnginePrivate *priv;
-  JavacOutput *output;  
+  JavaEnginePrivate *priv;
+  JavaOutput *output;  
 
-  priv = JAVAC_ENGINE_GET_PRIVATE (engine);
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
-  output =  get_output_by_active_editor (engine);
+  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILER);
+                         
   if (output)
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
-      javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
-                                                GTK_WIDGET (output));
-      g_thread_create ((GThreadFunc) execute_clean, output, FALSE, NULL);
+      java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
+                                         JAVA_PAGE_TYPE_COMPILER);
+      g_thread_create ((GThreadFunc) execute_clean, output, FALSE, NULL);    
     }
 }
 
 static void
-project_clean_action (JavacEngine *engine, 
-                      GList       *selections)
+project_clean_action (JavaEngine *engine, 
+                      GList      *selections)
 {
-  JavacEnginePrivate *priv;
-  JavacOutput *output;  
+  JavaEnginePrivate *priv;
+  JavaOutput *output;
   CodeSlayerProject *project;
 
-  priv = JAVAC_ENGINE_GET_PRIVATE (engine);
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);
   
   project = get_selections_project (selections);
-  output =  get_output_by_project (engine, project);
+  output = get_output_by_project (engine, project, JAVA_PAGE_TYPE_COMPILER);
   if (output)
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
-      javac_notebook_select_page_by_output (JAVAC_NOTEBOOK (priv->notebook), 
-                                                GTK_WIDGET (output));
-      g_thread_create ((GThreadFunc) execute_clean, output, FALSE, NULL);
+      java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
+                                         JAVA_PAGE_TYPE_COMPILER);
+      g_thread_create ((GThreadFunc) execute_clean, output, FALSE, NULL);    
     }
 }
 
@@ -397,7 +398,6 @@ get_selections_project (GList *selections)
     }
   return NULL;  
 }
-*/
 
 static void
 execute_compile (JavaOutput *output)
@@ -405,47 +405,31 @@ execute_compile (JavaOutput *output)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
-  gchar *dirname;
   
   configuration = g_object_get_data (G_OBJECT (output), CONFIGURATION);
   
   ant_file = java_configuration_get_ant_file (configuration);
-  dirname = g_path_get_dirname (ant_file);
   
-  command = g_strconcat ("cd ", dirname, "; ant compile 2>&1", NULL);
+  command = g_strconcat ("ant -f ", ant_file, " compile 2>&1", NULL);
   run_output_command (output, command);
   g_free (command);
-  g_free (dirname);
 }
 
-/*static void
-execute_clean (JavacOutput *output)
+static void
+execute_clean (JavaOutput *output)
 {
-  CodeSlayerProject *project;
-  const gchar *build_file_path;
+  JavaConfiguration *configuration;
+  const gchar *ant_file;
   gchar *command;
-  gchar *dirname;
   
-  project = javac_output_get_project (output);
-  build_file_path = codeslayer_project_get_build_file_path (project);
-  dirname = g_path_get_dirname (build_file_path);
+  configuration = g_object_get_data (G_OBJECT (output), CONFIGURATION);
   
-  command = g_strconcat ("cd ", dirname, "; ant clean 2>&1", NULL);
+  ant_file = java_configuration_get_ant_file (configuration);
+  
+  command = g_strconcat ("ant -f ", ant_file, " clean 2>&1", NULL);
   run_output_command (output, command);
   g_free (command);
-  g_free (dirname);
-}*/
-
-/*static CodeSlayerProject*
-get_selections_project (GList *selections)
-{
-  if (selections != NULL)
-    {
-      CodeSlayerProjectsSelection *selection = selections->data;
-      return codeslayer_projects_selection_get_project (CODESLAYER_PROJECTS_SELECTION (selection));
-    }
-  return NULL;  
-}*/
+}
 
 static JavaOutput*
 get_output_by_active_editor (JavaEngine   *engine, 
@@ -514,7 +498,7 @@ get_output_by_project (JavaEngine        *engine,
   
   if (output == NULL)
     {
-      output = java_output_new (JAVA_PAGE_TYPE_COMPILE);
+      output = java_output_new (JAVA_PAGE_TYPE_COMPILER);
       java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output, "Compile");
     }
     

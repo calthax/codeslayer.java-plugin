@@ -124,4 +124,23 @@ java_notebook_get_page_by_type (JavaNotebook *notebook,
     
   return NULL;
 }
-                                 
+
+void        
+java_notebook_select_page_by_type (JavaNotebook *notebook, 
+                                   JavaPageType  page_type)
+{
+  gint pages;
+  gint i;
+  
+  pages = gtk_notebook_get_n_pages (GTK_NOTEBOOK (notebook));
+
+  for (i = 0; i < pages; i++)
+    {
+      GtkWidget *notebook_page;
+      GtkWidget *widget;
+      notebook_page = gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook), i);
+      widget = java_notebook_page_get_widget (JAVA_NOTEBOOK_PAGE (notebook_page));
+      if (java_page_get_page_type (JAVA_PAGE (widget)) == page_type)
+        gtk_notebook_set_current_page (GTK_NOTEBOOK (notebook), i);
+    }
+}
