@@ -41,8 +41,9 @@ struct _JavaProjectsPopupClass
 {
   GtkMenuItemClass parent_class;
 
-  void (*compile) (JavaProjectsPopup *menu);
-  void (*clean) (JavaProjectsPopup *menu);
+  void (*compile) (JavaProjectsPopup *projects_popup);
+  void (*clean) (JavaProjectsPopup *projects_popup);
+  void (*test_project) (JavaProjectsPopup *projects_popup);
 };
 
 GType java_projects_popup_get_type (void) G_GNUC_CONST;
