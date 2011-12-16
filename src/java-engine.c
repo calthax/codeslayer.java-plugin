@@ -17,6 +17,7 @@
  */
 
 #include <codeslayer/codeslayer-utils.h>
+#include <string.h>
 #include "java-engine.h"
 #include "java-page.h"
 #include "java-output.h"
@@ -440,10 +441,13 @@ test_file_action (JavaEngine *engine)
 {
   JavaEnginePrivate *priv;
   JavaOutput *output;  
+  CodeSlayerDocument *document;
 
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
   output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_TESTER);
+  document = codeslayer_get_active_editor_document (priv->codeslayer);
+  java_page_set_document (JAVA_PAGE (output), document);
                          
   if (output)
     {
@@ -520,15 +524,31 @@ static void
 execute_test_file (JavaOutput *output)
 {
   JavaConfiguration *configuration;
+  CodeSlayerDocument *document;
   const gchar *ant_file;
+  const gchar *folder_path;
+  const gchar *file_path;
   gchar *command;
+  gchar *substr;
+  gchar *replace;
   
   configuration = java_page_get_configuration (JAVA_PAGE (output));
+  document = java_page_get_document (JAVA_PAGE (output));
   ant_file = java_configuration_get_ant_file (configuration);
   
-  command = g_strconcat ("ant -f ", ant_file, " test 2>&1", NULL);
+  folder_path = java_configuration_get_test_folder (configuration);
+  file_path = codeslayer_document_get_file_path (document);
+  
+  substr = codeslayer_utils_substr (file_path, strlen(folder_path) + 1, strlen(file_path) - 6);  
+  replace = codeslayer_utils_strreplace (substr, G_DIR_SEPARATOR_S, ".");
+  
+  command = g_strconcat ("ant -f ", ant_file, " testfile -Dtestfile=", replace, " 2>&1", NULL);
+  
   run_output_command (output, command);
+
   g_free (command);
+  g_free (substr);
+  g_free (replace);
 }
 
 static void
@@ -541,7 +561,7 @@ execute_test_project (JavaOutput *output)
   configuration = java_page_get_configuration (JAVA_PAGE (output));
   ant_file = java_configuration_get_ant_file (configuration);
   
-  command = g_strconcat ("ant -f ", ant_file, " test 2>&1", NULL);
+  command = g_strconcat ("ant -f ", ant_file, " testproject 2>&1", NULL);
   run_output_command (output, command);
   g_free (command);
 }

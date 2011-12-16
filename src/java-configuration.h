@@ -61,7 +61,7 @@ void                java_configuration_set_lib_folder     (JavaConfiguration *co
 const gchar*        java_configuration_get_source_folder  (JavaConfiguration *configuration);
 void                java_configuration_set_source_folder  (JavaConfiguration *configuration,
                                                            const gchar       *source_folder);
-const gchar*        java_configuration_get_test_folder    (JavaConfiguration *test_folder);
+const gchar*        java_configuration_get_test_folder    (JavaConfiguration *configuration);
 void                java_configuration_set_test_folder    (JavaConfiguration *configuration,
                                                            const gchar       *test_folder);
 

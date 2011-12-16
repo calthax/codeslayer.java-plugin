@@ -20,6 +20,7 @@
 #define	__JAVA_PAGE_H__
 
 #include <gtk/gtk.h>
+#include <codeslayer/codeslayer.h>
 #include "java-configuration.h"
 
 G_BEGIN_DECLS
@@ -45,15 +46,20 @@ struct _JavaPageInterface
   JavaPageType (*get_page_type) (JavaPage *page);
   JavaConfiguration* (*get_configuration) (JavaPage *page);
   void (*set_configuration) (JavaPage *page, JavaConfiguration *configuration);
+  CodeSlayerDocument* (*get_document) (JavaPage *page);
+  void (*set_document) (JavaPage *page, CodeSlayerDocument *document);
 };
 
 GType java_page_get_type (void);
 
-JavaPageType        java_page_get_page_type      (JavaPage          *page);
+JavaPageType        java_page_get_page_type      (JavaPage           *page);
 
-JavaConfiguration*  java_page_get_configuration  (JavaPage          *page);
-void                java_page_set_configuration  (JavaPage          *page, 
-                                                  JavaConfiguration *configuration);
+JavaConfiguration*  java_page_get_configuration  (JavaPage           *page);
+void                java_page_set_configuration  (JavaPage           *page, 
+                                                  JavaConfiguration  *configuration);
+CodeSlayerDocument* java_page_get_document       (JavaPage           *page);
+void                java_page_set_document       (JavaPage           *page, 
+                                                  CodeSlayerDocument *document);
 
 G_END_DECLS
 

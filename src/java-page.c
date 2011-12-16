@@ -61,3 +61,16 @@ java_page_set_configuration (JavaPage          *page,
 {
   JAVA_PAGE_GET_INTERFACE (page)->set_configuration (page, configuration);
 }
+
+CodeSlayerDocument*  
+java_page_get_document (JavaPage *page)
+{
+  return JAVA_PAGE_GET_INTERFACE (page)->get_document (page);
+}
+
+void
+java_page_set_document (JavaPage           *page, 
+                        CodeSlayerDocument *document)
+{
+  JAVA_PAGE_GET_INTERFACE (page)->set_document (page, document);
+}
