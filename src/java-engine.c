@@ -231,6 +231,9 @@ static void
 save_configuration_action (JavaEngine        *engine,
                            JavaConfiguration *configuration)
 {
+  JavaEnginePrivate *priv;
+  priv = JAVA_ENGINE_GET_PRIVATE (engine);  
+  java_configurations_save (priv->configurations, configuration);
 }
 
 static void
