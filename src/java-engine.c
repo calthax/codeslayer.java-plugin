@@ -28,8 +28,6 @@
 static void java_engine_class_init                          (JavaEngineClass   *klass);
 static void java_engine_init                                (JavaEngine        *engine);
 static void java_engine_finalize                            (JavaEngine        *engine);
-static JavaConfiguration* get_configuration_by_project_key  (JavaEngine        *engine, 
-                                                             const gchar       *project_key);
 static void project_properties_opened_action                (JavaEngine        *engine,
                                                              CodeSlayerProject *project);
 static void project_properties_saved_action                 (JavaEngine        *engine,
@@ -37,7 +35,6 @@ static void project_properties_saved_action                 (JavaEngine        *
 static void save_ant_build_properties                       (JavaConfiguration *configuration);
 static void save_configuration_action                       (JavaEngine        *engine,
                                                              JavaConfiguration *configuration);
-static gchar* get_configuration_file_path                   (JavaEngine        *engine);
 static void compile_action                                  (JavaEngine        *engine);
 static void project_compile_action                          (JavaEngine        *engine, 
                                                              GList             *selections);
@@ -67,14 +64,14 @@ typedef struct _JavaEnginePrivate JavaEnginePrivate;
 
 struct _JavaEnginePrivate
 {
-  CodeSlayer *codeslayer;
-  GtkWidget  *menu;
-  GtkWidget  *project_properties;
-  GtkWidget  *projects_popup;
-  GtkWidget  *notebook;
-  GList      *configurations;
-  gulong      properties_opened_id;
-  gulong      properties_saved_id;
+  CodeSlayer         *codeslayer;
+  GtkWidget          *menu;
+  GtkWidget          *project_properties;
+  GtkWidget          *projects_popup;
+  GtkWidget          *notebook;
+  gulong              properties_opened_id;
+  gulong              properties_saved_id;
+  JavaConfigurations *configurations;
 };
 
 G_DEFINE_TYPE (JavaEngine, java_engine, G_TYPE_OBJECT)
@@ -88,33 +85,21 @@ java_engine_class_init (JavaEngineClass *klass)
 }
 
 static void
-java_engine_init (JavaEngine *engine) 
-{
-  JavaEnginePrivate *priv;
-  priv = JAVA_ENGINE_GET_PRIVATE (engine);
-  priv->configurations = NULL;
-}
+java_engine_init (JavaEngine *engine) {}
 
 static void
 java_engine_finalize (JavaEngine *engine)
 {
   JavaEnginePrivate *priv;
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
-  if (priv->configurations != NULL)
-    {
-      g_list_foreach (priv->configurations, (GFunc) g_object_unref, NULL);
-      g_list_free (priv->configurations);
-      priv->configurations = NULL;    
-    }
-  
   g_signal_handler_disconnect (priv->codeslayer, priv->properties_opened_id);
   g_signal_handler_disconnect (priv->codeslayer, priv->properties_saved_id);
-
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
 
 JavaEngine*
 java_engine_new (CodeSlayer *codeslayer,
+                 JavaConfigurations *configurations,
                  GtkWidget  *menu, 
                  GtkWidget  *project_properties,
                  GtkWidget  *projects_popup,
@@ -131,6 +116,7 @@ java_engine_new (CodeSlayer *codeslayer,
   priv->project_properties = project_properties;
   priv->projects_popup = projects_popup;
   priv->notebook = notebook;
+  priv->configurations = configurations;
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);
@@ -162,57 +148,6 @@ java_engine_new (CodeSlayer *codeslayer,
   return engine;
 }
 
-void 
-java_engine_load_configurations (JavaEngine *engine)
-{
-  JavaEnginePrivate *priv;
-  GList *configurations;
-  gchar *file_path;
-
-  priv = JAVA_ENGINE_GET_PRIVATE (engine);
-  
-  file_path = get_configuration_file_path (engine);
-  configurations = codeslayer_utils_get_gobjects (JAVA_CONFIGURATION_TYPE,
-                                                  FALSE,
-                                                  file_path, 
-                                                  "java",
-                                                  "project_key", G_TYPE_STRING,
-                                                  "ant_file", G_TYPE_STRING, 
-                                                  "build_folder", G_TYPE_STRING, 
-                                                  "lib_folder", G_TYPE_STRING, 
-                                                  "source_folder", G_TYPE_STRING, 
-                                                  "test_folder", G_TYPE_STRING, 
-                                                  NULL);
-  priv->configurations = configurations;
-  g_free (file_path);
-}
-
-static JavaConfiguration*
-get_configuration_by_project_key (JavaEngine  *engine, 
-                                  const gchar *project_key)
-{
-  JavaEnginePrivate *priv;
-  GList *list;
-
-  priv = JAVA_ENGINE_GET_PRIVATE (engine);
-
-  list = priv->configurations;
-  while (list != NULL)
-    {
-      JavaConfiguration *configuration = list->data;
-      const gchar *key;
-      
-      key = java_configuration_get_project_key (configuration);
-      
-      if (g_strcmp0 (project_key, key) == 0)
-        return configuration;
-
-      list = g_list_next (list);
-    }
-
-  return NULL;
-}
-
 static void
 project_properties_opened_action (JavaEngine        *engine,
                                   CodeSlayerProject *project)
@@ -224,7 +159,7 @@ project_properties_opened_action (JavaEngine        *engine,
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
   project_key = codeslayer_project_get_key (project);
-  configuration = get_configuration_by_project_key (engine, project_key);
+  configuration = java_configurations_find_configuration (priv->configurations, project_key);
   
   java_project_properties_opened (JAVA_PROJECT_PROPERTIES (priv->project_properties),
                                   configuration, project);
@@ -241,7 +176,7 @@ project_properties_saved_action (JavaEngine        *engine,
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
   project_key = codeslayer_project_get_key (project);
-  configuration = get_configuration_by_project_key (engine, project_key);
+  configuration = java_configurations_find_configuration (priv->configurations, project_key);
   
   if (java_project_properties_saved (JAVA_PROJECT_PROPERTIES (priv->project_properties), 
                                      configuration, project))
@@ -296,64 +231,6 @@ static void
 save_configuration_action (JavaEngine        *engine,
                            JavaConfiguration *configuration)
 {
-  JavaEnginePrivate *priv;
-  GList *list;
-  GList *tmp;
-  gchar *file_path;
-    
-  priv = JAVA_ENGINE_GET_PRIVATE (engine);
-  
-  if (configuration)
-    priv->configurations = g_list_prepend (priv->configurations, configuration);
-
-  list = g_list_copy (priv->configurations);
-  tmp = list;
-  
-  while (tmp != NULL)
-    {
-      JavaConfiguration *configuration = tmp->data;
-      const gchar *ant_file;
-      const gchar *build_folder;
-
-      ant_file = java_configuration_get_ant_file (configuration);
-      build_folder = java_configuration_get_build_folder (configuration);
-      
-      if (g_utf8_strlen (ant_file, -1) == 0 &&
-          g_utf8_strlen (build_folder, -1) == 0)
-        priv->configurations = g_list_remove (priv->configurations, configuration);
-      tmp = g_list_next (tmp);
-    }
-    
-  g_list_free (list);    
-  
-  file_path = get_configuration_file_path (engine);  
-  codeslayer_utils_save_gobjects (priv->configurations,
-                                  file_path, 
-                                  "java",
-                                  "project_key", G_TYPE_STRING,
-                                  "ant_file", G_TYPE_STRING, 
-                                  "build_folder", G_TYPE_STRING, 
-                                  "lib_folder", G_TYPE_STRING, 
-                                  "source_folder", G_TYPE_STRING, 
-                                  "test_folder", G_TYPE_STRING, 
-                                  NULL);  
-  g_free (file_path);
-}
-
-static gchar*
-get_configuration_file_path (JavaEngine *engine)
-{
-  JavaEnginePrivate *priv;
-  gchar *folder_path;
-  gchar *file_path;
-  
-  priv = JAVA_ENGINE_GET_PRIVATE (engine);
-
-  folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);  
-  file_path = g_build_filename (folder_path, "java.xml", NULL);
-  g_free (folder_path);
-  
-  return file_path;
 }
 
 static void
@@ -610,7 +487,7 @@ get_output_by_project (JavaEngine        *engine,
   
   project_key = codeslayer_project_get_key (project);
   project_name = codeslayer_project_get_name (project);
-  configuration = get_configuration_by_project_key (engine, project_key);
+  configuration = java_configurations_find_configuration (priv->configurations, project_key);
   
   if (configuration == NULL)
     {

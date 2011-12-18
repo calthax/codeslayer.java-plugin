@@ -12,6 +12,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-page.c \
     java-output.h \
     java-output.c \
+    java-configurations.h \
+    java-configurations.c \
     java-configuration.h \
     java-configuration.c \
     java-menu.h \
