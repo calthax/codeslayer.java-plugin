@@ -38,12 +38,10 @@ typedef struct _JavaOutputPrivate JavaOutputPrivate;
 
 struct _JavaOutputPrivate
 {
-  JavaPageType       page_type;
-  JavaConfiguration *configuration;
+  JavaPageType        page_type;
+  JavaConfiguration  *configuration;
   CodeSlayerDocument *document;
 };
-
-/*G_DEFINE_TYPE (JavaOutput, java_output, GTK_TYPE_TEXT_VIEW)*/
 
 G_DEFINE_TYPE_EXTENDED (JavaOutput,
                         java_output,
