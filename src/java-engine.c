@@ -69,13 +69,14 @@ typedef struct _JavaEnginePrivate JavaEnginePrivate;
 struct _JavaEnginePrivate
 {
   CodeSlayer         *codeslayer;
+  JavaConfigurations *configurations;
+  JavaDebugger       *debugger;
   GtkWidget          *menu;
   GtkWidget          *project_properties;
   GtkWidget          *projects_popup;
   GtkWidget          *notebook;
   gulong              properties_opened_id;
   gulong              properties_saved_id;
-  JavaConfigurations *configurations;
 };
 
 G_DEFINE_TYPE (JavaEngine, java_engine, G_TYPE_OBJECT)
@@ -104,6 +105,7 @@ java_engine_finalize (JavaEngine *engine)
 JavaEngine*
 java_engine_new (CodeSlayer         *codeslayer,
                  JavaConfigurations *configurations,
+                 JavaDebugger       *debugger,
                  GtkWidget          *menu, 
                  GtkWidget          *project_properties,
                  GtkWidget          *projects_popup,
@@ -116,11 +118,12 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
   priv->codeslayer = codeslayer;
+  priv->configurations = configurations;
+  priv->debugger = debugger;
   priv->menu = menu;
   priv->project_properties = project_properties;
   priv->projects_popup = projects_popup;
   priv->notebook = notebook;
-  priv->configurations = configurations;
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);
@@ -326,7 +329,7 @@ execute_output (JavaEngine   *engine,
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
       java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), page_type);
-      g_thread_create (thread_func, output, FALSE, NULL);    
+      g_thread_create (thread_func, output, FALSE, NULL);
     }
 }
 

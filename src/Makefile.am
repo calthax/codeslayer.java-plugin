@@ -28,6 +28,12 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook-page.c \
     java-notebook-tab.h \
     java-notebook-tab.c \
+    java-debugger.h \
+    java-debugger.c \
+    java-breakpoint.h \
+    java-breakpoint.c \
+    java-utils.h \
+    java-utils.c \
     java-plugin.c
 
 libjavacodeslayerplugin_la_CPPFLAGS = -I$(top_srcdir)
