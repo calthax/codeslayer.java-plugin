@@ -30,6 +30,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook-tab.c \
     java-debugger.h \
     java-debugger.c \
+    java-breakpoints.h \
+    java-breakpoints.c \
     java-breakpoint.h \
     java-breakpoint.c \
     java-utils.h \

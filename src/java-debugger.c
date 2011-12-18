@@ -42,7 +42,7 @@ struct _JavaDebuggerPrivate
 {
   CodeSlayer              *codeslayer;
   JavaConfigurations      *configurations;
-  GList                   *breakpoints;
+  JavaBreakpoints         *breakpoints;
   GtkSourceMarkAttributes *attributes;
 };
 
@@ -74,20 +74,13 @@ java_debugger_init (JavaDebugger *breakpoint)
 static void
 java_debugger_finalize (JavaDebugger *breakpoint)
 {
-  JavaDebuggerPrivate *priv;
-  priv = JAVA_DEBUGGER_GET_PRIVATE (breakpoint);
-  if (priv->breakpoints != NULL)
-    {
-      g_list_foreach (priv->breakpoints, (GFunc) g_object_unref, NULL);
-      g_list_free (priv->breakpoints);
-      priv->breakpoints = NULL;    
-    }
   G_OBJECT_CLASS (java_debugger_parent_class)->finalize (G_OBJECT (breakpoint));
 }
 
 JavaDebugger*
 java_debugger_new (CodeSlayer         *codeslayer, 
-                   JavaConfigurations *configurations)
+                   JavaConfigurations *configurations, 
+                   JavaBreakpoints    *breakpoints)
 {
   JavaDebuggerPrivate *priv;
   JavaDebugger *debugger;
@@ -97,6 +90,7 @@ java_debugger_new (CodeSlayer         *codeslayer,
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
+  priv->breakpoints = breakpoints;
   
   attributes = gtk_source_mark_attributes_new ();
   priv->attributes = attributes;
@@ -151,22 +145,42 @@ line_activated_action (GtkSourceView *view,
 	project = codeslayer_get_active_editor_project (priv->codeslayer);
 	document = codeslayer_get_active_editor_document (priv->codeslayer);
 	project_key = codeslayer_project_get_key (project);
-	configuration = java_configurations_find_configuration (priv->configurations, project_key);
+	configuration = java_configurations_find_configuration (priv->configurations, 
+	                                                        project_key);
 
   class_name = java_utils_get_class_name (configuration, document);
   
 	if (marks != NULL)
 	  {
+      JavaBreakpoint *breakpoint;	    
+      breakpoint = java_breakpoints_find_breakpoint (priv->breakpoints, 
+                                                     class_name, line_number + 1);
+      if (breakpoint)
+        java_breakpoints_remove_breakpoint (priv->breakpoints, breakpoint);
+
 		  gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (buffer), 
 		                               GTK_TEXT_MARK (marks->data));
-      g_print ("line deactivated %s:%d\n", class_name, line_number + 1);
+
+      g_print ("line removed %s:%d\n", class_name, line_number + 1);
+
+      /*g_print ("line deactivated %s:%d\n", class_name, line_number + 1);*/
   	}
 	else
 	  {
-	  	gtk_source_buffer_create_source_mark (buffer, NULL, BREAKPOINT, iter);	  	
-      g_print ("line activated %s:%d\n", class_name, line_number + 1);
+      JavaBreakpoint *breakpoint;	    
+      breakpoint = java_breakpoint_new ();            
+      java_breakpoint_set_class_name (breakpoint, class_name);
+      java_breakpoint_set_line_number (breakpoint, line_number);
+      
+      java_breakpoints_add_breakpoint (priv->breakpoints, breakpoint);
+	  
+	  	gtk_source_buffer_create_source_mark (buffer, NULL, BREAKPOINT, iter);
+	  		  	
+      g_print ("line added %s:%d\n", class_name, line_number + 1);
+      
 	  	/*ejdb_send_command ("break org.jmesaweb.controller.BasicPresidentController:68\n");*/
   	}
 
+  g_free (class_name);
 	g_slist_free (marks);
 }

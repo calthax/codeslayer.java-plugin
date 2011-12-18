@@ -22,6 +22,7 @@
 #include <glib.h>
 #include "java-engine.h"
 #include "java-configurations.h"
+#include "java-breakpoints.h"
 #include "java-debugger.h"
 #include "java-menu.h"
 #include "java-notebook.h"
@@ -42,13 +43,15 @@ activate (CodeSlayer *codeslayer)
 {
   GtkAccelGroup *accel_group;
   JavaConfigurations *configurations;
+  JavaBreakpoints *breakpoints;
   JavaDebugger *debugger;
   accel_group = codeslayer_get_menubar_accel_group (codeslayer);
   menu = java_menu_new (accel_group);
   
   configurations = java_configurations_new (codeslayer);
   java_configurations_load (configurations);
-  debugger = java_debugger_new (codeslayer, configurations);
+  breakpoints = java_breakpoints_new ();
+  debugger = java_debugger_new (codeslayer, configurations, breakpoints);
   
   project_properties = java_project_properties_new ();
   projects_popup = java_projects_popup_new ();
