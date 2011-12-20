@@ -17,6 +17,8 @@
  */
 
 #include "java-debugger.h"
+#include "java-debugger-service.h"
+#include "java-debugger-breakpoints.h"
 #include "java-configuration.h"
 #include "java-utils.h"
 
@@ -42,7 +44,8 @@ struct _JavaDebuggerPrivate
 {
   CodeSlayer              *codeslayer;
   JavaConfigurations      *configurations;
-  JavaBreakpoints         *breakpoints;
+  JavaDebuggerService     *service;
+  JavaDebuggerBreakpoints *breakpoints;
   GtkSourceMarkAttributes *attributes;
 };
 
@@ -78,9 +81,8 @@ java_debugger_finalize (JavaDebugger *breakpoint)
 }
 
 JavaDebugger*
-java_debugger_new (CodeSlayer         *codeslayer, 
-                   JavaConfigurations *configurations, 
-                   JavaBreakpoints    *breakpoints)
+java_debugger_new (CodeSlayer              *codeslayer, 
+                   JavaConfigurations      *configurations)
 {
   JavaDebuggerPrivate *priv;
   JavaDebugger *debugger;
@@ -90,7 +92,9 @@ java_debugger_new (CodeSlayer         *codeslayer,
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
-  priv->breakpoints = breakpoints;
+  
+  priv->service = java_debugger_service_new ();
+  priv->breakpoints = java_debugger_breakpoints_new ();
   
   attributes = gtk_source_mark_attributes_new ();
   priv->attributes = attributes;
@@ -152,11 +156,12 @@ line_activated_action (GtkSourceView *view,
   
 	if (marks != NULL)
 	  {
-      JavaBreakpoint *breakpoint;	    
-      breakpoint = java_breakpoints_find_breakpoint (priv->breakpoints, 
-                                                     class_name, line_number + 1);
+      JavaDebuggerBreakpoint *breakpoint;	    
+      breakpoint = java_debugger_breakpoints_find_breakpoint (priv->breakpoints, 
+                                                              class_name, 
+                                                              line_number + 1);
       if (breakpoint)
-        java_breakpoints_remove_breakpoint (priv->breakpoints, breakpoint);
+        java_debugger_breakpoints_remove_breakpoint (priv->breakpoints, breakpoint);
 
 		  gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (buffer), 
 		                               GTK_TEXT_MARK (marks->data));
@@ -167,12 +172,12 @@ line_activated_action (GtkSourceView *view,
   	}
 	else
 	  {
-      JavaBreakpoint *breakpoint;	    
-      breakpoint = java_breakpoint_new ();            
-      java_breakpoint_set_class_name (breakpoint, class_name);
-      java_breakpoint_set_line_number (breakpoint, line_number);
+      JavaDebuggerBreakpoint *breakpoint;	    
+      breakpoint = java_debugger_breakpoint_new ();            
+      java_debugger_breakpoint_set_class_name (breakpoint, class_name);
+      java_debugger_breakpoint_set_line_number (breakpoint, line_number);
       
-      java_breakpoints_add_breakpoint (priv->breakpoints, breakpoint);
+      java_debugger_breakpoints_add_breakpoint (priv->breakpoints, breakpoint);
 	  
 	  	gtk_source_buffer_create_source_mark (buffer, NULL, BREAKPOINT, iter);
 	  		  	

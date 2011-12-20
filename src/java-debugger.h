@@ -22,7 +22,6 @@
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
 #include "java-configurations.h"
-#include "java-breakpoints.h"
 
 G_BEGIN_DECLS
 
@@ -47,9 +46,8 @@ struct _JavaDebuggerClass
 
 GType java_debugger_get_type (void) G_GNUC_CONST;
 
-JavaDebugger*  java_debugger_new  (CodeSlayer         *codeslayer,
-                                   JavaConfigurations *configurations, 
-                                   JavaBreakpoints    *breakpoints);
+JavaDebugger*  java_debugger_new  (CodeSlayer              *codeslayer,
+                                   JavaConfigurations      *configurations);
 
 G_END_DECLS
 

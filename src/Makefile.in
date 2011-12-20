@@ -83,8 +83,9 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-notebook-page.lo \
 	libjavacodeslayerplugin_la-java-notebook-tab.lo \
 	libjavacodeslayerplugin_la-java-debugger.lo \
-	libjavacodeslayerplugin_la-java-breakpoints.lo \
-	libjavacodeslayerplugin_la-java-breakpoint.lo \
+	libjavacodeslayerplugin_la-java-debugger-service.lo \
+	libjavacodeslayerplugin_la-java-debugger-breakpoints.lo \
+	libjavacodeslayerplugin_la-java-debugger-breakpoint.lo \
 	libjavacodeslayerplugin_la-java-utils.lo \
 	libjavacodeslayerplugin_la-java-plugin.lo
 libjavacodeslayerplugin_la_OBJECTS =  \
@@ -258,10 +259,12 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook-tab.c \
     java-debugger.h \
     java-debugger.c \
-    java-breakpoints.h \
-    java-breakpoints.c \
-    java-breakpoint.h \
-    java-breakpoint.c \
+    java-debugger-service.h \
+    java-debugger-service.c \
+    java-debugger-breakpoints.h \
+    java-debugger-breakpoints.c \
+    java-debugger-breakpoint.h \
+    java-debugger-breakpoint.c \
     java-utils.h \
     java-utils.c \
     java-plugin.c
@@ -341,10 +344,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoint.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoints.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configuration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configurations.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoint.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoints.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-service.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-engine.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-menu.Plo@am__quote@
@@ -463,19 +467,26 @@ libjavacodeslayerplugin_la-java-debugger.lo: java-debugger.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-debugger.lo `test -f 'java-debugger.c' || echo '$(srcdir)/'`java-debugger.c
 
-libjavacodeslayerplugin_la-java-breakpoints.lo: java-breakpoints.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-breakpoints.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoints.Tpo -c -o libjavacodeslayerplugin_la-java-breakpoints.lo `test -f 'java-breakpoints.c' || echo '$(srcdir)/'`java-breakpoints.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoints.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoints.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-breakpoints.c' object='libjavacodeslayerplugin_la-java-breakpoints.lo' libtool=yes @AMDEPBACKSLASH@
+libjavacodeslayerplugin_la-java-debugger-service.lo: java-debugger-service.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-debugger-service.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-service.Tpo -c -o libjavacodeslayerplugin_la-java-debugger-service.lo `test -f 'java-debugger-service.c' || echo '$(srcdir)/'`java-debugger-service.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-service.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-service.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-debugger-service.c' object='libjavacodeslayerplugin_la-java-debugger-service.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-breakpoints.lo `test -f 'java-breakpoints.c' || echo '$(srcdir)/'`java-breakpoints.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-debugger-service.lo `test -f 'java-debugger-service.c' || echo '$(srcdir)/'`java-debugger-service.c
 
-libjavacodeslayerplugin_la-java-breakpoint.lo: java-breakpoint.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-breakpoint.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoint.Tpo -c -o libjavacodeslayerplugin_la-java-breakpoint.lo `test -f 'java-breakpoint.c' || echo '$(srcdir)/'`java-breakpoint.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoint.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-breakpoint.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-breakpoint.c' object='libjavacodeslayerplugin_la-java-breakpoint.lo' libtool=yes @AMDEPBACKSLASH@
+libjavacodeslayerplugin_la-java-debugger-breakpoints.lo: java-debugger-breakpoints.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-debugger-breakpoints.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoints.Tpo -c -o libjavacodeslayerplugin_la-java-debugger-breakpoints.lo `test -f 'java-debugger-breakpoints.c' || echo '$(srcdir)/'`java-debugger-breakpoints.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoints.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoints.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-debugger-breakpoints.c' object='libjavacodeslayerplugin_la-java-debugger-breakpoints.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-breakpoint.lo `test -f 'java-breakpoint.c' || echo '$(srcdir)/'`java-breakpoint.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-debugger-breakpoints.lo `test -f 'java-debugger-breakpoints.c' || echo '$(srcdir)/'`java-debugger-breakpoints.c
+
+libjavacodeslayerplugin_la-java-debugger-breakpoint.lo: java-debugger-breakpoint.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-debugger-breakpoint.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoint.Tpo -c -o libjavacodeslayerplugin_la-java-debugger-breakpoint.lo `test -f 'java-debugger-breakpoint.c' || echo '$(srcdir)/'`java-debugger-breakpoint.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoint.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoint.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-debugger-breakpoint.c' object='libjavacodeslayerplugin_la-java-debugger-breakpoint.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-debugger-breakpoint.lo `test -f 'java-debugger-breakpoint.c' || echo '$(srcdir)/'`java-debugger-breakpoint.c
 
 libjavacodeslayerplugin_la-java-utils.lo: java-utils.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-utils.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-utils.Tpo -c -o libjavacodeslayerplugin_la-java-utils.lo `test -f 'java-utils.c' || echo '$(srcdir)/'`java-utils.c
