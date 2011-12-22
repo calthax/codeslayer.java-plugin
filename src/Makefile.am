@@ -10,6 +10,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-engine.c \
     java-page.h \
     java-page.c \
+    java-output.h \
+    java-output.c \
     java-output-pane.h \
     java-output-pane.c \
     java-configurations.h \

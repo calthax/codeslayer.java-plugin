@@ -54,7 +54,8 @@ activate (CodeSlayer *codeslayer)
   project_properties = java_project_properties_new ();
   projects_popup = java_projects_popup_new ();
   notebook = java_notebook_new ();
-  engine = java_engine_new (codeslayer, configurations, debugger, menu, project_properties, projects_popup, notebook);
+  engine = java_engine_new (codeslayer, configurations, debugger, menu, 
+                            project_properties, projects_popup, notebook);
   
   codeslayer_add_to_menubar (codeslayer, GTK_MENU_ITEM (menu));
   codeslayer_add_to_projects_popup (codeslayer, GTK_MENU_ITEM (projects_popup));
