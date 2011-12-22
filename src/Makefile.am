@@ -10,8 +10,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-engine.c \
     java-page.h \
     java-page.c \
-    java-output.h \
-    java-output.c \
+    java-output-pane.h \
+    java-output-pane.c \
     java-configurations.h \
     java-configurations.c \
     java-configuration.h \
@@ -24,8 +24,6 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-project-properties.c \
     java-notebook.h \
     java-notebook.c \
-    java-notebook-page.h \
-    java-notebook-page.c \
     java-notebook-tab.h \
     java-notebook-tab.c \
     java-debugger.h \

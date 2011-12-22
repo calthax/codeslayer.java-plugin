@@ -20,46 +20,46 @@
 #include <string.h>
 #include "java-engine.h"
 #include "java-page.h"
-#include "java-output.h"
+#include "java-output-pane.h"
 #include "java-project-properties.h"
 #include "java-configuration.h"
 #include "java-notebook.h"
 
-static void java_engine_class_init                (JavaEngineClass   *klass);
-static void java_engine_init                      (JavaEngine        *engine);
-static void java_engine_finalize                  (JavaEngine        *engine);
-static void project_properties_opened_action      (JavaEngine        *engine,
-                                                   CodeSlayerProject *project);
-static void project_properties_saved_action       (JavaEngine        *engine,
-                                                   CodeSlayerProject *project);
-static void save_ant_build_properties             (JavaConfiguration *configuration);
-static void save_configuration_action             (JavaEngine        *engine,
-                                                   JavaConfiguration *configuration);
-static void compile_action                        (JavaEngine        *engine);
-static void project_compile_action                (JavaEngine        *engine, 
-                                                   GList             *selections);
-static void clean_action                          (JavaEngine        *engine);
-static void project_clean_action                  (JavaEngine        *engine, 
-                                                   GList             *selections);
-static void test_action                           (JavaEngine        *engine);
-static void project_test_action                   (JavaEngine        *engine, 
-                                                   GList             *selections);
-static void execute_output                        (JavaEngine        *engine,
-                                                   JavaOutput        *output,
-                                                   JavaPageType       page_type, 
-                                                   GThreadFunc        thread_func);
-static void execute_clean                         (JavaOutput        *output);
-static void execute_compile                       (JavaOutput        *output);
-static void execute_test                          (JavaOutput        *output);
-static void execute_project_test                  (JavaOutput        *output);
-static void run_output_command                    (JavaOutput        *output,
-                                                   gchar             *command);
-static CodeSlayerProject* get_selections_project  (GList             *selections);
-static JavaOutput* get_output_by_active_editor    (JavaEngine        *engine,
-                                                   JavaPageType       page_type);
-static JavaOutput* get_output_by_project          (JavaEngine        *engine, 
-                                                   CodeSlayerProject *project,
-                                                   JavaPageType       page_type);
+static void java_engine_class_init                       (JavaEngineClass   *klass);
+static void java_engine_init                             (JavaEngine        *engine);
+static void java_engine_finalize                         (JavaEngine        *engine);
+static void project_properties_opened_action             (JavaEngine        *engine,
+                                                          CodeSlayerProject *project);
+static void project_properties_saved_action              (JavaEngine        *engine,
+                                                          CodeSlayerProject *project);
+static void save_ant_build_properties                    (JavaConfiguration *configuration);
+static void save_configuration_action                    (JavaEngine        *engine,
+                                                          JavaConfiguration *configuration);
+static void compile_action                               (JavaEngine        *engine);
+static void project_compile_action                       (JavaEngine        *engine, 
+                                                          GList             *selections);
+static void clean_action                                 (JavaEngine        *engine);
+static void project_clean_action                         (JavaEngine        *engine, 
+                                                          GList             *selections);
+static void test_action                                  (JavaEngine        *engine);
+static void project_test_action                          (JavaEngine        *engine, 
+                                                          GList             *selections);
+static void execute                                      (JavaEngine        *engine,
+                                                          JavaOutputPane    *output_pane,
+                                                          JavaPageType       page_type, 
+                                                          GThreadFunc        thread_func);
+static void execute_clean                                (JavaOutputPane    *output_pane);
+static void execute_compile                              (JavaOutputPane    *output_pane);
+static void execute_test                                 (JavaOutputPane    *output_pane);
+static void execute_project_test                         (JavaOutputPane    *output_pane);
+static void run_command                                  (JavaOutputPane    *output_pane,
+                                                          gchar             *command);
+static CodeSlayerProject* get_selections_project         (GList             *selections);
+static JavaOutputPane* get_output_pane_by_active_editor  (JavaEngine        *engine,
+                                                          JavaPageType       page_type);
+static JavaOutputPane* get_output_pane_by_project        (JavaEngine        *engine, 
+                                                          CodeSlayerProject *project,
+                                                          JavaPageType       page_type);
                           
 #define JAVA_ENGINE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_ENGINE_TYPE, JavaEnginePrivate))
@@ -246,63 +246,63 @@ save_configuration_action (JavaEngine        *engine,
 static void
 compile_action (JavaEngine *engine)
 {
-  JavaOutput *output;  
-  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILER);
-  execute_output (engine, output, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_compile);
+  JavaOutputPane *output_pane;  
+  output_pane = get_output_pane_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILER);
+  execute (engine, output_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_compile);
 }
 
 static void
 project_compile_action (JavaEngine *engine, 
                         GList      *selections)
 {
-  JavaOutput *output;
+  JavaOutputPane *output_pane;
   CodeSlayerProject *project;
   project = get_selections_project (selections);
-  output = get_output_by_project (engine, project, JAVA_PAGE_TYPE_COMPILER);
-  execute_output (engine, output, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_compile);
+  output_pane = get_output_pane_by_project (engine, project, JAVA_PAGE_TYPE_COMPILER);
+  execute (engine, output_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_compile);
 }
 
 static void
 clean_action (JavaEngine *engine)
 {
-  JavaOutput *output;  
-  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILER);
-  execute_output (engine, output, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean);
+  JavaOutputPane *output_pane;  
+  output_pane = get_output_pane_by_active_editor (engine, JAVA_PAGE_TYPE_COMPILER);
+  execute (engine, output_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean);
 }
 
 static void
 project_clean_action (JavaEngine *engine, 
                       GList      *selections)
 {
-  JavaOutput *output;
+  JavaOutputPane *output_pane;
   CodeSlayerProject *project;
   project = get_selections_project (selections);
-  output = get_output_by_project (engine, project, JAVA_PAGE_TYPE_COMPILER);
-  execute_output (engine, output, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean);
+  output_pane = get_output_pane_by_project (engine, project, JAVA_PAGE_TYPE_COMPILER);
+  execute (engine, output_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean);
 }
 
 static void
 test_action (JavaEngine *engine)
 {
   JavaEnginePrivate *priv;
-  JavaOutput *output;  
+  JavaOutputPane *output_pane;  
   CodeSlayerDocument *document;
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
-  output = get_output_by_active_editor (engine, JAVA_PAGE_TYPE_TESTER);
+  output_pane = get_output_pane_by_active_editor (engine, JAVA_PAGE_TYPE_TESTER);
   document = codeslayer_get_active_editor_document (priv->codeslayer);
-  java_page_set_document (JAVA_PAGE (output), document); 
-  execute_output (engine, output, JAVA_PAGE_TYPE_TESTER, (GThreadFunc) execute_test);
+  java_page_set_document (JAVA_PAGE (output_pane), document); 
+  execute (engine, output_pane, JAVA_PAGE_TYPE_TESTER, (GThreadFunc) execute_test);
 }
 
 static void
 project_test_action (JavaEngine *engine, 
                      GList      *selections)
 {
-  JavaOutput *output;
+  JavaOutputPane *output_pane;
   CodeSlayerProject *project;
   project = get_selections_project (selections);
-  output = get_output_by_project (engine, project, JAVA_PAGE_TYPE_TESTER);
-  execute_output (engine, output, JAVA_PAGE_TYPE_TESTER, (GThreadFunc) execute_project_test);
+  output_pane = get_output_pane_by_project (engine, project, JAVA_PAGE_TYPE_TESTER);
+  execute (engine, output_pane, JAVA_PAGE_TYPE_TESTER, (GThreadFunc) execute_project_test);
 }
 
 static CodeSlayerProject*
@@ -317,54 +317,54 @@ get_selections_project (GList *selections)
 }
 
 static void
-execute_output (JavaEngine   *engine,
-                JavaOutput   *output,
-                JavaPageType  page_type, 
-                GThreadFunc   thread_func)
+execute (JavaEngine     *engine,
+         JavaOutputPane *output_pane,
+         JavaPageType    page_type, 
+         GThreadFunc     thread_func)
 {
   JavaEnginePrivate *priv;
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
-  if (output)
+  if (output_pane)
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
       java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), page_type);
-      g_thread_create (thread_func, output, FALSE, NULL);
+      g_thread_create (thread_func, output_pane, FALSE, NULL);
     }
 }
 
 static void
-execute_compile (JavaOutput *output)
+execute_compile (JavaOutputPane *output_pane)
 {
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
   
-  configuration = java_page_get_configuration (JAVA_PAGE (output));
+  configuration = java_page_get_configuration (JAVA_PAGE (output_pane));
   ant_file = java_configuration_get_ant_file (configuration);
   
   command = g_strconcat ("ant -f ", ant_file, " compile 2>&1", NULL);
-  run_output_command (output, command);
+  run_command (output_pane, command);
   g_free (command);
 }
 
 static void
-execute_clean (JavaOutput *output)
+execute_clean (JavaOutputPane *output_pane)
 {
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
   
-  configuration = java_page_get_configuration (JAVA_PAGE (output));
+  configuration = java_page_get_configuration (JAVA_PAGE (output_pane));
   ant_file = java_configuration_get_ant_file (configuration);
   
   command = g_strconcat ("ant -f ", ant_file, " clean 2>&1", NULL);
-  run_output_command (output, command);
+  run_command (output_pane, command);
   g_free (command);
 }
 
 static void
-execute_test (JavaOutput *output)
+execute_test (JavaOutputPane *output_pane)
 {
   JavaConfiguration *configuration;
   CodeSlayerDocument *document;
@@ -375,8 +375,8 @@ execute_test (JavaOutput *output)
   gchar *substr;
   gchar *replace;
   
-  configuration = java_page_get_configuration (JAVA_PAGE (output));
-  document = java_page_get_document (JAVA_PAGE (output));
+  configuration = java_page_get_configuration (JAVA_PAGE (output_pane));
+  document = java_page_get_document (JAVA_PAGE (output_pane));
   ant_file = java_configuration_get_ant_file (configuration);
   
   folder_path = java_configuration_get_test_folder (configuration);
@@ -387,7 +387,7 @@ execute_test (JavaOutput *output)
   
   command = g_strconcat ("ant -f ", ant_file, " testfile -Dtestfile=", replace, " 2>&1", NULL);
   
-  run_output_command (output, command);
+  run_command (output_pane, command);
 
   g_free (command);
   g_free (substr);
@@ -395,22 +395,22 @@ execute_test (JavaOutput *output)
 }
 
 static void
-execute_project_test (JavaOutput *output)
+execute_project_test (JavaOutputPane *output_pane)
 {
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
   
-  configuration = java_page_get_configuration (JAVA_PAGE (output));
+  configuration = java_page_get_configuration (JAVA_PAGE (output_pane));
   ant_file = java_configuration_get_ant_file (configuration);
   
   command = g_strconcat ("ant -f ", ant_file, " testproject 2>&1", NULL);
-  run_output_command (output, command);
+  run_command (output_pane, command);
   g_free (command);
 }
 
-static JavaOutput*
-get_output_by_active_editor (JavaEngine   *engine, 
+static JavaOutputPane*
+get_output_pane_by_active_editor (JavaEngine   *engine, 
                              JavaPageType  page_type)
 {
   JavaEnginePrivate *priv;
@@ -433,20 +433,20 @@ get_output_by_active_editor (JavaEngine   *engine,
       return NULL;
     }
 
-  return get_output_by_project (engine, project, page_type);
+  return get_output_pane_by_project (engine, project, page_type);
 }
 
-static JavaOutput*
-get_output_by_project (JavaEngine        *engine,
-                       CodeSlayerProject *project,
-                       JavaPageType       page_type)
+static JavaOutputPane*
+get_output_pane_by_project (JavaEngine        *engine,
+                            CodeSlayerProject *project,
+                            JavaPageType       page_type)
 {
   JavaEnginePrivate *priv;
   GtkWidget  *notebook;
   const gchar *project_key;
   const gchar *project_name;
   JavaConfiguration *configuration;
-  GtkWidget *output;
+  GtkWidget *output_pane;
   
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
   notebook = priv->notebook;
@@ -472,28 +472,28 @@ get_output_by_project (JavaEngine        *engine,
       return NULL;
     }
   
-  output = java_notebook_get_page_by_type (JAVA_NOTEBOOK (notebook), page_type);
+  output_pane = java_notebook_get_page_by_type (JAVA_NOTEBOOK (notebook), page_type);
   
-  if (output == NULL)
+  if (output_pane == NULL)
     {
       gchar *label;
-      output = java_output_new (page_type);
+      output_pane = java_output_pane_new (page_type);
       if (page_type == JAVA_PAGE_TYPE_COMPILER)
         label = "Compile";
       else if (page_type == JAVA_PAGE_TYPE_TESTER)
         label = "Test";
         
-      java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output, label);
+      java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output_pane, label);
     }
     
-  java_page_set_configuration (JAVA_PAGE (output), configuration);
+  java_page_set_configuration (JAVA_PAGE (output_pane), configuration);
 
-  return JAVA_OUTPUT (output);
+  return JAVA_OUTPUT_PANE (output_pane);
 }
 
 static void
-run_output_command (JavaOutput *output,
-                    gchar      *command)
+run_command (JavaOutputPane *output_pane,
+             gchar          *command)
 {
   GtkTextBuffer *buffer;
   GtkTextIter iter;
@@ -502,7 +502,7 @@ run_output_command (JavaOutput *output,
   FILE *file;
   
   gdk_threads_enter ();
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (output));
+  buffer = gtk_text_view_get_buffer (java_output_pane_get_text_view (output_pane));
   gtk_text_buffer_set_text (buffer, "", -1);
   gdk_threads_leave ();
   
@@ -515,7 +515,8 @@ run_output_command (JavaOutput *output,
           gtk_text_buffer_get_end_iter (buffer, &iter);
           gtk_text_buffer_insert (buffer, &iter, out, -1);
           text_mark = gtk_text_buffer_create_mark (buffer, NULL, &iter, TRUE);
-          gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (output), text_mark, 0.0, FALSE, 0, 0);
+          gtk_text_view_scroll_to_mark (java_output_pane_get_text_view (output_pane), 
+                                        text_mark, 0.0, FALSE, 0, 0);
           gdk_threads_leave ();
         }
       pclose (file);

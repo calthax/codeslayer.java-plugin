@@ -17,7 +17,6 @@
  */
 
 #include "java-notebook.h"
-#include "java-notebook-page.h"
 #include "java-notebook-tab.h"
 
 static void java_notebook_class_init  (JavaNotebookClass *klass);
@@ -68,13 +67,11 @@ java_notebook_new (void)
 
 void 
 java_notebook_add_page (JavaNotebook *notebook, 
-                        GtkWidget    *page,
+                        GtkWidget    *notebook_page,
                         const gchar  *label)
 {
-  GtkWidget *notebook_page;
   GtkWidget *notebook_tab;
   
-  notebook_page = java_notebook_page_new (page);
   notebook_tab = java_notebook_tab_new (GTK_WIDGET (notebook), label);
   
   java_notebook_tab_set_notebook_page (JAVA_NOTEBOOK_TAB (notebook_tab), 
@@ -115,11 +112,9 @@ java_notebook_get_page_by_type (JavaNotebook *notebook,
   for (i = 0; i < pages; i++)
     {
       GtkWidget *notebook_page;
-      GtkWidget *widget;
       notebook_page = gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook), i);
-      widget = java_notebook_page_get_widget (JAVA_NOTEBOOK_PAGE (notebook_page));
-      if (java_page_get_page_type (JAVA_PAGE (widget)) == page_type)
-        return widget;
+      if (java_page_get_page_type (JAVA_PAGE (notebook_page)) == page_type)
+        return notebook_page;
     }
     
   return NULL;
@@ -137,10 +132,8 @@ java_notebook_select_page_by_type (JavaNotebook *notebook,
   for (i = 0; i < pages; i++)
     {
       GtkWidget *notebook_page;
-      GtkWidget *widget;
       notebook_page = gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook), i);
-      widget = java_notebook_page_get_widget (JAVA_NOTEBOOK_PAGE (notebook_page));
-      if (java_page_get_page_type (JAVA_PAGE (widget)) == page_type)
+      if (java_page_get_page_type (JAVA_PAGE (notebook_page)) == page_type)
         gtk_notebook_set_current_page (GTK_NOTEBOOK (notebook), i);
     }
 }

@@ -73,14 +73,13 @@ libjavacodeslayerplugin_la_LIBADD =
 am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-engine.lo \
 	libjavacodeslayerplugin_la-java-page.lo \
-	libjavacodeslayerplugin_la-java-output.lo \
+	libjavacodeslayerplugin_la-java-output-pane.lo \
 	libjavacodeslayerplugin_la-java-configurations.lo \
 	libjavacodeslayerplugin_la-java-configuration.lo \
 	libjavacodeslayerplugin_la-java-menu.lo \
 	libjavacodeslayerplugin_la-java-projects-popup.lo \
 	libjavacodeslayerplugin_la-java-project-properties.lo \
 	libjavacodeslayerplugin_la-java-notebook.lo \
-	libjavacodeslayerplugin_la-java-notebook-page.lo \
 	libjavacodeslayerplugin_la-java-notebook-tab.lo \
 	libjavacodeslayerplugin_la-java-debugger.lo \
 	libjavacodeslayerplugin_la-java-debugger-pane.lo \
@@ -240,8 +239,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-engine.c \
     java-page.h \
     java-page.c \
-    java-output.h \
-    java-output.c \
+    java-output-pane.h \
+    java-output-pane.c \
     java-configurations.h \
     java-configurations.c \
     java-configuration.h \
@@ -254,8 +253,6 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-project-properties.c \
     java-notebook.h \
     java-notebook.c \
-    java-notebook-page.h \
-    java-notebook-page.c \
     java-notebook-tab.h \
     java-notebook-tab.c \
     java-debugger.h \
@@ -356,10 +353,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-engine.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-menu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-page.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-tab.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-notebook.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-output.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-output-pane.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-page.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-project-properties.Plo@am__quote@
@@ -401,12 +397,12 @@ libjavacodeslayerplugin_la-java-page.lo: java-page.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-page.lo `test -f 'java-page.c' || echo '$(srcdir)/'`java-page.c
 
-libjavacodeslayerplugin_la-java-output.lo: java-output.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-output.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-output.Tpo -c -o libjavacodeslayerplugin_la-java-output.lo `test -f 'java-output.c' || echo '$(srcdir)/'`java-output.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-output.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-output.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-output.c' object='libjavacodeslayerplugin_la-java-output.lo' libtool=yes @AMDEPBACKSLASH@
+libjavacodeslayerplugin_la-java-output-pane.lo: java-output-pane.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-output-pane.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-output-pane.Tpo -c -o libjavacodeslayerplugin_la-java-output-pane.lo `test -f 'java-output-pane.c' || echo '$(srcdir)/'`java-output-pane.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-output-pane.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-output-pane.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-output-pane.c' object='libjavacodeslayerplugin_la-java-output-pane.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-output.lo `test -f 'java-output.c' || echo '$(srcdir)/'`java-output.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-output-pane.lo `test -f 'java-output-pane.c' || echo '$(srcdir)/'`java-output-pane.c
 
 libjavacodeslayerplugin_la-java-configurations.lo: java-configurations.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-configurations.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-configurations.Tpo -c -o libjavacodeslayerplugin_la-java-configurations.lo `test -f 'java-configurations.c' || echo '$(srcdir)/'`java-configurations.c
@@ -449,13 +445,6 @@ libjavacodeslayerplugin_la-java-notebook.lo: java-notebook.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-notebook.c' object='libjavacodeslayerplugin_la-java-notebook.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-notebook.lo `test -f 'java-notebook.c' || echo '$(srcdir)/'`java-notebook.c
-
-libjavacodeslayerplugin_la-java-notebook-page.lo: java-notebook-page.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-notebook-page.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-page.Tpo -c -o libjavacodeslayerplugin_la-java-notebook-page.lo `test -f 'java-notebook-page.c' || echo '$(srcdir)/'`java-notebook-page.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-page.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-page.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-notebook-page.c' object='libjavacodeslayerplugin_la-java-notebook-page.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-notebook-page.lo `test -f 'java-notebook-page.c' || echo '$(srcdir)/'`java-notebook-page.c
 
 libjavacodeslayerplugin_la-java-notebook-tab.lo: java-notebook-tab.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-notebook-tab.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-tab.Tpo -c -o libjavacodeslayerplugin_la-java-notebook-tab.lo `test -f 'java-notebook-tab.c' || echo '$(srcdir)/'`java-notebook-tab.c
