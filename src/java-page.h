@@ -28,7 +28,8 @@ G_BEGIN_DECLS
 typedef enum
 {
   JAVA_PAGE_TYPE_COMPILER,
-  JAVA_PAGE_TYPE_TESTER
+  JAVA_PAGE_TYPE_TESTER, 
+  JAVA_PAGE_TYPE_DEBUGGER, 
 } JavaPageType;
 
 #define JAVA_PAGE_TYPE                (java_page_get_type ())

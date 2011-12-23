@@ -19,6 +19,7 @@
 #include <codeslayer/codeslayer-utils.h>
 #include <string.h>
 #include "java-engine.h"
+#include "java-debugger.h"
 #include "java-output.h"
 #include "java-page.h"
 #include "java-project-properties.h"
@@ -81,7 +82,6 @@ java_engine_finalize (JavaEngine *engine)
 JavaEngine*
 java_engine_new (CodeSlayer         *codeslayer,
                  JavaConfigurations *configurations,
-                 JavaDebugger       *debugger,
                  GtkWidget          *menu, 
                  GtkWidget          *project_properties,
                  GtkWidget          *projects_popup,
@@ -95,13 +95,13 @@ java_engine_new (CodeSlayer         *codeslayer,
 
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
-  priv->debugger = debugger;
   priv->menu = menu;
   priv->project_properties = project_properties;
   priv->projects_popup = projects_popup;
   priv->notebook = notebook;
   
-  priv->output = java_output_new (codeslayer, configurations, menu, projects_popup, notebook);  
+  priv->output = java_output_new (codeslayer, configurations, menu, projects_popup, notebook);
+  priv->debugger = java_debugger_new (codeslayer, configurations, notebook);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);

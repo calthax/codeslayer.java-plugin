@@ -371,9 +371,9 @@ get_output_pane_by_project (JavaOutput        *output,
       gchar *label;
       output_pane = java_output_pane_new (page_type);
       if (page_type == JAVA_PAGE_TYPE_COMPILER)
-        label = "Compile";
+        label = "Compiler";
       else if (page_type == JAVA_PAGE_TYPE_TESTER)
-        label = "Test";
+        label = "Tester";
         
       java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), output_pane, label);
     }

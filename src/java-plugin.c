@@ -21,8 +21,6 @@
 #include <gmodule.h>
 #include <glib.h>
 #include "java-engine.h"
-#include "java-debugger.h"
-#include "java-debugger-breakpoints.h"
 #include "java-configurations.h"
 #include "java-menu.h"
 #include "java-notebook.h"
@@ -43,18 +41,16 @@ activate (CodeSlayer *codeslayer)
 {
   GtkAccelGroup *accel_group;
   JavaConfigurations *configurations;
-  JavaDebugger *debugger;
   accel_group = codeslayer_get_menubar_accel_group (codeslayer);
   menu = java_menu_new (accel_group);
   
   configurations = java_configurations_new (codeslayer);
   java_configurations_load (configurations);
-  debugger = java_debugger_new (codeslayer, configurations);
   
   project_properties = java_project_properties_new ();
   projects_popup = java_projects_popup_new ();
   notebook = java_notebook_new ();
-  engine = java_engine_new (codeslayer, configurations, debugger, menu, 
+  engine = java_engine_new (codeslayer, configurations, menu, 
                             project_properties, projects_popup, notebook);
   
   codeslayer_add_to_menubar (codeslayer, GTK_MENU_ITEM (menu));

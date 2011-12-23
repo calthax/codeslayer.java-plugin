@@ -22,7 +22,6 @@
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
 #include "java-configurations.h"
-#include "java-debugger.h"
 
 G_BEGIN_DECLS
 
@@ -49,7 +48,6 @@ GType java_engine_get_type (void) G_GNUC_CONST;
 
 JavaEngine*  java_engine_new (CodeSlayer         *codeslayer,
                               JavaConfigurations *configurations,
-                              JavaDebugger       *debugger,
                               GtkWidget          *menu,
                               GtkWidget          *project_properties,
                               GtkWidget          *projects_popup,

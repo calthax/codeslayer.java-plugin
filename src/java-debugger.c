@@ -17,8 +17,10 @@
  */
 
 #include "java-debugger.h"
+#include "java-debugger-pane.h"
 #include "java-debugger-service.h"
 #include "java-debugger-breakpoints.h"
+#include "java-notebook.h"
 #include "java-configuration.h"
 #include "java-utils.h"
 
@@ -47,6 +49,7 @@ struct _JavaDebuggerPrivate
   JavaDebuggerService     *service;
   JavaDebuggerBreakpoints *breakpoints;
   GtkSourceMarkAttributes *attributes;
+  GtkWidget               *notebook;
 };
 
 enum
@@ -67,31 +70,34 @@ java_debugger_class_init (JavaDebuggerClass *klass)
 }
 
 static void
-java_debugger_init (JavaDebugger *breakpoint)
+java_debugger_init (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
-  priv = JAVA_DEBUGGER_GET_PRIVATE (breakpoint);
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   priv->breakpoints = NULL;
 }
 
 static void
-java_debugger_finalize (JavaDebugger *breakpoint)
+java_debugger_finalize (JavaDebugger *debugger)
 {
-  G_OBJECT_CLASS (java_debugger_parent_class)->finalize (G_OBJECT (breakpoint));
+  G_OBJECT_CLASS (java_debugger_parent_class)->finalize (G_OBJECT (debugger));
 }
 
 JavaDebugger*
-java_debugger_new (CodeSlayer              *codeslayer, 
-                   JavaConfigurations      *configurations)
+java_debugger_new (CodeSlayer         *codeslayer, 
+                   JavaConfigurations *configurations, 
+                   GtkWidget          *notebook)
 {
   JavaDebuggerPrivate *priv;
   JavaDebugger *debugger;
+  GtkWidget *debugger_pane;
   GtkSourceMarkAttributes *attributes;
 
   debugger = JAVA_DEBUGGER (g_object_new (java_debugger_get_type (), NULL));
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
+  priv->notebook = notebook;
   
   priv->service = java_debugger_service_new ();
   priv->breakpoints = java_debugger_breakpoints_new ();
@@ -99,6 +105,9 @@ java_debugger_new (CodeSlayer              *codeslayer,
   attributes = gtk_source_mark_attributes_new ();
   priv->attributes = attributes;
   gtk_source_mark_attributes_set_stock_id (attributes, GTK_STOCK_MEDIA_RECORD);
+  
+  debugger_pane = java_debugger_pane_new ();
+  java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), debugger_pane, "Debugger");
   
   g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
                             G_CALLBACK (editor_added_action), debugger);

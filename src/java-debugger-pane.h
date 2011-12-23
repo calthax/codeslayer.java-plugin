@@ -35,17 +35,17 @@ typedef struct _JavaDebuggerPaneClass JavaDebuggerPaneClass;
 
 struct _JavaDebuggerPane
 {
-  GObject parent_instance;
+  GtkVBox parent_instance;
 };
 
 struct _JavaDebuggerPaneClass
 {
-  GObjectClass parent_class;
+  GtkVBoxClass parent_class;
 };
 
 GType java_debugger_pane_get_type (void) G_GNUC_CONST;
 
-JavaDebuggerPane*  java_debugger_pane_new    (void);
+GtkWidget*  java_debugger_pane_new  (void);
 
 G_END_DECLS
 

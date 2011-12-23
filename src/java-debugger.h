@@ -46,8 +46,9 @@ struct _JavaDebuggerClass
 
 GType java_debugger_get_type (void) G_GNUC_CONST;
 
-JavaDebugger*  java_debugger_new  (CodeSlayer              *codeslayer,
-                                   JavaConfigurations      *configurations);
+JavaDebugger*  java_debugger_new  (CodeSlayer         *codeslayer,
+                                   JavaConfigurations *configurations, 
+                                   GtkWidget          *notebook);
 
 G_END_DECLS
 
