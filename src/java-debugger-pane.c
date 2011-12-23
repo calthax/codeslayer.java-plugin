@@ -48,6 +48,7 @@ struct _JavaDebuggerPanePrivate
 {
   JavaConfiguration  *configuration;
   CodeSlayerDocument *document;
+  GtkWidget          *hpaned; 
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaDebuggerPane,
@@ -78,7 +79,38 @@ java_debugger_pane_class_init (JavaDebuggerPaneClass *klass)
 }
 
 static void
-java_debugger_pane_init (JavaDebuggerPane *debugger_pane) {}
+java_debugger_pane_init (JavaDebuggerPane *debugger_pane) 
+{
+  JavaDebuggerPanePrivate *priv;
+  GtkWidget *toolbar;
+  GtkWidget *vbox;
+  GtkToolItem *query_item;
+  GtkToolItem *forward_item;
+  GtkToolItem *down_item;
+  GtkToolItem *up_item;
+  
+  priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
+  
+  priv->hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
+  gtk_box_pack_start (GTK_BOX (debugger_pane), priv->hpaned, TRUE, TRUE, 0);
+  
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  gtk_paned_add1 (GTK_PANED (priv->hpaned), vbox);
+  toolbar = gtk_toolbar_new ();
+  gtk_toolbar_set_icon_size (GTK_TOOLBAR (toolbar), GTK_ICON_SIZE_MENU);
+  gtk_toolbar_set_style (GTK_TOOLBAR (toolbar), GTK_TOOLBAR_ICONS);
+  gtk_box_pack_start (GTK_BOX (vbox), toolbar, FALSE, FALSE, 0);
+  
+  query_item = gtk_tool_button_new (NULL, "Query");
+  forward_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_FORWARD);
+  down_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_DOWN);
+  up_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_UP);
+  
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), query_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), forward_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), down_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), up_item, -1);
+}
 
 static void
 java_debugger_pane_finalize (JavaDebuggerPane *debugger_pane)
@@ -89,8 +121,14 @@ java_debugger_pane_finalize (JavaDebuggerPane *debugger_pane)
 GtkWidget*
 java_debugger_pane_new ()
 {
+  /*JavaDebuggerPanePrivate *priv;*/
   GtkWidget *debugger_pane;
+  
   debugger_pane = g_object_new (java_debugger_pane_get_type (), NULL);
+  /*priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);*/
+  
+  
+  
   return debugger_pane;
 }
 
