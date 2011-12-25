@@ -52,7 +52,7 @@ JavaDebuggerService*  java_debugger_service_new    (void);
 void                  java_debugger_service_start         (JavaDebuggerService *service);
 void                  java_debugger_service_stop          (JavaDebuggerService *service);
 void                  java_debugger_service_send_command  (JavaDebuggerService *service, 
-                                                           char                *command);
+                                                           char                *cmd);
 
 G_END_DECLS
 
