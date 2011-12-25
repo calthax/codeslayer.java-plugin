@@ -128,7 +128,7 @@ java_debugger_service_start (JavaDebuggerService *service)
       if (priv->channel_read == NULL || priv->channel_write == NULL)
         g_error ("The channels could not be created.");
         
-      g_io_add_watch (priv->channel_read, G_IO_IN | G_IO_HUP, (GIOFunc) iochannel_read, NULL);        
+      g_io_add_watch (priv->channel_read, G_IO_IN | G_IO_HUP, (GIOFunc) iochannel_read, service);        
     }
 }
 
@@ -140,7 +140,7 @@ java_debugger_service_stop (JavaDebuggerService *service)
 
 void 
 java_debugger_service_send_command (JavaDebuggerService *service, 
-                                    char                *cmd)
+                                    char                *command)
 {
   JavaDebuggerServicePrivate *priv;
   GIOStatus ret_value;
@@ -148,9 +148,9 @@ java_debugger_service_send_command (JavaDebuggerService *service,
 
   priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
 
-  g_print ("%s\n", cmd);
+  g_print ("%s\n", command);
   
-  ret_value = g_io_channel_write_chars (priv->channel_write, cmd, -1, &length, NULL);
+  ret_value = g_io_channel_write_chars (priv->channel_write, command, -1, &length, NULL);
   if (ret_value == G_IO_STATUS_ERROR)
     g_error ("The changes could not be written to the pipe.");
   else
@@ -170,7 +170,10 @@ iochannel_read (GIOChannel          *channel,
   priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
 
   if (condition == G_IO_HUP)
-    g_error ("The pipe has died.");
+    {
+      g_error ("The pipe has died.");
+      return TRUE;          
+    }
 
   ret_value = g_io_channel_read_line (priv->channel_read, &message, &length, NULL, NULL);
   if (ret_value == G_IO_STATUS_ERROR)

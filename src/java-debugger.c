@@ -33,8 +33,11 @@ static void editor_added_action       (JavaDebugger      *debugger,
 static void line_activated_action     (GtkSourceView     *sourceview,
                                        GtkTextIter       *iter,
                                        GdkEvent          *event,
-                                       JavaDebugger      *debugger);                                 
-
+                                       JavaDebugger      *debugger);                                       
+static void debug_test_file_action    (JavaDebugger      *debugger);
+static void stop_action               (JavaDebugger      *debugger);
+static void step_over_action          (JavaDebugger      *debugger);
+                                       
 #define BREAKPOINT "breakpoint"
 
 #define JAVA_DEBUGGER_GET_PRIVATE(obj) \
@@ -46,6 +49,7 @@ struct _JavaDebuggerPrivate
 {
   CodeSlayer              *codeslayer;
   JavaConfigurations      *configurations;
+  GtkWidget               *menu;
   JavaDebuggerService     *service;
   JavaDebuggerBreakpoints *breakpoints;
   GtkSourceMarkAttributes *attributes;
@@ -84,8 +88,9 @@ java_debugger_finalize (JavaDebugger *debugger)
 }
 
 JavaDebugger*
-java_debugger_new (CodeSlayer         *codeslayer, 
+java_debugger_new (CodeSlayer         *codeslayer,
                    JavaConfigurations *configurations, 
+                   GtkWidget          *menu,
                    GtkWidget          *notebook)
 {
   JavaDebuggerPrivate *priv;
@@ -97,6 +102,7 @@ java_debugger_new (CodeSlayer         *codeslayer,
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
+  priv->menu = menu;
   priv->notebook = notebook;
   
   priv->service = java_debugger_service_new ();
@@ -111,6 +117,15 @@ java_debugger_new (CodeSlayer         *codeslayer,
   
   g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
                             G_CALLBACK (editor_added_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (menu), "debug-test-file",
+                            G_CALLBACK (debug_test_file_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-over",
+                            G_CALLBACK (step_over_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "stop",
+                            G_CALLBACK (stop_action), debugger);
 
   return debugger;
 }
@@ -197,4 +212,26 @@ line_activated_action (GtkSourceView *view,
 
   g_free (class_name);
 	g_slist_free (marks);
+}
+
+static void
+debug_test_file_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  java_debugger_service_start (priv->service);
+}
+
+static void
+stop_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  java_debugger_service_stop (priv->service);
+}
+
+static void
+step_over_action (JavaDebugger *debugger)
+{
+  g_print ("debugger step over action\n");
 }
