@@ -57,6 +57,7 @@ void                      java_debugger_breakpoints_remove_breakpoint  (JavaDebu
 JavaDebuggerBreakpoint*   java_debugger_breakpoints_find_breakpoint    (JavaDebuggerBreakpoints *breakpoints,
                                                                         const gchar             *class_name,
                                                                         gint                     line_number);
+GList*                    java_debugger_breakpoints_get_list           (JavaDebuggerBreakpoints *breakpoints);
 
 G_END_DECLS
 

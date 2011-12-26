@@ -24,19 +24,24 @@
 #include "java-configuration.h"
 #include "java-utils.h"
 
-static void java_debugger_class_init  (JavaDebuggerClass *klass);
-static void java_debugger_init        (JavaDebugger      *debugger);
-static void java_debugger_finalize    (JavaDebugger      *debugger);
+static void java_debugger_class_init  (JavaDebuggerClass      *klass);
+static void java_debugger_init        (JavaDebugger           *debugger);
+static void java_debugger_finalize    (JavaDebugger           *debugger);
 
-static void editor_added_action       (JavaDebugger      *debugger,
-                                       CodeSlayerEditor  *editor);                                    
-static void line_activated_action     (GtkSourceView     *sourceview,
-                                       GtkTextIter       *iter,
-                                       GdkEvent          *event,
-                                       JavaDebugger      *debugger);                                       
-static void debug_test_file_action    (JavaDebugger      *debugger);
-static void stop_action               (JavaDebugger      *debugger);
-static void step_over_action          (JavaDebugger      *debugger);
+static void editor_added_action       (JavaDebugger           *debugger,
+                                       CodeSlayerEditor       *editor);                                    
+static void line_activated_action     (GtkSourceView          *sourceview,
+                                       GtkTextIter            *iter,
+                                       GdkEvent               *event,
+                                       JavaDebugger           *debugger);                                       
+static void debug_test_file_action    (JavaDebugger           *debugger);
+static void stop_action               (JavaDebugger           *debugger);
+static void step_over_action          (JavaDebugger           *debugger);
+
+static void add_breakpoint            (JavaDebugger           *debugger,
+                                       JavaDebuggerBreakpoint *breakpoint);
+static void read_channel_action       (JavaDebugger           *debugger, 
+                                       gchar                  *text);
                                        
 #define BREAKPOINT "breakpoint"
 
@@ -84,6 +89,10 @@ java_debugger_init (JavaDebugger *debugger)
 static void
 java_debugger_finalize (JavaDebugger *debugger)
 {
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  g_object_unref (priv->breakpoints);
+  g_object_unref (priv->service);
   G_OBJECT_CLASS (java_debugger_parent_class)->finalize (G_OBJECT (debugger));
 }
 
@@ -126,6 +135,9 @@ java_debugger_new (CodeSlayer         *codeslayer,
 
   g_signal_connect_swapped (G_OBJECT (debugger_pane), "stop",
                             G_CALLBACK (stop_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (priv->service), "read-channel",
+                            G_CALLBACK (read_channel_action), debugger);
 
   return debugger;
 }
@@ -199,15 +211,16 @@ line_activated_action (GtkSourceView *view,
       JavaDebuggerBreakpoint *breakpoint;	    
       breakpoint = java_debugger_breakpoint_new ();            
       java_debugger_breakpoint_set_class_name (breakpoint, class_name);
-      java_debugger_breakpoint_set_line_number (breakpoint, line_number);
+      java_debugger_breakpoint_set_line_number (breakpoint, line_number + 1);
       
       java_debugger_breakpoints_add_breakpoint (priv->breakpoints, breakpoint);
 	  
 	  	gtk_source_buffer_create_source_mark (buffer, NULL, BREAKPOINT, iter);
 	  		  	
-      g_print ("line added %s:%d\n", class_name, line_number + 1);
+      /*g_print ("line added %s:%d\n", class_name, line_number + 1);*/
       
-	  	/*ejdb_send_command ("break org.jmesaweb.controller.BasicPresidentController:68\n");*/
+      if (java_debugger_service_get_running (priv->service))
+        add_breakpoint (debugger, breakpoint);
   	}
 
   g_free (class_name);
@@ -219,6 +232,10 @@ debug_test_file_action (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  if (java_debugger_service_get_running (priv->service))
+    java_debugger_service_stop (priv->service);
+    
   java_debugger_service_start (priv->service);
 }
 
@@ -227,11 +244,63 @@ stop_action (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
-  java_debugger_service_stop (priv->service);
+
+  if (!java_debugger_service_get_running (priv->service))
+    java_debugger_service_stop (priv->service);
 }
 
 static void
 step_over_action (JavaDebugger *debugger)
 {
-  g_print ("debugger step over action\n");
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  if (!java_debugger_service_get_running (priv->service))
+    return;
+
+  java_debugger_service_send_command (priv->service, "n\n");
+}
+
+static void
+add_breakpoint (JavaDebugger           *debugger,
+                JavaDebuggerBreakpoint *breakpoint)
+{
+  JavaDebuggerPrivate *priv;
+  gchar *command;
+  const gchar *className = NULL;
+  gint lineNumber = 0;
+  
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  className = java_debugger_breakpoint_get_class_name (breakpoint);
+  lineNumber = java_debugger_breakpoint_get_line_number (breakpoint);
+  command = g_strdup_printf ("break %s:%d\n", className, lineNumber);
+  
+  java_debugger_service_send_command (priv->service, command);
+  
+  g_free (command);
+}
+
+static void
+read_channel_action (JavaDebugger *debugger, 
+                     gchar        *text)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  g_print ("text %s\n", text);
+
+  if (g_strcmp0 (text, "ready\n") == 0)
+    {
+      GList *list;
+      list = java_debugger_breakpoints_get_list (priv->breakpoints);  
+      while (list != NULL)
+        {
+          JavaDebuggerBreakpoint *breakpoint = list->data;
+          add_breakpoint (debugger, breakpoint);
+          list = g_list_next (list);
+        }
+        
+      java_debugger_service_send_command (priv->service, "c\n");
+    }
 }

@@ -73,6 +73,14 @@ java_debugger_breakpoints_new ()
   return breakpoints;
 }
 
+GList*
+java_debugger_breakpoints_get_list (JavaDebuggerBreakpoints *breakpoints)
+{
+ JavaDebuggerBreakpointsPrivate *priv;
+  priv = JAVA_DEBUGGER_BREAKPOINTS_GET_PRIVATE (breakpoints);
+  return priv->list;
+}
+
 void
 java_debugger_breakpoints_add_breakpoint (JavaDebuggerBreakpoints *breakpoints, 
                                           JavaDebuggerBreakpoint  *breakpoint)

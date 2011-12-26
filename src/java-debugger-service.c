@@ -29,7 +29,8 @@ static void java_debugger_service_finalize    (JavaDebuggerService      *debugge
 
 static gboolean iochannel_read                (GIOChannel               *channel, 
                                                GIOCondition              condition, 
-                                               JavaDebuggerService      *service);
+                                               JavaDebuggerService      *service);                                               
+static void  channel_closed_action            (JavaDebuggerService      *service);
 
 #define JAVA_DEBUGGER_SERVICE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_DEBUGGER_SERVICE_TYPE, JavaDebuggerServicePrivate))
@@ -42,13 +43,28 @@ struct _JavaDebuggerServicePrivate
   GIOChannel *channel_write;
 };
 
+enum
+{
+  READ_CHANNEL,  
+  LAST_SIGNAL
+};
+
+static guint debugger_service_signals[LAST_SIGNAL] = { 0 };
+
 G_DEFINE_TYPE (JavaDebuggerService, java_debugger_service, G_TYPE_OBJECT)
      
 static void 
 java_debugger_service_class_init (JavaDebuggerServiceClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->finalize = (GObjectFinalizeFunc) java_debugger_service_finalize;
+  debugger_service_signals[READ_CHANNEL] =
+    g_signal_new ("read-channel", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerServiceClass, read_channel),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_debugger_service_finalize;
   g_type_class_add_private (klass, sizeof (JavaDebuggerServicePrivate));
 }
 
@@ -113,7 +129,7 @@ java_debugger_service_start (JavaDebuggerService *service)
       close (stdout_pipe[0]);
       close (stdout_pipe[1]);
 
-      execlp ("ejdb", "ejdb", "-interactive", "true", "-launch", "org.junit.runner.JUnitCore org.jmesa.core.CoreContextTest", "-sourcepath", "/home/jeff/workspace/jmesaWeb/src:/home/jeff/workspace/jmesa/src:/home/jeff/workspace/jmesa/test", "-classpath", "/home/jeff/workspace/jmesa/classes:/home/jeff/workspace/jmesa/lib/*", (char *)NULL);
+      execlp ("ejdb", "ejdb", "-interactive", "true", "-launch", "org.junit.runner.JUnitCore org.jmesa.core.CoreContextTest", "-sourcepath", "/home/jeff/workspace/jmesaWeb/src:/home/jeff/workspace/jmesa/src:/home/jeff/workspace/jmesa/test", "-classpath", "/home/jeff/workspace/jmesa/build:/home/jeff/workspace/jmesa/lib/*", (char *)NULL);
 
       g_warning ("Not able to communicate with ejdb.");
     }
@@ -131,7 +147,10 @@ java_debugger_service_start (JavaDebuggerService *service)
         return;
       }
         
-      g_io_add_watch (priv->channel_read, G_IO_IN | G_IO_HUP, (GIOFunc) iochannel_read, service);        
+      g_io_add_watch_full (priv->channel_read, G_PRIORITY_DEFAULT, 
+                           G_IO_IN | G_IO_HUP, 
+                           (GIOFunc) iochannel_read, service, 
+                           (GDestroyNotify) channel_closed_action);        
     }
 }
 
@@ -143,7 +162,7 @@ java_debugger_service_stop (JavaDebuggerService *service)
 
 void 
 java_debugger_service_send_command (JavaDebuggerService *service, 
-                                    char                *cmd)
+                                    gchar               *command)
 {
   JavaDebuggerServicePrivate *priv;
   GIOStatus ret_value;
@@ -151,9 +170,9 @@ java_debugger_service_send_command (JavaDebuggerService *service,
 
   priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
 
-  g_print ("%s\n", cmd);
+  g_print ("command:: %s\n", command);
   
-  ret_value = g_io_channel_write_chars (priv->channel_write, cmd, -1, &length, NULL);
+  ret_value = g_io_channel_write_chars (priv->channel_write, command, -1, &length, NULL);
   if (ret_value == G_IO_STATUS_ERROR)
     {
       g_warning ("The changes could not be written to the pipe.");
@@ -161,8 +180,17 @@ java_debugger_service_send_command (JavaDebuggerService *service,
     }
   else
     {
-      g_io_channel_flush (priv->channel_write, NULL);    
+      if (g_io_channel_flush (priv->channel_write, NULL) == G_IO_STATUS_NORMAL)
+        g_print ("flush\n");
     }
+}
+
+gboolean
+java_debugger_service_get_running (JavaDebuggerService *service)
+{
+  JavaDebuggerServicePrivate *priv;
+  priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
+  return priv->channel_read != NULL && priv->channel_write != NULL;
 }
 
 static gboolean
@@ -187,7 +215,32 @@ iochannel_read (GIOChannel          *channel,
       return FALSE;
     }
 
-  g_print ("read: %s", message);
+  if (message)
+    {
+      g_signal_emit_by_name ((gpointer) service, "read-channel", message);
+      g_free (message);    
+    }
 
   return TRUE;
+}
+
+static void 
+channel_closed_action (JavaDebuggerService *service)
+{
+  JavaDebuggerServicePrivate *priv;
+  priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
+  
+  if (priv->channel_read)
+   {
+      g_io_channel_shutdown (priv->channel_read, FALSE, NULL);
+      g_io_channel_unref (priv->channel_read);
+      priv->channel_read = NULL;
+   }
+  
+  if (priv->channel_write)
+   {
+      g_io_channel_shutdown (priv->channel_write, FALSE, NULL);
+      g_io_channel_unref (priv->channel_write);
+      priv->channel_write = NULL;
+   }
 }

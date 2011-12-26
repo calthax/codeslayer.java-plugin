@@ -43,6 +43,8 @@ struct _JavaDebuggerService
 struct _JavaDebuggerServiceClass
 {
   GObjectClass parent_class;
+  
+  void (*read_channel) (JavaDebuggerService *service);
 };
 
 GType java_debugger_service_get_type (void) G_GNUC_CONST;
@@ -51,8 +53,9 @@ JavaDebuggerService*  java_debugger_service_new    (void);
 
 void                  java_debugger_service_start         (JavaDebuggerService *service);
 void                  java_debugger_service_stop          (JavaDebuggerService *service);
+gboolean              java_debugger_service_get_running   (JavaDebuggerService *service);
 void                  java_debugger_service_send_command  (JavaDebuggerService *service, 
-                                                           char                *cmd);
+                                                           gchar               *command);
 
 G_END_DECLS
 
