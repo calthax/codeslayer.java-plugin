@@ -38,6 +38,7 @@ typedef struct _JavaDebuggerBreakpointPrivate JavaDebuggerBreakpointPrivate;
 struct _JavaDebuggerBreakpointPrivate
 {
   gchar *class_name;
+  gchar *file_path;
   gint line_number;
 };
 
@@ -45,6 +46,7 @@ enum
 {
   PROP_0,
   PROP_CLASS_NAME,
+  PROP_FILE_PATH,
   PROP_LINE_NUMBER
 };
 
@@ -70,11 +72,19 @@ java_debugger_breakpoint_class_init (JavaDebuggerBreakpointClass *klass)
                                                         G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, 
-                                   PROP_LINE_NUMBER,
-                                   g_param_spec_string ("line_number",
-                                                        "Line Lumber",
-                                                        "Line Lumber", "",
+                                   PROP_FILE_PATH,
+                                   g_param_spec_string ("file_path",
+                                                        "File Path",
+                                                        "File Path", "",
                                                         G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_LINE_NUMBER,
+                                   g_param_spec_int ("line_number",
+                                                     "Line Lumber",
+                                                     "Line Lumber", 
+                                                     0, 100000, 0,
+                                                     G_PARAM_READWRITE));
 }
 
 static void
@@ -83,6 +93,7 @@ java_debugger_breakpoint_init (JavaDebuggerBreakpoint *breakpoint)
   JavaDebuggerBreakpointPrivate *priv;
   priv = JAVA_DEBUGGER_BREAKPOINT_GET_PRIVATE (breakpoint);
   priv->class_name = NULL;
+  priv->file_path = NULL;
   priv->line_number = 0;
 }
 
@@ -116,6 +127,9 @@ java_debugger_breakpoint_get_property (GObject    *object,
     case PROP_CLASS_NAME:
       g_value_set_string (value, priv->class_name);
       break;
+    case PROP_FILE_PATH:
+      g_value_set_string (value, priv->file_path);
+      break;
     case PROP_LINE_NUMBER:
       g_value_set_int (value, priv->line_number);
       break;
@@ -138,6 +152,9 @@ java_debugger_breakpoint_set_property (GObject      *object,
     {
     case PROP_CLASS_NAME:
       java_debugger_breakpoint_set_class_name (breakpoint, g_value_get_string (value));
+      break;
+    case PROP_FILE_PATH:
+      java_debugger_breakpoint_set_file_path (breakpoint, g_value_get_string (value));
       break;
     case PROP_LINE_NUMBER:
       java_debugger_breakpoint_set_line_number (breakpoint, g_value_get_int (value));
@@ -172,6 +189,26 @@ java_debugger_breakpoint_set_class_name (JavaDebuggerBreakpoint *breakpoint,
       priv->class_name = NULL;
     }
   priv->class_name = g_strdup (class_name);
+}
+
+const gchar*
+java_debugger_breakpoint_get_file_path (JavaDebuggerBreakpoint *breakpoint)
+{
+  return JAVA_DEBUGGER_BREAKPOINT_GET_PRIVATE (breakpoint)->file_path;
+}
+
+void
+java_debugger_breakpoint_set_file_path (JavaDebuggerBreakpoint *breakpoint, 
+                                        const gchar            *file_path)
+{
+  JavaDebuggerBreakpointPrivate *priv;
+  priv = JAVA_DEBUGGER_BREAKPOINT_GET_PRIVATE (breakpoint);
+  if (priv->file_path)
+    {
+      g_free (priv->file_path);
+      priv->file_path = NULL;
+    }
+  priv->file_path = g_strdup (file_path);
 }
 
 const gint

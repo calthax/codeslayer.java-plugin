@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <codeslayer/codeslayer-utils.h>
 #include "java-debugger.h"
 #include "java-debugger-pane.h"
 #include "java-debugger-service.h"
@@ -203,8 +204,6 @@ line_activated_action (GtkSourceView *view,
 		                               GTK_TEXT_MARK (marks->data));
 
       g_print ("line removed %s:%d\n", class_name, line_number + 1);
-
-      /*g_print ("line deactivated %s:%d\n", class_name, line_number + 1);*/
   	}
 	else
 	  {
@@ -217,7 +216,7 @@ line_activated_action (GtkSourceView *view,
 	  
 	  	gtk_source_buffer_create_source_mark (buffer, NULL, BREAKPOINT, iter);
 	  		  	
-      /*g_print ("line added %s:%d\n", class_name, line_number + 1);*/
+      g_print ("line added %s:%d\n", class_name, line_number + 1);
       
       if (java_debugger_service_get_running (priv->service))
         add_breakpoint (debugger, breakpoint);
@@ -267,14 +266,14 @@ add_breakpoint (JavaDebugger           *debugger,
 {
   JavaDebuggerPrivate *priv;
   gchar *command;
-  const gchar *className = NULL;
-  gint lineNumber = 0;
+  const gchar *class_name = NULL;
+  gint line_number = 0;
   
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  className = java_debugger_breakpoint_get_class_name (breakpoint);
-  lineNumber = java_debugger_breakpoint_get_line_number (breakpoint);
-  command = g_strdup_printf ("break %s:%d\n", className, lineNumber);
+  class_name = java_debugger_breakpoint_get_class_name (breakpoint);
+  line_number = java_debugger_breakpoint_get_line_number (breakpoint);
+  command = g_strdup_printf ("break %s:%d\n", class_name, line_number);
   
   java_debugger_service_send_command (priv->service, command);
   
@@ -283,14 +282,14 @@ add_breakpoint (JavaDebugger           *debugger,
 
 static void
 read_channel_action (JavaDebugger *debugger, 
-                     gchar        *text)
+                     gchar        *contents)
 {
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  g_print ("text %s\n", text);
+  g_print ("contents %s\n", contents);
 
-  if (g_strcmp0 (text, "ready\n") == 0)
+  if (g_str_has_prefix (contents, "<ready/>"))
     {
       GList *list;
       list = java_debugger_breakpoints_get_list (priv->breakpoints);  
@@ -302,5 +301,41 @@ read_channel_action (JavaDebugger *debugger,
         }
         
       java_debugger_service_send_command (priv->service, "c\n");
+    }
+  else if (g_str_has_prefix (contents, "<hit-breakpoint>"))
+    {
+      GList *gobjects;
+       
+      gobjects = codeslayer_utils_deserialize_gobjects (JAVA_DEBUGGER_BREAKPOINT_TYPE,
+                                                        TRUE,
+                                                        contents, 
+                                                        "breakpoint",
+                                                        "file_path", G_TYPE_STRING, 
+                                                        "line_number", G_TYPE_INT, 
+                                                        NULL);
+      if (gobjects != NULL)
+        {
+          JavaDebuggerBreakpoint *breakpoint = gobjects->data;
+          CodeSlayerProject *project;
+          CodeSlayerDocument *document;
+          const gchar *file_path;
+          gint line_number;
+          
+          file_path = java_debugger_breakpoint_get_file_path (breakpoint);
+          line_number = java_debugger_breakpoint_get_line_number (breakpoint);
+          
+          document = codeslayer_document_new ();
+          codeslayer_document_set_line_number (document, line_number);
+          codeslayer_document_set_file_path (document, file_path);
+          
+          project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
+          codeslayer_document_set_project (document, project);
+          
+          gdk_threads_enter ();
+          codeslayer_select_editor (priv->codeslayer, document);
+          gdk_threads_leave ();
+          
+          g_object_unref (breakpoint);
+        }
     }
 }

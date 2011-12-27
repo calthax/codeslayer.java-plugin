@@ -49,6 +49,9 @@ JavaDebuggerBreakpoint*  java_debugger_breakpoint_new              (void);
 const gchar*             java_debugger_breakpoint_get_class_name   (JavaDebuggerBreakpoint *breakpoint);
 void                     java_debugger_breakpoint_set_class_name   (JavaDebuggerBreakpoint *breakpoint,
                                                                     const gchar            *class_name);
+const gchar*             java_debugger_breakpoint_get_file_path    (JavaDebuggerBreakpoint *breakpoint);
+void                     java_debugger_breakpoint_set_file_path    (JavaDebuggerBreakpoint *breakpoint,
+                                                                    const gchar            *file_path);
 const gint               java_debugger_breakpoint_get_line_number  (JavaDebuggerBreakpoint *breakpoint);
 void                     java_debugger_breakpoint_set_line_number  (JavaDebuggerBreakpoint *breakpoint,
                                                                     gint                    line_number);

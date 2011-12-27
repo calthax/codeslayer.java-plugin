@@ -170,7 +170,7 @@ java_debugger_service_send_command (JavaDebuggerService *service,
 
   priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
 
-  g_print ("command:: %s\n", command);
+  /*g_print ("command:: %s\n", command);*/
   
   ret_value = g_io_channel_write_chars (priv->channel_write, command, -1, &length, NULL);
   if (ret_value == G_IO_STATUS_ERROR)
@@ -180,8 +180,7 @@ java_debugger_service_send_command (JavaDebuggerService *service,
     }
   else
     {
-      if (g_io_channel_flush (priv->channel_write, NULL) == G_IO_STATUS_NORMAL)
-        g_print ("flush\n");
+      g_io_channel_flush (priv->channel_write, NULL);
     }
 }
 
