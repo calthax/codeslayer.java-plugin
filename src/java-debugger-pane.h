@@ -43,6 +43,8 @@ struct _JavaDebuggerPaneClass
   GtkVBoxClass parent_class;
   
   void (*step_over) (JavaDebuggerPane *debugger_pane);
+  void (*step_into) (JavaDebuggerPane *debugger_pane);
+  void (*step_out) (JavaDebuggerPane *debugger_pane);
   void (*stop) (JavaDebuggerPane *debugger_pane);
 };
 

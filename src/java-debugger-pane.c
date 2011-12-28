@@ -58,6 +58,8 @@ struct _JavaDebuggerPanePrivate
 enum
 {
   STEP_OVER,  
+  STEP_INTO,  
+  STEP_OUT,  
   STOP,  
   LAST_SIGNAL
 };
@@ -91,6 +93,22 @@ java_debugger_pane_class_init (JavaDebuggerPaneClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (JavaDebuggerPaneClass, step_over),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  debugger_pane_signals[STEP_INTO] =
+    g_signal_new ("step-into", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerPaneClass, step_into),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  debugger_pane_signals[STEP_OUT] =
+    g_signal_new ("step-out", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerPaneClass, step_out),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
@@ -239,13 +257,13 @@ step_over_action (JavaDebuggerPane *debugger_pane)
 static void
 step_into_action (JavaDebuggerPane *debugger_pane)
 {
-  g_print ("step into action\n");
+  g_signal_emit_by_name ((gpointer) debugger_pane, "step-into");
 }
 
 static void
 step_out_action (JavaDebuggerPane *debugger_pane)
 {
-  g_print ("step out action\n");
+  g_signal_emit_by_name ((gpointer) debugger_pane, "step-out");
 }
 
 static void

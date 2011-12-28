@@ -38,11 +38,15 @@ static void line_activated_action     (GtkSourceView          *sourceview,
 static void debug_test_file_action    (JavaDebugger           *debugger);
 static void stop_action               (JavaDebugger           *debugger);
 static void step_over_action          (JavaDebugger           *debugger);
+static void step_into_action          (JavaDebugger           *debugger);
+static void step_out_action           (JavaDebugger           *debugger);
 
 static void add_breakpoint            (JavaDebugger           *debugger,
                                        JavaDebuggerBreakpoint *breakpoint);
 static void read_channel_action       (JavaDebugger           *debugger, 
                                        gchar                  *text);
+static void select_editor             (CodeSlayer             *codeslayer, 
+                                       CodeSlayerDocument     *document);
                                        
 #define BREAKPOINT "breakpoint"
 
@@ -133,6 +137,12 @@ java_debugger_new (CodeSlayer         *codeslayer,
 
   g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-over",
                             G_CALLBACK (step_over_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-into",
+                            G_CALLBACK (step_into_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-out",
+                            G_CALLBACK (step_out_action), debugger);
 
   g_signal_connect_swapped (G_OBJECT (debugger_pane), "stop",
                             G_CALLBACK (stop_action), debugger);
@@ -261,6 +271,30 @@ step_over_action (JavaDebugger *debugger)
 }
 
 static void
+step_into_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  if (!java_debugger_service_get_running (priv->service))
+    return;
+
+  java_debugger_service_send_command (priv->service, "s\n");
+}
+
+static void
+step_out_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  if (!java_debugger_service_get_running (priv->service))
+    return;
+
+  java_debugger_service_send_command (priv->service, "f\n");
+}
+
+static void
 add_breakpoint (JavaDebugger           *debugger,
                 JavaDebuggerBreakpoint *breakpoint)
 {
@@ -302,40 +336,54 @@ read_channel_action (JavaDebugger *debugger,
         
       java_debugger_service_send_command (priv->service, "c\n");
     }
-  else if (g_str_has_prefix (contents, "<hit-breakpoint>"))
+  else if (g_str_has_prefix (contents, "<hit-breakpoint"))
     {
       GList *gobjects;
-       
-      gobjects = codeslayer_utils_deserialize_gobjects (JAVA_DEBUGGER_BREAKPOINT_TYPE,
+      gobjects = codeslayer_utils_deserialize_gobjects (CODESLAYER_DOCUMENT_TYPE,
                                                         TRUE,
                                                         contents, 
-                                                        "breakpoint",
+                                                        "hit-breakpoint",
                                                         "file_path", G_TYPE_STRING, 
                                                         "line_number", G_TYPE_INT, 
                                                         NULL);
       if (gobjects != NULL)
         {
-          JavaDebuggerBreakpoint *breakpoint = gobjects->data;
-          CodeSlayerProject *project;
-          CodeSlayerDocument *document;
-          const gchar *file_path;
-          gint line_number;
-          
-          file_path = java_debugger_breakpoint_get_file_path (breakpoint);
-          line_number = java_debugger_breakpoint_get_line_number (breakpoint);
-          
-          document = codeslayer_document_new ();
-          codeslayer_document_set_line_number (document, line_number);
-          codeslayer_document_set_file_path (document, file_path);
-          
-          project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
-          codeslayer_document_set_project (document, project);
-          
-          gdk_threads_enter ();
-          codeslayer_select_editor (priv->codeslayer, document);
-          gdk_threads_leave ();
-          
-          g_object_unref (breakpoint);
+          CodeSlayerDocument *document = gobjects->data;
+          select_editor (priv->codeslayer, document);
+          g_object_unref (document);
         }
     }
+  else if (g_str_has_prefix (contents, "<step"))
+    {
+      GList *gobjects;
+      gobjects = codeslayer_utils_deserialize_gobjects (CODESLAYER_DOCUMENT_TYPE,
+                                                        TRUE,
+                                                        contents, 
+                                                        "step",
+                                                        "file_path", G_TYPE_STRING, 
+                                                        "line_number", G_TYPE_INT, 
+                                                        NULL);
+      if (gobjects != NULL)
+        {
+          CodeSlayerDocument *document = gobjects->data;
+          select_editor (priv->codeslayer, document);
+          g_object_unref (document);
+        }
+    }
+}
+
+static void
+select_editor (CodeSlayer         *codeslayer, 
+               CodeSlayerDocument *document)
+{
+  CodeSlayerProject *project;
+  const gchar *file_path;
+
+  file_path = codeslayer_document_get_file_path (document);
+  project = codeslayer_get_project_by_file_path (codeslayer, file_path);
+  codeslayer_document_set_project (document, project);
+
+  gdk_threads_enter ();
+  codeslayer_select_editor (codeslayer, document);
+  gdk_threads_leave ();
 }
