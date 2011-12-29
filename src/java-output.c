@@ -68,8 +68,6 @@ struct _JavaOutputPrivate
   GtkWidget          *project_properties;
   GtkWidget          *projects_popup;
   GtkWidget          *notebook;
-  gulong              properties_opened_id;
-  gulong              properties_saved_id;
 };
 
 G_DEFINE_TYPE (JavaOutput, java_output, G_TYPE_OBJECT)
@@ -88,10 +86,6 @@ java_output_init (JavaOutput *output) {}
 static void
 java_output_finalize (JavaOutput *output)
 {
-  JavaOutputPrivate *priv;
-  priv = JAVA_OUTPUT_GET_PRIVATE (output);
-  g_signal_handler_disconnect (priv->codeslayer, priv->properties_opened_id);
-  g_signal_handler_disconnect (priv->codeslayer, priv->properties_saved_id);
   G_OBJECT_CLASS (java_output_parent_class)->finalize (G_OBJECT(output));
 }
 

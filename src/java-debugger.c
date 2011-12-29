@@ -17,6 +17,8 @@
  */
 
 #include <codeslayer/codeslayer-utils.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "java-debugger.h"
 #include "java-debugger-pane.h"
 #include "java-debugger-service.h"
@@ -31,12 +33,15 @@ static void java_debugger_finalize    (JavaDebugger           *debugger);
 
 static void editor_added_action       (JavaDebugger           *debugger,
                                        CodeSlayerEditor       *editor);                                    
+static void editor_removed_action     (JavaDebugger           *debugger,
+                                       CodeSlayerEditor       *editor);                                    
 static void line_activated_action     (GtkSourceView          *sourceview,
                                        GtkTextIter            *iter,
                                        GdkEvent               *event,
                                        JavaDebugger           *debugger);                                       
 static void debug_test_file_action    (JavaDebugger           *debugger);
-static void stop_action               (JavaDebugger           *debugger);
+static void cont_action               (JavaDebugger           *debugger);
+static void quit_action               (JavaDebugger           *debugger);
 static void step_over_action          (JavaDebugger           *debugger);
 static void step_into_action          (JavaDebugger           *debugger);
 static void step_out_action           (JavaDebugger           *debugger);
@@ -48,7 +53,12 @@ static void read_channel_action       (JavaDebugger           *debugger,
 static void select_editor             (CodeSlayer             *codeslayer, 
                                        CodeSlayerDocument     *document);
                                        
+static void initialize_editors        (JavaDebugger           *debugger);
+static void uninitialize_editors      (JavaDebugger           *debugger);
+                                       
+                                       
 #define BREAKPOINT "breakpoint"
+#define LINE_ACTIVATED "LINE_ACTIVATED"
 
 #define JAVA_DEBUGGER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_DEBUGGER_TYPE, JavaDebuggerPrivate))
@@ -64,6 +74,8 @@ struct _JavaDebuggerPrivate
   JavaDebuggerBreakpoints *breakpoints;
   GtkSourceMarkAttributes *attributes;
   GtkWidget               *notebook;
+  gulong                   editor_added_id;
+  gulong                   editor_removed_id;
 };
 
 enum
@@ -95,9 +107,13 @@ static void
 java_debugger_finalize (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
-  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);  
+  uninitialize_editors (debugger);
+  g_signal_handler_disconnect (priv->codeslayer, priv->editor_added_id);
+  g_signal_handler_disconnect (priv->codeslayer, priv->editor_removed_id);
   g_object_unref (priv->breakpoints);
   g_object_unref (priv->service);
+  g_object_unref (priv->attributes);
   G_OBJECT_CLASS (java_debugger_parent_class)->finalize (G_OBJECT (debugger));
 }
 
@@ -110,7 +126,6 @@ java_debugger_new (CodeSlayer         *codeslayer,
   JavaDebuggerPrivate *priv;
   JavaDebugger *debugger;
   GtkWidget *debugger_pane;
-  GtkSourceMarkAttributes *attributes;
 
   debugger = JAVA_DEBUGGER (g_object_new (java_debugger_get_type (), NULL));
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
@@ -122,18 +137,26 @@ java_debugger_new (CodeSlayer         *codeslayer,
   priv->service = java_debugger_service_new ();
   priv->breakpoints = java_debugger_breakpoints_new ();
   
-  attributes = gtk_source_mark_attributes_new ();
-  priv->attributes = attributes;
-  gtk_source_mark_attributes_set_stock_id (attributes, GTK_STOCK_MEDIA_RECORD);
+  priv->attributes = gtk_source_mark_attributes_new ();
+  gtk_source_mark_attributes_set_stock_id (priv->attributes, GTK_STOCK_MEDIA_RECORD);
   
   debugger_pane = java_debugger_pane_new ();
   java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), debugger_pane, "Debugger");
   
-  g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
-                            G_CALLBACK (editor_added_action), debugger);
+  priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
+                                                    G_CALLBACK (editor_added_action), debugger);
+
+  priv->editor_removed_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-removed",
+                                                      G_CALLBACK (editor_removed_action), debugger);
 
   g_signal_connect_swapped (G_OBJECT (menu), "debug-test-file",
                             G_CALLBACK (debug_test_file_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "cont",
+                            G_CALLBACK (cont_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "quit",
+                            G_CALLBACK (quit_action), debugger);
 
   g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-over",
                             G_CALLBACK (step_over_action), debugger);
@@ -144,13 +167,61 @@ java_debugger_new (CodeSlayer         *codeslayer,
   g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-out",
                             G_CALLBACK (step_out_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "stop",
-                            G_CALLBACK (stop_action), debugger);
-
   g_signal_connect_swapped (G_OBJECT (priv->service), "read-channel",
                             G_CALLBACK (read_channel_action), debugger);
+                            
+  initialize_editors (debugger);
 
   return debugger;
+}
+
+static void
+initialize_editors (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  GList *editors;
+  GList *list;
+  
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  
+  editors = codeslayer_get_all_editors (priv->codeslayer);
+  list = editors;
+  
+  while (list != NULL)
+    {
+      CodeSlayerEditor *editor = list->data;
+      gchar *line_activated_id = NULL;
+      line_activated_id = (gchar*)g_object_get_data (G_OBJECT (editor), LINE_ACTIVATED);
+      if (line_activated_id == NULL)
+        editor_added_action (debugger, editor);
+      list = g_list_next (list);
+    }
+    
+  if (editors != NULL)
+    g_list_free (editors);    
+}
+
+static void
+uninitialize_editors (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  GList *editors;
+  GList *list;
+
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  editors = codeslayer_get_all_editors (priv->codeslayer);
+  list = editors;
+
+  while (list != NULL)
+    {
+      CodeSlayerEditor *editor = list->data;
+      editor_removed_action (debugger, editor);
+      list = g_list_next (list);
+    }
+  
+  if (editors != NULL)
+    g_list_free (editors);    
 }
 
 static void
@@ -158,15 +229,34 @@ editor_added_action (JavaDebugger     *debugger,
                      CodeSlayerEditor *editor)
 {
   JavaDebuggerPrivate *priv;
+  gulong line_activated_id;
   
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
   gtk_source_view_set_mark_attributes (GTK_SOURCE_VIEW (editor), BREAKPOINT, 
                                        priv->attributes, 1);
   gtk_source_view_set_show_line_marks (GTK_SOURCE_VIEW (editor), TRUE);
+  
+  line_activated_id = g_signal_connect (G_OBJECT (editor), "line-mark-activated",
+                                        G_CALLBACK (line_activated_action), debugger);
+                                        
+  g_object_set_data (G_OBJECT (editor), LINE_ACTIVATED, 
+                     g_strdup_printf ("%lu", line_activated_id));
+}
 
-  g_signal_connect (G_OBJECT (editor), "line-mark-activated",
-                    G_CALLBACK (line_activated_action), debugger);
+static void
+editor_removed_action (JavaDebugger     *debugger,
+                       CodeSlayerEditor *editor)
+{
+  gchar *line_activated_id = NULL;
+  line_activated_id = (gchar*)g_object_get_data (G_OBJECT (editor), LINE_ACTIVATED);
+  if (line_activated_id != NULL)
+    {        
+      g_signal_handler_disconnect (editor, atol (line_activated_id));
+      g_free (line_activated_id);
+      g_object_set_data (G_OBJECT (editor), LINE_ACTIVATED, NULL);
+      gtk_source_view_set_show_line_marks (GTK_SOURCE_VIEW (editor), FALSE);
+    }
 }
 
 static void
@@ -243,19 +333,29 @@ debug_test_file_action (JavaDebugger *debugger)
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
   if (java_debugger_service_get_running (priv->service))
-    java_debugger_service_stop (priv->service);
+    java_debugger_service_send_command (priv->service, "q\n");
     
   java_debugger_service_start (priv->service);
 }
 
 static void
-stop_action (JavaDebugger *debugger)
+cont_action (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  if (!java_debugger_service_get_running (priv->service))
-    java_debugger_service_stop (priv->service);
+  if (java_debugger_service_get_running (priv->service))
+    java_debugger_service_send_command (priv->service, "c\n");
+}
+
+static void
+quit_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  if (java_debugger_service_get_running (priv->service))
+    java_debugger_service_send_command (priv->service, "q\n");
 }
 
 static void
@@ -264,10 +364,8 @@ step_over_action (JavaDebugger *debugger)
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  if (!java_debugger_service_get_running (priv->service))
-    return;
-
-  java_debugger_service_send_command (priv->service, "n\n");
+  if (java_debugger_service_get_running (priv->service))
+    java_debugger_service_send_command (priv->service, "n\n");
 }
 
 static void
@@ -339,36 +437,46 @@ read_channel_action (JavaDebugger *debugger,
   else if (g_str_has_prefix (contents, "<hit-breakpoint"))
     {
       GList *gobjects;
+      GList *list;
       gobjects = codeslayer_utils_deserialize_gobjects (CODESLAYER_DOCUMENT_TYPE,
-                                                        TRUE,
+                                                        FALSE,
                                                         contents, 
                                                         "hit-breakpoint",
                                                         "file_path", G_TYPE_STRING, 
                                                         "line_number", G_TYPE_INT, 
                                                         NULL);
-      if (gobjects != NULL)
+      list = gobjects;
+      if (list != NULL)
         {
-          CodeSlayerDocument *document = gobjects->data;
+          CodeSlayerDocument *document = list->data;
           select_editor (priv->codeslayer, document);
           g_object_unref (document);
         }
+
+      if (gobjects != NULL)
+        g_list_free (gobjects);
     }
   else if (g_str_has_prefix (contents, "<step"))
     {
       GList *gobjects;
+      GList *list;
       gobjects = codeslayer_utils_deserialize_gobjects (CODESLAYER_DOCUMENT_TYPE,
-                                                        TRUE,
+                                                        FALSE,
                                                         contents, 
                                                         "step",
                                                         "file_path", G_TYPE_STRING, 
                                                         "line_number", G_TYPE_INT, 
                                                         NULL);
-      if (gobjects != NULL)
+      list = gobjects;
+      if (list != NULL)
         {
-          CodeSlayerDocument *document = gobjects->data;
+          CodeSlayerDocument *document = list->data;
           select_editor (priv->codeslayer, document);
           g_object_unref (document);
         }
+
+      if (gobjects != NULL)
+        g_list_free (gobjects);
     }
 }
 

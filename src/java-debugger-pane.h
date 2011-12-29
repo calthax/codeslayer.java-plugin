@@ -42,10 +42,11 @@ struct _JavaDebuggerPaneClass
 {
   GtkVBoxClass parent_class;
   
+  void (*cont) (JavaDebuggerPane *debugger_pane);
+  void (*quit) (JavaDebuggerPane *debugger_pane);
   void (*step_over) (JavaDebuggerPane *debugger_pane);
   void (*step_into) (JavaDebuggerPane *debugger_pane);
   void (*step_out) (JavaDebuggerPane *debugger_pane);
-  void (*stop) (JavaDebuggerPane *debugger_pane);
 };
 
 GType java_debugger_pane_get_type (void) G_GNUC_CONST;

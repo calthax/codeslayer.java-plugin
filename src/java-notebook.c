@@ -26,23 +26,12 @@ static void java_notebook_finalize    (JavaNotebook      *notebook);
 static void close_action              (JavaNotebookTab   *notebook_tab,
                                        JavaNotebook      *notebook);
 
-#define JAVA_NOTEBOOK_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_NOTEBOOK_TYPE, JavaNotebookPrivate))
-
-typedef struct _JavaNotebookPrivate JavaNotebookPrivate;
-
-struct _JavaNotebookPrivate
-{
-  gchar *foo;
-};
-
 G_DEFINE_TYPE (JavaNotebook, java_notebook, GTK_TYPE_NOTEBOOK)
 
 static void
 java_notebook_class_init (JavaNotebookClass *klass)
 {
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_notebook_finalize;
-  g_type_class_add_private (klass, sizeof (JavaNotebookPrivate));
 }
 
 static void

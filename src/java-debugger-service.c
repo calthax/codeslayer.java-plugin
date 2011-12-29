@@ -155,12 +155,6 @@ java_debugger_service_start (JavaDebuggerService *service)
 }
 
 void 
-java_debugger_service_stop (JavaDebuggerService *service)
-{
-  java_debugger_service_send_command (service, "q\n");
-}
-
-void 
 java_debugger_service_send_command (JavaDebuggerService *service, 
                                     gchar               *command)
 {

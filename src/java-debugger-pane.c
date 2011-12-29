@@ -41,7 +41,8 @@ static void query_action                                        (JavaDebuggerPan
 static void step_over_action                                    (JavaDebuggerPane      *debugger_pane);
 static void step_into_action                                    (JavaDebuggerPane      *debugger_pane);
 static void step_out_action                                     (JavaDebuggerPane      *debugger_pane);
-static void stop_action                                         (JavaDebuggerPane      *debugger_pane);
+static void cont_action                                         (JavaDebuggerPane      *debugger_pane);
+static void quit_action                                         (JavaDebuggerPane      *debugger_pane);
 
 #define JAVA_DEBUGGER_PANE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_DEBUGGER_PANE_TYPE, JavaDebuggerPanePrivate))
@@ -57,10 +58,11 @@ struct _JavaDebuggerPanePrivate
 
 enum
 {
+  QUIT,  
+  CONT,  
   STEP_OVER,  
   STEP_INTO,  
   STEP_OUT,  
-  STOP,  
   LAST_SIGNAL
 };
 
@@ -88,6 +90,22 @@ java_page_interface_init (gpointer page,
 static void 
 java_debugger_pane_class_init (JavaDebuggerPaneClass *klass)
 {
+  debugger_pane_signals[CONT] =
+    g_signal_new ("cont", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerPaneClass, cont),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  debugger_pane_signals[QUIT] =
+    g_signal_new ("quit", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerPaneClass, quit),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   debugger_pane_signals[STEP_OVER] =
     g_signal_new ("step-over", 
                   G_TYPE_FROM_CLASS (klass),
@@ -112,14 +130,6 @@ java_debugger_pane_class_init (JavaDebuggerPaneClass *klass)
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  debugger_pane_signals[STOP] =
-    g_signal_new ("stop", 
-                  G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
-                  G_STRUCT_OFFSET (JavaDebuggerPaneClass, stop),
-                  NULL, NULL, 
-                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_debugger_pane_finalize;
   g_type_class_add_private (klass, sizeof (JavaDebuggerPanePrivate));
 }
@@ -132,11 +142,12 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   GtkWidget *vbox;
   GtkToolItem *query_item;
   GtkToolItem *query_separator_item;
+  GtkToolItem *cont_item;
+  GtkToolItem *quit_item;
+  GtkToolItem *stop_separator_item;
   GtkToolItem *step_over_item;
   GtkToolItem *step_into_item;
   GtkToolItem *step_out_item;
-  GtkToolItem *stop_item;
-  GtkToolItem *stop_separator_item;
   
   priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
   
@@ -152,22 +163,30 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   
   query_item = gtk_tool_button_new (NULL, "Query");
   query_separator_item = gtk_separator_tool_item_new ();
+  cont_item = gtk_tool_button_new_from_stock (GTK_STOCK_GOTO_LAST);
+  quit_item = gtk_tool_button_new_from_stock (GTK_STOCK_STOP);
   step_over_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_FORWARD);
   step_into_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_DOWN);
   step_out_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_UP);
-  stop_item = gtk_tool_button_new_from_stock (GTK_STOCK_STOP);
   stop_separator_item = gtk_separator_tool_item_new ();
   
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), query_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), query_separator_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), cont_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), quit_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), stop_separator_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_over_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_into_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_out_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), stop_separator_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), stop_item, -1);
   
   g_signal_connect_swapped (G_OBJECT (query_item), "clicked",
                             G_CALLBACK (query_action), debugger_pane);
+  
+  g_signal_connect_swapped (G_OBJECT (cont_item), "clicked",
+                            G_CALLBACK (cont_action), debugger_pane);
+  
+  g_signal_connect_swapped (G_OBJECT (quit_item), "clicked",
+                            G_CALLBACK (quit_action), debugger_pane);
   
   g_signal_connect_swapped (G_OBJECT (step_over_item), "clicked",
                             G_CALLBACK (step_over_action), debugger_pane);
@@ -177,9 +196,6 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   
   g_signal_connect_swapped (G_OBJECT (step_out_item), "clicked",
                             G_CALLBACK (step_out_action), debugger_pane);
-  
-  g_signal_connect_swapped (G_OBJECT (stop_item), "clicked",
-                            G_CALLBACK (stop_action), debugger_pane);
 }
 
 static void
@@ -191,14 +207,8 @@ java_debugger_pane_finalize (JavaDebuggerPane *debugger_pane)
 GtkWidget*
 java_debugger_pane_new ()
 {
-  /*JavaDebuggerPanePrivate *priv;*/
   GtkWidget *debugger_pane;
-  
   debugger_pane = g_object_new (java_debugger_pane_get_type (), NULL);
-  /*priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);*/
-  
-  
-  
   return debugger_pane;
 }
 
@@ -249,6 +259,18 @@ query_action (JavaDebuggerPane *debugger_pane)
 }
 
 static void
+cont_action (JavaDebuggerPane *debugger_pane)
+{
+  g_signal_emit_by_name ((gpointer) debugger_pane, "cont");
+}
+
+static void
+quit_action (JavaDebuggerPane *debugger_pane)
+{
+  g_signal_emit_by_name ((gpointer) debugger_pane, "quit");
+}
+
+static void
 step_over_action (JavaDebuggerPane *debugger_pane)
 {
   g_signal_emit_by_name ((gpointer) debugger_pane, "step-over");
@@ -264,10 +286,4 @@ static void
 step_out_action (JavaDebuggerPane *debugger_pane)
 {
   g_signal_emit_by_name ((gpointer) debugger_pane, "step-out");
-}
-
-static void
-stop_action (JavaDebuggerPane *debugger_pane)
-{
-  g_signal_emit_by_name ((gpointer) debugger_pane, "stop");
 }

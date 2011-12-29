@@ -76,6 +76,9 @@ java_engine_finalize (JavaEngine *engine)
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
   g_signal_handler_disconnect (priv->codeslayer, priv->properties_opened_id);
   g_signal_handler_disconnect (priv->codeslayer, priv->properties_saved_id);
+  g_object_unref (priv->output);
+  g_object_unref (priv->debugger);
+  g_object_unref (priv->configurations);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
 
