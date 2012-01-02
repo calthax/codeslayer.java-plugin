@@ -30,6 +30,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook-tab.c \
     java-debugger.h \
     java-debugger.c \
+    java-debugger-column.h \
+    java-debugger-column.c \
     java-debugger-pane.h \
     java-debugger-pane.c \
     java-debugger-service.h \

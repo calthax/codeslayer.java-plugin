@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "java-debugger.h"
+#include "java-debugger-column.h"
 #include "java-debugger-pane.h"
 #include "java-debugger-service.h"
 #include "java-debugger-breakpoints.h"
@@ -40,6 +41,8 @@ static void line_activated_action     (GtkSourceView          *sourceview,
                                        GdkEvent               *event,
                                        JavaDebugger           *debugger);                                       
 static void debug_test_file_action    (JavaDebugger           *debugger);
+static void query_action              (JavaDebugger           *debugger, 
+                                       gchar                  *text);
 static void cont_action               (JavaDebugger           *debugger);
 static void quit_action               (JavaDebugger           *debugger);
 static void step_over_action          (JavaDebugger           *debugger);
@@ -151,6 +154,9 @@ java_debugger_new (CodeSlayer         *codeslayer,
 
   g_signal_connect_swapped (G_OBJECT (menu), "debug-test-file",
                             G_CALLBACK (debug_test_file_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (debugger_pane), "query",
+                            G_CALLBACK (query_action), debugger);
 
   g_signal_connect_swapped (G_OBJECT (debugger_pane), "cont",
                             G_CALLBACK (cont_action), debugger);
@@ -339,6 +345,23 @@ debug_test_file_action (JavaDebugger *debugger)
 }
 
 static void
+query_action (JavaDebugger *debugger, 
+              gchar        *text)
+{
+  JavaDebuggerPrivate *priv;
+  gchar *query;
+  
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  if (!java_debugger_service_get_running (priv->service))
+    return;
+
+  query = g_strconcat (text, "\n", NULL);  
+  java_debugger_service_send_command (priv->service, query);
+  g_free (query);  
+}
+
+static void
 cont_action (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
@@ -473,6 +496,31 @@ read_channel_action (JavaDebugger *debugger,
           CodeSlayerDocument *document = list->data;
           select_editor (priv->codeslayer, document);
           g_object_unref (document);
+        }
+
+      if (gobjects != NULL)
+        g_list_free (gobjects);
+    }
+  else if (g_str_has_prefix (contents, "<print-table"))
+    {
+      GList *gobjects;
+      GList *list;
+      gobjects = codeslayer_utils_deserialize_gobjects (JAVA_DEBUGGER_COLUMN_TYPE,
+                                                        FALSE,
+                                                        contents, 
+                                                        "print-column",
+                                                        "name", G_TYPE_STRING, 
+                                                        "value", G_TYPE_STRING, 
+                                                        NULL);
+      list = gobjects;
+      while (list != NULL)
+        {
+          JavaDebuggerColumn *column = list->data;
+          const gchar *name = java_debugger_column_get_name (column);
+          const gchar *value = java_debugger_column_get_value (column);
+          g_print ("%s:%s\n", name, value);
+          g_object_unref (column);
+          list = g_list_next (list);
         }
 
       if (gobjects != NULL)

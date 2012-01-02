@@ -107,6 +107,11 @@ java_debugger_breakpoint_finalize (JavaDebuggerBreakpoint *breakpoint)
       g_free (priv->class_name);
       priv->class_name = NULL;
     }
+  if (priv->file_path)
+    {
+      g_free (priv->file_path);
+      priv->file_path = NULL;
+    }
   G_OBJECT_CLASS (java_debugger_breakpoint_parent_class)->finalize (G_OBJECT (breakpoint));
 }
 

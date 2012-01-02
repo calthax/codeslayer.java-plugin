@@ -53,11 +53,15 @@ struct _JavaDebuggerPanePrivate
 {
   JavaConfiguration  *configuration;
   CodeSlayerDocument *document;
-  GtkWidget          *hpaned; 
+  GtkWidget          *hpaned;
+  GtkWidget          *text_view;
+  GtkWidget          *tree;
+  GtkListStore       *store;
 };
 
 enum
 {
+  QUERY,  
   QUIT,  
   CONT,  
   STEP_OVER,  
@@ -90,6 +94,14 @@ java_page_interface_init (gpointer page,
 static void 
 java_debugger_pane_class_init (JavaDebuggerPaneClass *klass)
 {
+  debugger_pane_signals[QUERY] =
+    g_signal_new ("query", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerPaneClass, query),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+
   debugger_pane_signals[CONT] =
     g_signal_new ("cont", 
                   G_TYPE_FROM_CLASS (klass),
@@ -152,6 +164,7 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
   
   priv->hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
+  gtk_paned_set_position (GTK_PANED (priv->hpaned), 400);
   gtk_box_pack_start (GTK_BOX (debugger_pane), priv->hpaned, TRUE, TRUE, 0);
   
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -178,6 +191,15 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_over_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_into_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_out_item, -1);
+  
+  priv->text_view = gtk_text_view_new ();
+  gtk_box_pack_start (GTK_BOX (vbox), priv->text_view, TRUE, TRUE, 0);
+  
+  priv->tree = gtk_tree_view_new ();
+  gtk_paned_add2 (GTK_PANED (priv->hpaned), priv->tree);
+  /*priv->store = gtk_list_store_new (COLUMNS, G_TYPE_STRING);
+  gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->store));
+  g_object_unref (priv->store);*/
   
   g_signal_connect_swapped (G_OBJECT (query_item), "clicked",
                             G_CALLBACK (query_action), debugger_pane);
@@ -255,7 +277,21 @@ java_debugger_pane_set_document (JavaDebuggerPane   *debugger_pane,
 static void
 query_action (JavaDebuggerPane *debugger_pane)
 {
-  g_print ("query action\n");
+  JavaDebuggerPanePrivate *priv;
+  GtkTextBuffer *buffer;
+  GtkTextIter start;
+  GtkTextIter end;
+  gchar *text;
+  
+  priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
+  
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->text_view));
+  gtk_text_buffer_get_bounds (buffer, &start, &end);
+  text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  
+  g_signal_emit_by_name ((gpointer) debugger_pane, "query", text);
+  
+  g_free (text);
 }
 
 static void
