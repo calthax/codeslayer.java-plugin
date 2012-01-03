@@ -54,8 +54,8 @@ GType java_debugger_pane_get_type (void) G_GNUC_CONST;
 
 GtkWidget*  java_debugger_pane_new            (void);
 
-void        java_debugger_pane_refresh_table  (JavaDebuggerPane *debugger_pane, 
-                                               GList             *rows); 
+void        java_debugger_pane_refresh_rows  (JavaDebuggerPane *debugger_pane, 
+                                              GList            *rows); 
 
 G_END_DECLS
 

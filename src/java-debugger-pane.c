@@ -198,6 +198,7 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   gtk_box_pack_start (GTK_BOX (vbox), priv->text_view, TRUE, TRUE, 0);
   
   priv->tree = gtk_tree_view_new ();
+  priv->store = NULL;
   
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
@@ -240,22 +241,34 @@ java_debugger_pane_new ()
 }
 
 void
-java_debugger_pane_refresh_table (JavaDebuggerPane *debugger_pane, 
-                                  GList            *rows)
+java_debugger_pane_refresh_rows (JavaDebuggerPane *debugger_pane, 
+                                 GList            *rows)
 {
   JavaDebuggerPanePrivate *priv;
   GList *list;
   priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
+  
+  if (priv->store != NULL)
+    {
+      GList *columns = NULL;
+      gtk_list_store_clear (priv->store);
+      
+      columns = gtk_tree_view_get_columns (GTK_TREE_VIEW (priv->tree));
+      while (columns != NULL)
+        {
+          GtkTreeViewColumn *column = columns->data;
+          gtk_tree_view_remove_column (GTK_TREE_VIEW (priv->tree), column);
+          columns = g_list_next (columns);
+        }
+    }
   
   list = rows;
   
   if (list != NULL)
     {
       GList *columns = list->data;
-      GType *types;
+      GType types[g_list_length (columns)];
       gint i = 0;
-      
-      types = g_malloc (sizeof (GType) * g_list_length (columns));
       
       while (columns != NULL)
         {
@@ -269,14 +282,13 @@ java_debugger_pane_refresh_table (JavaDebuggerPane *debugger_pane,
           vcolumn = gtk_tree_view_column_new_with_attributes (name, renderer, "text", i, NULL);          
           gtk_tree_view_append_column (GTK_TREE_VIEW (priv->tree), vcolumn);          
           gdk_threads_leave ();
-          *(types+i) = G_TYPE_STRING;
+          types[i] = G_TYPE_STRING;
           i++;
           columns = g_list_next (columns);
         }
       
       gdk_threads_enter ();
       priv->store = gtk_list_store_newv (i, types);
-      g_free (types);
       gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->store));
       g_object_unref (priv->store);
       gdk_threads_leave ();

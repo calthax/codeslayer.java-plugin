@@ -513,7 +513,19 @@ read_channel_action (JavaDebugger *debugger,
                                                         "value", G_TYPE_STRING, 
                                                         NULL);
       rows = get_debugger_rows (gobjects);
-      java_debugger_pane_refresh_table (JAVA_DEBUGGER_PANE (priv->debugger_pane), rows);
+      java_debugger_pane_refresh_rows (JAVA_DEBUGGER_PANE (priv->debugger_pane), rows);
+    
+      while (rows != NULL)
+        {
+          GList *columns = rows->data;
+          while (columns != NULL)
+            {
+              GList *column = columns->data;
+              g_object_unref (column);
+              columns = g_list_next (columns);         
+            }          
+          rows = g_list_next (rows);
+        }
     
       if (gobjects != NULL)
         g_list_free (gobjects);
