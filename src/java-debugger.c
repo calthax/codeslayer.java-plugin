@@ -58,7 +58,7 @@ static void select_editor             (CodeSlayer             *codeslayer,
                                        
 static void initialize_editors        (JavaDebugger           *debugger);
 static void uninitialize_editors      (JavaDebugger           *debugger);
-                                       
+static GList* get_debugger_rows       (GList                  *columns);                                       
                                        
 #define BREAKPOINT "breakpoint"
 #define LINE_ACTIVATED "LINE_ACTIVATED"
@@ -71,6 +71,7 @@ typedef struct _JavaDebuggerPrivate JavaDebuggerPrivate;
 struct _JavaDebuggerPrivate
 {
   CodeSlayer              *codeslayer;
+  GtkWidget               *debugger_pane;
   JavaConfigurations      *configurations;
   GtkWidget               *menu;
   JavaDebuggerService     *service;
@@ -128,7 +129,6 @@ java_debugger_new (CodeSlayer         *codeslayer,
 {
   JavaDebuggerPrivate *priv;
   JavaDebugger *debugger;
-  GtkWidget *debugger_pane;
 
   debugger = JAVA_DEBUGGER (g_object_new (java_debugger_get_type (), NULL));
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
@@ -143,8 +143,8 @@ java_debugger_new (CodeSlayer         *codeslayer,
   priv->attributes = gtk_source_mark_attributes_new ();
   gtk_source_mark_attributes_set_stock_id (priv->attributes, GTK_STOCK_MEDIA_RECORD);
   
-  debugger_pane = java_debugger_pane_new ();
-  java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), debugger_pane, "Debugger");
+  priv->debugger_pane = java_debugger_pane_new ();
+  java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), priv->debugger_pane, "Debugger");
   
   priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
                                                     G_CALLBACK (editor_added_action), debugger);
@@ -155,22 +155,22 @@ java_debugger_new (CodeSlayer         *codeslayer,
   g_signal_connect_swapped (G_OBJECT (menu), "debug-test-file",
                             G_CALLBACK (debug_test_file_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "query",
+  g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "query",
                             G_CALLBACK (query_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "cont",
+  g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "cont",
                             G_CALLBACK (cont_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "quit",
+  g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "quit",
                             G_CALLBACK (quit_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-over",
+  g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "step-over",
                             G_CALLBACK (step_over_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-into",
+  g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "step-into",
                             G_CALLBACK (step_into_action), debugger);
 
-  g_signal_connect_swapped (G_OBJECT (debugger_pane), "step-out",
+  g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "step-out",
                             G_CALLBACK (step_out_action), debugger);
 
   g_signal_connect_swapped (G_OBJECT (priv->service), "read-channel",
@@ -504,7 +504,7 @@ read_channel_action (JavaDebugger *debugger,
   else if (g_str_has_prefix (contents, "<print-table"))
     {
       GList *gobjects;
-      GList *list;
+      GList *rows;
       gobjects = codeslayer_utils_deserialize_gobjects (JAVA_DEBUGGER_COLUMN_TYPE,
                                                         FALSE,
                                                         contents, 
@@ -512,20 +512,43 @@ read_channel_action (JavaDebugger *debugger,
                                                         "name", G_TYPE_STRING, 
                                                         "value", G_TYPE_STRING, 
                                                         NULL);
-      list = gobjects;
-      while (list != NULL)
-        {
-          JavaDebuggerColumn *column = list->data;
-          const gchar *name = java_debugger_column_get_name (column);
-          const gchar *value = java_debugger_column_get_value (column);
-          g_print ("%s:%s\n", name, value);
-          g_object_unref (column);
-          list = g_list_next (list);
-        }
-
+      rows = get_debugger_rows (gobjects);
+      java_debugger_pane_refresh_table (JAVA_DEBUGGER_PANE (priv->debugger_pane), rows);
+    
       if (gobjects != NULL)
         g_list_free (gobjects);
     }
+}
+
+static GList*
+get_debugger_rows (GList *columns)
+{
+  GList *rows = NULL;
+  GList *row = NULL;
+  const gchar *first_col = NULL; 
+  
+  while (columns != NULL)
+    {
+      JavaDebuggerColumn *column = columns->data;
+      const gchar *name = java_debugger_column_get_name (column);
+      if (first_col == NULL)
+        first_col = name;
+      
+      if (g_strcmp0 (first_col, name) == 0)
+        {
+          row = NULL;
+          row = g_list_append (row, column);
+          rows = g_list_append (rows, row);
+        }
+      else
+        {
+          row = g_list_append (row, column);
+        }
+      
+      columns = g_list_next (columns);
+    }
+  
+  return rows;
 }
 
 static void

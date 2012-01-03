@@ -22,6 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "java-debugger-pane.h"
+#include "java-debugger-column.h"
 #include "java-page.h"
 
 static void java_page_interface_init                            (gpointer               debugger_pane, 
@@ -150,6 +151,7 @@ static void
 java_debugger_pane_init (JavaDebuggerPane *debugger_pane) 
 {
   JavaDebuggerPanePrivate *priv;
+  GtkWidget *scrolled_window;
   GtkWidget *toolbar;
   GtkWidget *vbox;
   GtkToolItem *query_item;
@@ -196,10 +198,13 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   gtk_box_pack_start (GTK_BOX (vbox), priv->text_view, TRUE, TRUE, 0);
   
   priv->tree = gtk_tree_view_new ();
-  gtk_paned_add2 (GTK_PANED (priv->hpaned), priv->tree);
-  /*priv->store = gtk_list_store_new (COLUMNS, G_TYPE_STRING);
-  gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->store));
-  g_object_unref (priv->store);*/
+  
+  scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (priv->tree));
+  
+  gtk_paned_add2 (GTK_PANED (priv->hpaned), scrolled_window);
   
   g_signal_connect_swapped (G_OBJECT (query_item), "clicked",
                             G_CALLBACK (query_action), debugger_pane);
@@ -232,6 +237,74 @@ java_debugger_pane_new ()
   GtkWidget *debugger_pane;
   debugger_pane = g_object_new (java_debugger_pane_get_type (), NULL);
   return debugger_pane;
+}
+
+void
+java_debugger_pane_refresh_table (JavaDebuggerPane *debugger_pane, 
+                                  GList            *rows)
+{
+  JavaDebuggerPanePrivate *priv;
+  GList *list;
+  priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
+  
+  list = rows;
+  
+  if (list != NULL)
+    {
+      GList *columns = list->data;
+      GType *types;
+      gint i = 0;
+      
+      types = g_malloc (sizeof (GType) * g_list_length (columns));
+      
+      while (columns != NULL)
+        {
+          JavaDebuggerColumn *column = columns->data;
+          GtkCellRenderer *renderer;
+          GtkTreeViewColumn *vcolumn;
+          const gchar *name;          
+          name = java_debugger_column_get_name (column);
+          gdk_threads_enter ();
+          renderer = gtk_cell_renderer_text_new ();
+          vcolumn = gtk_tree_view_column_new_with_attributes (name, renderer, "text", i, NULL);          
+          gtk_tree_view_append_column (GTK_TREE_VIEW (priv->tree), vcolumn);          
+          gdk_threads_leave ();
+          *(types+i) = G_TYPE_STRING;
+          i++;
+          columns = g_list_next (columns);
+        }
+      
+      gdk_threads_enter ();
+      priv->store = gtk_list_store_newv (i, types);
+      g_free (types);
+      gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->store));
+      g_object_unref (priv->store);
+      gdk_threads_leave ();
+      
+      while (rows != NULL)
+        {
+          GList *columns = rows->data;
+          GtkTreeIter iter;
+          gint i = 0;
+
+          gdk_threads_enter ();
+          gtk_list_store_append (priv->store, &iter);
+          gdk_threads_leave ();
+
+          while (columns != NULL)
+            {
+              JavaDebuggerColumn *column = columns->data;
+              const gchar *value;
+              value = java_debugger_column_get_value (column);
+              gdk_threads_enter ();
+              gtk_list_store_set (priv->store, &iter, i, value, -1);
+              gdk_threads_leave ();
+              i++;
+              columns = g_list_next (columns);
+            }
+          rows = g_list_next (rows);
+        }    
+    }    
 }
 
 static JavaPageType 
