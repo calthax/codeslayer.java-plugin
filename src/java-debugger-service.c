@@ -92,7 +92,8 @@ java_debugger_service_new ()
 }
 
 void 
-java_debugger_service_start (JavaDebuggerService *service)
+java_debugger_service_start (JavaDebuggerService *service, 
+                             gchar               *const command[])
 {
   JavaDebuggerServicePrivate *priv;
 
@@ -129,7 +130,7 @@ java_debugger_service_start (JavaDebuggerService *service)
       close (stdout_pipe[0]);
       close (stdout_pipe[1]);
 
-      execlp ("ejdb", "ejdb", "-interactive", "true", "-launch", "org.junit.runner.JUnitCore org.jmesa.core.CoreContextTest", "-sourcepath", "/home/jeff/workspace/jmesaWeb/src:/home/jeff/workspace/jmesa/src:/home/jeff/workspace/jmesa/test", "-classpath", "/home/jeff/workspace/jmesa/build:/home/jeff/workspace/jmesa/lib/*", (char *)NULL);
+      execvp ("ejdb", command);
 
       g_warning ("Not able to communicate with ejdb.");
     }
@@ -164,8 +165,6 @@ java_debugger_service_send_command (JavaDebuggerService *service,
 
   priv = JAVA_DEBUGGER_SERVICE_GET_PRIVATE (service);
 
-  /*g_print ("command:: %s\n", command);*/
-  
   ret_value = g_io_channel_write_chars (priv->channel_write, command, -1, &length, NULL);
   if (ret_value == G_IO_STATUS_ERROR)
     {

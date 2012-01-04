@@ -336,12 +336,34 @@ static void
 debug_test_file_action (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
+  gchar *command[10];
+  
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
   if (java_debugger_service_get_running (priv->service))
-    java_debugger_service_send_command (priv->service, "q\n");
+    {
+      GtkWidget *dialog;
+      dialog =  gtk_message_dialog_new (NULL, 
+                                        GTK_DIALOG_MODAL,
+                                        GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+                                        "There is already a debugger session running.");
+      gtk_dialog_run (GTK_DIALOG (dialog));
+      gtk_widget_destroy (dialog);
+      return;
+    }
     
-  java_debugger_service_start (priv->service);
+  command[0] = "ejdb";   
+  command[1] = "-interactive";   
+  command[2] = "true";   
+  command[3] = "-launch";   
+  command[4] = "org.junit.runner.JUnitCore org.jmesa.core.CoreContextTest";   
+  command[5] = "-sourcepath";   
+  command[6] = "/home/jeff/workspace/jmesaWeb/src:/home/jeff/workspace/jmesa/src:/home/jeff/workspace/jmesa/test";   
+  command[7] = "-classpath";   
+  command[8] = "/home/jeff/workspace/jmesa/build:/home/jeff/workspace/jmesa/lib/*";   
+  command[9] = NULL;
+  
+  java_debugger_service_start (priv->service, command);
 }
 
 static void
@@ -353,12 +375,12 @@ query_action (JavaDebugger *debugger,
   
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  if (!java_debugger_service_get_running (priv->service))
-    return;
-
-  query = g_strconcat (text, "\n", NULL);  
-  java_debugger_service_send_command (priv->service, query);
-  g_free (query);  
+  if (java_debugger_service_get_running (priv->service))
+    {
+      query = g_strconcat (text, "\n", NULL);  
+      java_debugger_service_send_command (priv->service, query);
+      g_free (query);  
+    }
 }
 
 static void
@@ -397,10 +419,8 @@ step_into_action (JavaDebugger *debugger)
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  if (!java_debugger_service_get_running (priv->service))
-    return;
-
-  java_debugger_service_send_command (priv->service, "s\n");
+  if (java_debugger_service_get_running (priv->service))
+    java_debugger_service_send_command (priv->service, "s\n");
 }
 
 static void
@@ -409,10 +429,8 @@ step_out_action (JavaDebugger *debugger)
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
-  if (!java_debugger_service_get_running (priv->service))
-    return;
-
-  java_debugger_service_send_command (priv->service, "f\n");
+  if (java_debugger_service_get_running (priv->service))
+    java_debugger_service_send_command (priv->service, "f\n");
 }
 
 static void

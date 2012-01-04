@@ -51,7 +51,8 @@ GType java_debugger_service_get_type (void) G_GNUC_CONST;
 
 JavaDebuggerService*  java_debugger_service_new    (void);
 
-void                  java_debugger_service_start         (JavaDebuggerService *service);
+void                  java_debugger_service_start         (JavaDebuggerService *service, 
+                                                           gchar               *const command[]);
 gboolean              java_debugger_service_get_running   (JavaDebuggerService *service);
 void                  java_debugger_service_send_command  (JavaDebuggerService *service, 
                                                            gchar               *command);
