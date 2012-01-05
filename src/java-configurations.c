@@ -106,6 +106,14 @@ java_configurations_load (JavaConfigurations *configurations)
   g_free (file_path);
 }
 
+GList*
+java_configurations_get_list (JavaConfigurations *configurations)
+{
+  JavaConfigurationsPrivate *priv;
+  priv = JAVA_CONFIGURATIONS_GET_PRIVATE (configurations);
+  return priv->list;
+}
+
 JavaConfiguration*
 java_configurations_find_configuration (JavaConfigurations *configurations, 
                                         const gchar        *project_key)

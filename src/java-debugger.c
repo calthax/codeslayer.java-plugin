@@ -58,7 +58,10 @@ static void select_editor             (CodeSlayer             *codeslayer,
                                        
 static void initialize_editors        (JavaDebugger           *debugger);
 static void uninitialize_editors      (JavaDebugger           *debugger);
-static GList* get_debugger_rows       (GList                  *columns);                                       
+static GList* get_debugger_rows       (GList                  *columns); 
+static gchar* get_editor_class_name   (JavaDebugger           *debugger);
+static gchar* get_class_path          (JavaDebugger           *debugger);                                      
+static gchar* get_source_path         (JavaDebugger           *debugger);                                      
                                        
 #define BREAKPOINT "breakpoint"
 #define LINE_ACTIVATED "LINE_ACTIVATED"
@@ -273,10 +276,6 @@ line_activated_action (GtkSourceView *view,
 {
   JavaDebuggerPrivate *priv;
 	GtkSourceBuffer *buffer;
-	CodeSlayerProject *project;
-	CodeSlayerDocument *document;
-	JavaConfiguration *configuration;
-	const gchar *project_key;
 	gchar *class_name;
 	gint line_number;
 	GSList *marks;
@@ -289,13 +288,7 @@ line_activated_action (GtkSourceView *view,
 
 	marks = gtk_source_buffer_get_source_marks_at_line (buffer, line_number, BREAKPOINT);
 	
-	project = codeslayer_get_active_editor_project (priv->codeslayer);
-	document = codeslayer_get_active_editor_document (priv->codeslayer);
-	project_key = codeslayer_project_get_key (project);
-	configuration = java_configurations_find_configuration (priv->configurations, 
-	                                                        project_key);
-
-  class_name = java_utils_get_class_name (configuration, document);
+  class_name = get_editor_class_name (debugger);
   
 	if (marks != NULL)
 	  {
@@ -336,6 +329,10 @@ static void
 debug_test_file_action (JavaDebugger *debugger)
 {
   JavaDebuggerPrivate *priv;
+	gchar *class_name;
+	gchar *junit_cmd;
+	gchar *source_path;
+	gchar *class_path;
   gchar *command[10];
   
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
@@ -352,18 +349,110 @@ debug_test_file_action (JavaDebugger *debugger)
       return;
     }
     
+  class_name = get_editor_class_name (debugger);
+  junit_cmd = g_strconcat ("org.junit.runner.JUnitCore ", class_name, NULL);
+  source_path = get_source_path (debugger);
+  class_path = get_class_path (debugger);
+  
+  g_print ("class_path %s\n", class_path);
+
   command[0] = "ejdb";   
   command[1] = "-interactive";   
   command[2] = "true";   
   command[3] = "-launch";   
-  command[4] = "org.junit.runner.JUnitCore org.jmesa.core.CoreContextTest";   
+  command[4] = junit_cmd;   
   command[5] = "-sourcepath";   
-  command[6] = "/home/jeff/workspace/jmesaWeb/src:/home/jeff/workspace/jmesa/src:/home/jeff/workspace/jmesa/test";   
+  command[6] = source_path;
   command[7] = "-classpath";   
-  command[8] = "/home/jeff/workspace/jmesa/build:/home/jeff/workspace/jmesa/lib/*";   
+  command[8] = class_path;   
   command[9] = NULL;
   
   java_debugger_service_start (priv->service, command);
+  
+  g_free (class_name);
+  g_free (junit_cmd);
+  g_free (source_path);
+  g_free (class_path);
+}
+
+static gchar*
+get_editor_class_name (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+	const gchar *project_key;
+	CodeSlayerProject *project;
+	CodeSlayerDocument *document;
+	JavaConfiguration *configuration;
+
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+	project = codeslayer_get_active_editor_project (priv->codeslayer);
+	document = codeslayer_get_active_editor_document (priv->codeslayer);
+	project_key = codeslayer_project_get_key (project);
+	configuration = java_configurations_find_configuration (priv->configurations, 
+	                                                        project_key);
+
+  return java_utils_get_class_name (configuration, document);
+}
+
+static gchar*
+get_class_path (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+	const gchar *project_key;
+	CodeSlayerProject *project;
+	JavaConfiguration *configuration;
+  const gchar *build_folder;
+  const gchar *lib_folder;
+
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+	project = codeslayer_get_active_editor_project (priv->codeslayer);
+	project_key = codeslayer_project_get_key (project);
+	configuration = java_configurations_find_configuration (priv->configurations, 
+	                                                        project_key);
+	                                                        
+  build_folder = java_configuration_get_build_folder (configuration);
+  lib_folder = java_configuration_get_lib_folder (configuration);
+
+  return g_strconcat (build_folder, ":", lib_folder, "/*", NULL);
+}
+
+static gchar*
+get_source_path (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  GList *list;
+  GString *string;
+
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  
+  string = g_string_new ("");
+  
+  
+  list = java_configurations_get_list (priv->configurations);
+  while (list != NULL)
+    {
+      JavaConfiguration *configuration = list->data;
+      const gchar *source_folder;
+      const gchar *test_folder;
+      
+      source_folder = java_configuration_get_source_folder (configuration);
+      test_folder = java_configuration_get_test_folder (configuration);
+      
+      string = g_string_append (string, source_folder);
+      string = g_string_append (string, ":");
+      
+      if (codeslayer_utils_has_text (test_folder))
+        {
+          string = g_string_append (string, test_folder);
+          string = g_string_append (string, ":");
+        }
+            
+      list = g_list_next (list);
+    }
+
+  return g_string_free (string, FALSE);  
 }
 
 static void

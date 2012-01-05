@@ -50,7 +50,7 @@ JavaConfigurations*  java_configurations_new                 (CodeSlayer        
 
 
 void                 java_configurations_load                (JavaConfigurations *configurations);
-
+GList*               java_configurations_get_list            (JavaConfigurations *configurations);
 JavaConfiguration*   java_configurations_find_configuration  (JavaConfigurations *configurations,
                                                               const gchar        *project_key);
 void                 java_configurations_save                (JavaConfigurations *configurations,
