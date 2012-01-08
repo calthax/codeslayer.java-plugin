@@ -118,6 +118,7 @@ java_debugger_breakpoints_find_breakpoint (JavaDebuggerBreakpoints *breakpoints,
       gint number = 0;
       
       name = java_debugger_breakpoint_get_class_name (breakpoint);
+      number = java_debugger_breakpoint_get_line_number (breakpoint);
       
       if (g_strcmp0 (class_name, name) == 0 && line_number == number)
         return breakpoint;

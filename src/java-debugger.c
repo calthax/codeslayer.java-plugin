@@ -52,6 +52,8 @@ static void step_out_action           (JavaDebugger           *debugger);
 
 static void add_breakpoint            (JavaDebugger           *debugger,
                                        JavaDebuggerBreakpoint *breakpoint);
+static void delete_breakpoint         (JavaDebugger           *debugger,
+                                       JavaDebuggerBreakpoint *breakpoint);
 static void read_channel_action       (JavaDebugger           *debugger, 
                                        gchar                  *text);
 static void select_editor             (CodeSlayer             *codeslayer, 
@@ -301,7 +303,12 @@ line_activated_action (GtkSourceView *view,
                                                               class_name, 
                                                               line_number + 1);
       if (breakpoint)
-        java_debugger_breakpoints_remove_breakpoint (priv->breakpoints, breakpoint);
+        {
+          if (java_debugger_service_get_running (priv->service))
+            delete_breakpoint (debugger, breakpoint);
+
+          java_debugger_breakpoints_remove_breakpoint (priv->breakpoints, breakpoint);
+        }
 
 		  gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (buffer), 
 		                               GTK_TEXT_MARK (marks->data));
@@ -575,6 +582,26 @@ add_breakpoint (JavaDebugger           *debugger,
   class_name = java_debugger_breakpoint_get_class_name (breakpoint);
   line_number = java_debugger_breakpoint_get_line_number (breakpoint);
   command = g_strdup_printf ("break %s:%d\n", class_name, line_number);
+  
+  java_debugger_service_send_command (priv->service, command);
+  
+  g_free (command);
+}
+
+static void
+delete_breakpoint (JavaDebugger           *debugger,
+                   JavaDebuggerBreakpoint *breakpoint)
+{
+  JavaDebuggerPrivate *priv;
+  gchar *command;
+  const gchar *class_name = NULL;
+  gint line_number = 0;
+  
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+
+  class_name = java_debugger_breakpoint_get_class_name (breakpoint);
+  line_number = java_debugger_breakpoint_get_line_number (breakpoint);
+  command = g_strdup_printf ("delete %s:%d\n", class_name, line_number);
   
   java_debugger_service_send_command (priv->service, command);
   
