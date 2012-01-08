@@ -31,6 +31,7 @@ static void compile_action          (JavaMenu      *menu);
 static void clean_action            (JavaMenu      *menu);
 static void test_file_action        (JavaMenu      *menu);
 static void debug_test_file_action  (JavaMenu      *menu);
+static void attach_debugger_action  (JavaMenu      *menu);
                                         
 enum
 {
@@ -38,6 +39,7 @@ enum
   CLEAN,
   TEST_FILE,
   DEBUG_TEST_FILE,
+  ATTACH_DEBUGGER,
   LAST_SIGNAL
 };
 
@@ -77,6 +79,14 @@ java_menu_class_init (JavaMenuClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (JavaMenuClass, debug_test_file),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  java_menu_signals[ATTACH_DEBUGGER] =
+    g_signal_new ("attach-debugger", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaMenuClass, attach_debugger),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
@@ -120,6 +130,7 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *clean_item;
   GtkWidget *test_file_item;
   GtkWidget *debug_test_file_item;
+  GtkWidget *attach_debugger_item;
   GtkWidget *separator_item;
 
   compile_item = codeslayer_menu_item_new_with_label ("compile");
@@ -143,6 +154,12 @@ add_menu_items (JavaMenu      *menu,
                               accel_group, GDK_KEY_F6, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), debug_test_file_item);
 
+  separator_item = gtk_separator_menu_item_new ();
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
+
+  attach_debugger_item = codeslayer_menu_item_new_with_label ("attach debugger");
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), attach_debugger_item);
+
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 
                             G_CALLBACK (compile_action), menu);
    
@@ -154,6 +171,9 @@ add_menu_items (JavaMenu      *menu,
    
   g_signal_connect_swapped (G_OBJECT (debug_test_file_item), "activate", 
                             G_CALLBACK (debug_test_file_action), menu);
+   
+  g_signal_connect_swapped (G_OBJECT (attach_debugger_item), "activate", 
+                            G_CALLBACK (attach_debugger_action), menu);
 }
 
 static void 
@@ -178,4 +198,10 @@ static void
 debug_test_file_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "debug-test-file");
+}
+
+static void 
+attach_debugger_action (JavaMenu *menu) 
+{
+  g_signal_emit_by_name ((gpointer) menu, "attach-debugger");
 }

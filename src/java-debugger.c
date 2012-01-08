@@ -41,6 +41,7 @@ static void line_activated_action     (GtkSourceView          *sourceview,
                                        GdkEvent               *event,
                                        JavaDebugger           *debugger);                                       
 static void debug_test_file_action    (JavaDebugger           *debugger);
+static void attach_debugger_action    (JavaDebugger           *debugger);
 static void query_action              (JavaDebugger           *debugger, 
                                        gchar                  *text);
 static void cont_action               (JavaDebugger           *debugger);
@@ -157,6 +158,9 @@ java_debugger_new (CodeSlayer         *codeslayer,
 
   g_signal_connect_swapped (G_OBJECT (menu), "debug-test-file",
                             G_CALLBACK (debug_test_file_action), debugger);
+
+  g_signal_connect_swapped (G_OBJECT (menu), "attach-debugger",
+                            G_CALLBACK (attach_debugger_action), debugger);
 
   g_signal_connect_swapped (G_OBJECT (priv->debugger_pane), "query",
                             G_CALLBACK (query_action), debugger);
@@ -354,8 +358,6 @@ debug_test_file_action (JavaDebugger *debugger)
   source_path = get_source_path (debugger);
   class_path = get_class_path (debugger);
   
-  g_print ("class_path %s\n", class_path);
-
   command[0] = "ejdb";   
   command[1] = "-interactive";   
   command[2] = "true";   
@@ -373,6 +375,43 @@ debug_test_file_action (JavaDebugger *debugger)
   g_free (junit_cmd);
   g_free (source_path);
   g_free (class_path);
+}
+
+static void
+attach_debugger_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+	gchar *source_path;
+  gchar *command[8];
+
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  
+  if (java_debugger_service_get_running (priv->service))
+    {
+      GtkWidget *dialog;
+      dialog =  gtk_message_dialog_new (NULL, 
+                                        GTK_DIALOG_MODAL,
+                                        GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+                                        "There is already a debugger session running.");
+      gtk_dialog_run (GTK_DIALOG (dialog));
+      gtk_widget_destroy (dialog);
+      return;
+    }
+  
+  source_path = get_source_path (debugger);
+  
+  command[0] = "ejdb";   
+  command[1] = "-interactive";   
+  command[2] = "true";   
+  command[3] = "-port";   
+  command[4] = "8000";   
+  command[5] = "-sourcepath";   
+  command[6] = source_path;
+  command[7] = NULL;
+
+  java_debugger_service_start (priv->service, command);
+  
+  g_free (source_path);    
 }
 
 static gchar*
