@@ -58,6 +58,12 @@ struct _JavaDebuggerPanePrivate
   GtkWidget          *text_view;
   GtkWidget          *tree;
   GtkListStore       *store;
+  GtkToolItem        *query_item;
+  GtkToolItem        *cont_item;
+  GtkToolItem        *quit_item;
+  GtkToolItem        *step_over_item;
+  GtkToolItem        *step_into_item;
+  GtkToolItem        *step_out_item;
 };
 
 enum
@@ -154,14 +160,8 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   GtkWidget *scrolled_window;
   GtkWidget *toolbar;
   GtkWidget *vbox;
-  GtkToolItem *query_item;
   GtkToolItem *query_separator_item;
-  GtkToolItem *cont_item;
-  GtkToolItem *quit_item;
   GtkToolItem *stop_separator_item;
-  GtkToolItem *step_over_item;
-  GtkToolItem *step_into_item;
-  GtkToolItem *step_out_item;
   
   priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
   
@@ -176,23 +176,23 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   gtk_toolbar_set_style (GTK_TOOLBAR (toolbar), GTK_TOOLBAR_ICONS);
   gtk_box_pack_start (GTK_BOX (vbox), toolbar, FALSE, FALSE, 0);
   
-  query_item = gtk_tool_button_new (NULL, "Query");
+  priv->query_item = gtk_tool_button_new (NULL, "Query");
   query_separator_item = gtk_separator_tool_item_new ();
-  cont_item = gtk_tool_button_new_from_stock (GTK_STOCK_GOTO_LAST);
-  quit_item = gtk_tool_button_new_from_stock (GTK_STOCK_STOP);
-  step_over_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_FORWARD);
-  step_into_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_DOWN);
-  step_out_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_UP);
+  priv->cont_item = gtk_tool_button_new_from_stock (GTK_STOCK_GOTO_LAST);
+  priv->quit_item = gtk_tool_button_new_from_stock (GTK_STOCK_STOP);
+  priv->step_over_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_FORWARD);
+  priv->step_into_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_DOWN);
+  priv->step_out_item = gtk_tool_button_new_from_stock (GTK_STOCK_GO_UP);
   stop_separator_item = gtk_separator_tool_item_new ();
   
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), query_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), priv->query_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), query_separator_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), cont_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), quit_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), priv->cont_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), priv->quit_item, -1);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar), stop_separator_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_over_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_into_item, -1);
-  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), step_out_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), priv->step_over_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), priv->step_into_item, -1);
+  gtk_toolbar_insert (GTK_TOOLBAR (toolbar), priv->step_out_item, -1);
   
   priv->text_view = gtk_text_view_new ();
   gtk_box_pack_start (GTK_BOX (vbox), priv->text_view, TRUE, TRUE, 0);
@@ -207,22 +207,22 @@ java_debugger_pane_init (JavaDebuggerPane *debugger_pane)
   
   gtk_paned_add2 (GTK_PANED (priv->hpaned), scrolled_window);
   
-  g_signal_connect_swapped (G_OBJECT (query_item), "clicked",
+  g_signal_connect_swapped (G_OBJECT (priv->query_item), "clicked",
                             G_CALLBACK (query_action), debugger_pane);
   
-  g_signal_connect_swapped (G_OBJECT (cont_item), "clicked",
+  g_signal_connect_swapped (G_OBJECT (priv->cont_item), "clicked",
                             G_CALLBACK (cont_action), debugger_pane);
   
-  g_signal_connect_swapped (G_OBJECT (quit_item), "clicked",
+  g_signal_connect_swapped (G_OBJECT (priv->quit_item), "clicked",
                             G_CALLBACK (quit_action), debugger_pane);
   
-  g_signal_connect_swapped (G_OBJECT (step_over_item), "clicked",
+  g_signal_connect_swapped (G_OBJECT (priv->step_over_item), "clicked",
                             G_CALLBACK (step_over_action), debugger_pane);
   
-  g_signal_connect_swapped (G_OBJECT (step_into_item), "clicked",
+  g_signal_connect_swapped (G_OBJECT (priv->step_into_item), "clicked",
                             G_CALLBACK (step_into_action), debugger_pane);
   
-  g_signal_connect_swapped (G_OBJECT (step_out_item), "clicked",
+  g_signal_connect_swapped (G_OBJECT (priv->step_out_item), "clicked",
                             G_CALLBACK (step_out_action), debugger_pane);
 }
 
@@ -238,6 +238,21 @@ java_debugger_pane_new ()
   GtkWidget *debugger_pane;
   debugger_pane = g_object_new (java_debugger_pane_get_type (), NULL);
   return debugger_pane;
+}
+
+void
+java_debugger_pane_enable_toolbar (JavaDebuggerPane *debugger_pane, 
+                                   gboolean          enable)
+{
+  JavaDebuggerPanePrivate *priv;
+  priv = JAVA_DEBUGGER_PANE_GET_PRIVATE (debugger_pane);
+
+  gtk_widget_set_sensitive (GTK_WIDGET (priv->query_item), enable);
+  gtk_widget_set_sensitive (GTK_WIDGET (priv->cont_item), enable);
+  gtk_widget_set_sensitive (GTK_WIDGET (priv->quit_item), enable);
+  gtk_widget_set_sensitive (GTK_WIDGET (priv->step_over_item), enable);
+  gtk_widget_set_sensitive (GTK_WIDGET (priv->step_into_item), enable);
+  gtk_widget_set_sensitive (GTK_WIDGET (priv->step_out_item), enable);
 }
 
 void

@@ -45,6 +45,7 @@ struct _JavaDebuggerServiceClass
   GObjectClass parent_class;
   
   void (*read_channel) (JavaDebuggerService *service);
+  void (*channel_closed) (JavaDebuggerService *service);
 };
 
 GType java_debugger_service_get_type (void) G_GNUC_CONST;

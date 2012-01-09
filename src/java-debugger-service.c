@@ -46,6 +46,7 @@ struct _JavaDebuggerServicePrivate
 enum
 {
   READ_CHANNEL,  
+  CHANNEL_CLOSED,  
   LAST_SIGNAL
 };
 
@@ -63,6 +64,14 @@ java_debugger_service_class_init (JavaDebuggerServiceClass *klass)
                   G_STRUCT_OFFSET (JavaDebuggerServiceClass, read_channel),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  debugger_service_signals[CHANNEL_CLOSED] =
+    g_signal_new ("channel-closed", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaDebuggerServiceClass, channel_closed),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_debugger_service_finalize;
   g_type_class_add_private (klass, sizeof (JavaDebuggerServicePrivate));
@@ -235,4 +244,7 @@ channel_closed_action (JavaDebuggerService *service)
       g_io_channel_unref (priv->channel_write);
       priv->channel_write = NULL;
    }
+   
+   if (priv->channel_read == NULL && priv->channel_write == NULL)
+     g_signal_emit_by_name ((gpointer) service, "channel-closed");
 }

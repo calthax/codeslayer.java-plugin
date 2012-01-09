@@ -56,6 +56,7 @@ static void delete_breakpoint         (JavaDebugger           *debugger,
                                        JavaDebuggerBreakpoint *breakpoint);
 static void read_channel_action       (JavaDebugger           *debugger, 
                                        gchar                  *text);
+static void channel_closed_action     (JavaDebugger           *debugger);
 static void select_editor             (CodeSlayer             *codeslayer, 
                                        CodeSlayerDocument     *document);
                                        
@@ -185,6 +186,9 @@ java_debugger_new (CodeSlayer         *codeslayer,
   g_signal_connect_swapped (G_OBJECT (priv->service), "read-channel",
                             G_CALLBACK (read_channel_action), debugger);
                             
+  g_signal_connect_swapped (G_OBJECT (priv->service), "channel-closed",
+                            G_CALLBACK (channel_closed_action), debugger);
+                            
   initialize_editors (debugger);
 
   return debugger;
@@ -312,8 +316,6 @@ line_activated_action (GtkSourceView *view,
 
 		  gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (buffer), 
 		                               GTK_TEXT_MARK (marks->data));
-
-      g_print ("line removed %s:%d\n", class_name, line_number + 1);
   	}
 	else
 	  {
@@ -323,11 +325,8 @@ line_activated_action (GtkSourceView *view,
       java_debugger_breakpoint_set_line_number (breakpoint, line_number + 1);
       
       java_debugger_breakpoints_add_breakpoint (priv->breakpoints, breakpoint);
-	  
 	  	gtk_source_buffer_create_source_mark (buffer, NULL, BREAKPOINT, iter);
 	  		  	
-      g_print ("line added %s:%d\n", class_name, line_number + 1);
-      
       if (java_debugger_service_get_running (priv->service))
         add_breakpoint (debugger, breakpoint);
   	}
@@ -377,6 +376,8 @@ debug_test_file_action (JavaDebugger *debugger)
   command[9] = NULL;
   
   java_debugger_service_start (priv->service, command);
+  java_debugger_pane_enable_toolbar (JAVA_DEBUGGER_PANE (priv->debugger_pane), 
+                                     TRUE); 
   
   g_free (class_name);
   g_free (junit_cmd);
@@ -417,6 +418,8 @@ attach_debugger_action (JavaDebugger *debugger)
   command[7] = NULL;
 
   java_debugger_service_start (priv->service, command);
+  java_debugger_pane_enable_toolbar (JAVA_DEBUGGER_PANE (priv->debugger_pane), 
+                                     TRUE); 
   
   g_free (source_path);    
 }
@@ -606,6 +609,15 @@ delete_breakpoint (JavaDebugger           *debugger,
   java_debugger_service_send_command (priv->service, command);
   
   g_free (command);
+}
+
+static void
+channel_closed_action (JavaDebugger *debugger)
+{
+  JavaDebuggerPrivate *priv;
+  priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
+  java_debugger_pane_enable_toolbar (JAVA_DEBUGGER_PANE (priv->debugger_pane), 
+                                     FALSE); 
 }
 
 static void
