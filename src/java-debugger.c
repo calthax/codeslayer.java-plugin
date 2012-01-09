@@ -65,7 +65,11 @@ static void uninitialize_editors      (JavaDebugger           *debugger);
 static GList* get_debugger_rows       (GList                  *columns); 
 static gchar* get_editor_class_name   (JavaDebugger           *debugger);
 static gchar* get_class_path          (JavaDebugger           *debugger);                                      
-static gchar* get_source_path         (JavaDebugger           *debugger);                                      
+static gchar* get_source_path         (JavaDebugger           *debugger);
+static void apply_debugger_marks      (CodeSlayer             *codeslayer,
+                                       CodeSlayerDocument     *document);
+static void remove_debugger_marks     (CodeSlayer             *codeslayer);
+                                       
                                        
 #define BREAKPOINT "breakpoint"
 #define LINE_ACTIVATED "LINE_ACTIVATED"
@@ -248,6 +252,7 @@ editor_added_action (JavaDebugger     *debugger,
                      CodeSlayerEditor *editor)
 {
   JavaDebuggerPrivate *priv;
+  GtkTextBuffer *buffer;
   gulong line_activated_id;
   
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
@@ -261,6 +266,10 @@ editor_added_action (JavaDebugger     *debugger,
                                         
   g_object_set_data (G_OBJECT (editor), LINE_ACTIVATED, 
                      g_strdup_printf ("%lu", line_activated_id));
+                     
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
+  gtk_text_buffer_create_tag (GTK_TEXT_BUFFER (buffer), 
+                              "debugger-marks", "background", "#abe37e", NULL);
 }
 
 static void
@@ -528,7 +537,10 @@ cont_action (JavaDebugger *debugger)
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
 
   if (java_debugger_service_get_running (priv->service))
-    java_debugger_service_send_command (priv->service, "c\n");
+    {
+      java_debugger_service_send_command (priv->service, "c\n");    
+      remove_debugger_marks (priv->codeslayer);
+    }
 }
 
 static void
@@ -617,7 +629,10 @@ channel_closed_action (JavaDebugger *debugger)
   JavaDebuggerPrivate *priv;
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   java_debugger_pane_enable_toolbar (JAVA_DEBUGGER_PANE (priv->debugger_pane), 
-                                     FALSE); 
+                                     FALSE);
+  gdk_threads_enter ();
+  remove_debugger_marks (priv->codeslayer);
+  gdk_threads_leave ();
 }
 
 static void
@@ -760,6 +775,49 @@ select_editor (CodeSlayer         *codeslayer,
   codeslayer_document_set_project (document, project);
 
   gdk_threads_enter ();
-  codeslayer_select_editor (codeslayer, document);
+  if (codeslayer_select_editor (codeslayer, document))
+    {
+      remove_debugger_marks (codeslayer);
+      apply_debugger_marks (codeslayer, document);    
+    }
   gdk_threads_leave ();
+}
+
+static void
+apply_debugger_marks (CodeSlayer         *codeslayer, 
+                      CodeSlayerDocument *document)
+{
+  CodeSlayerEditor *editor;
+  GtkTextBuffer *buffer;
+  gint line_number;
+  GtkTextIter begin;
+  GtkTextIter end;
+
+  editor = codeslayer_get_active_editor (codeslayer);
+  
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
+  line_number = codeslayer_document_get_line_number (document);
+
+  gtk_text_buffer_get_iter_at_line (buffer, &begin, line_number-1);
+  end = begin;
+  gtk_text_iter_forward_line (&end);
+
+  gtk_text_buffer_apply_tag_by_name (buffer, "debugger-marks", &begin, &end);
+}
+
+static void
+remove_debugger_marks (CodeSlayer *codeslayer)
+{
+  GList *editors;
+  editors = codeslayer_get_all_editors (codeslayer);
+  while (editors != NULL)
+    {
+      CodeSlayerEditor *editor = editors->data;
+      GtkTextBuffer *buffer;
+      GtkTextIter start, end;
+      buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
+      gtk_text_buffer_get_bounds (buffer, &start, &end);
+      gtk_text_buffer_remove_tag_by_name (buffer, "debugger-marks", &start, &end);
+      editors = g_list_next (editors);
+    }
 }
