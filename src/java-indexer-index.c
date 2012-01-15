@@ -16,26 +16,26 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "java-indexer-method.h"
+#include "java-indexer-index.h"
 
-static void java_indexer_method_class_init    (JavaIndexerMethodClass *klass);
-static void java_indexer_method_init          (JavaIndexerMethod      *method);
-static void java_indexer_method_finalize      (JavaIndexerMethod      *method);
-static void java_indexer_method_get_property  (GObject                *object, 
-                                               guint                   prop_id,
-                                               GValue                 *value,
-                                               GParamSpec             *pspec);
-static void java_indexer_method_set_property  (GObject                *object, 
-                                               guint                   prop_id,
-                                               const GValue           *value,
-                                               GParamSpec             *pspec);
+static void java_indexer_index_class_init    (JavaIndexerIndexClass *klass);
+static void java_indexer_index_init          (JavaIndexerIndex      *index);
+static void java_indexer_index_finalize      (JavaIndexerIndex      *index);
+static void java_indexer_index_get_property  (GObject               *object, 
+                                              guint                  prop_id,
+                                              GValue                *value,
+                                              GParamSpec            *pspec);
+static void java_indexer_index_set_property  (GObject               *object, 
+                                              guint                  prop_id,
+                                              const GValue          *value,
+                                              GParamSpec            *pspec);
 
-#define JAVA_INDEXER_METHOD_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_METHOD_TYPE, JavaIndexerMethodPrivate))
+#define JAVA_INDEXER_INDEX_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_INDEX_TYPE, JavaIndexerIndexPrivate))
 
-typedef struct _JavaIndexerMethodPrivate JavaIndexerMethodPrivate;
+typedef struct _JavaIndexerIndexPrivate JavaIndexerIndexPrivate;
 
-struct _JavaIndexerMethodPrivate
+struct _JavaIndexerIndexPrivate
 {
   gchar *name;
   gchar *parameters;
@@ -58,19 +58,19 @@ enum
   PROP_LINE_NUMBER
 };
 
-G_DEFINE_TYPE (JavaIndexerMethod, java_indexer_method, G_TYPE_OBJECT)
+G_DEFINE_TYPE (JavaIndexerIndex, java_indexer_index, G_TYPE_OBJECT)
      
 static void 
-java_indexer_method_class_init (JavaIndexerMethodClass *klass)
+java_indexer_index_class_init (JavaIndexerIndexClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->finalize = (GObjectFinalizeFunc) java_indexer_method_finalize;
+  gobject_class->finalize = (GObjectFinalizeFunc) java_indexer_index_finalize;
 
-  gobject_class->get_property = java_indexer_method_get_property;
-  gobject_class->set_property = java_indexer_method_set_property;
+  gobject_class->get_property = java_indexer_index_get_property;
+  gobject_class->set_property = java_indexer_index_set_property;
 
-  g_type_class_add_private (klass, sizeof (JavaIndexerMethodPrivate));
+  g_type_class_add_private (klass, sizeof (JavaIndexerIndexPrivate));
 
   g_object_class_install_property (gobject_class, 
                                    PROP_NAME,
@@ -124,10 +124,10 @@ java_indexer_method_class_init (JavaIndexerMethodClass *klass)
 }
 
 static void
-java_indexer_method_init (JavaIndexerMethod *method)
+java_indexer_index_init (JavaIndexerIndex *index)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   priv->name = NULL;
   priv->parameters = NULL;
   priv->modifier = NULL;
@@ -138,10 +138,10 @@ java_indexer_method_init (JavaIndexerMethod *method)
 }
 
 static void
-java_indexer_method_finalize (JavaIndexerMethod *method)
+java_indexer_index_finalize (JavaIndexerIndex *index)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->name)
     {
       g_free (priv->name);
@@ -172,20 +172,20 @@ java_indexer_method_finalize (JavaIndexerMethod *method)
       g_free (priv->file_path);
       priv->file_path = NULL;
     }
-  G_OBJECT_CLASS (java_indexer_method_parent_class)->finalize (G_OBJECT (method));
+  G_OBJECT_CLASS (java_indexer_index_parent_class)->finalize (G_OBJECT (index));
 }
 
 static void
-java_indexer_method_get_property (GObject    *object, 
-                                       guint       prop_id,
-                                       GValue     *value, 
-                                       GParamSpec *pspec)
+java_indexer_index_get_property (GObject    *object, 
+                                 guint       prop_id,
+                                 GValue     *value, 
+                                 GParamSpec *pspec)
 {
-  JavaIndexerMethod *method;
-  JavaIndexerMethodPrivate *priv;
+  JavaIndexerIndex *index;
+  JavaIndexerIndexPrivate *priv;
   
-  method = JAVA_INDEXER_METHOD (object);
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  index = JAVA_INDEXER_INDEX (object);
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
 
   switch (prop_id)
     {
@@ -217,36 +217,36 @@ java_indexer_method_get_property (GObject    *object,
 }
 
 static void
-java_indexer_method_set_property (GObject      *object, 
-                                       guint         prop_id,
-                                       const GValue *value, 
-                                       GParamSpec   *pspec)
+java_indexer_index_set_property (GObject      *object, 
+                                 guint         prop_id,
+                                 const GValue *value, 
+                                 GParamSpec   *pspec)
 {
-  JavaIndexerMethod *method;
-  method = JAVA_INDEXER_METHOD (object);
+  JavaIndexerIndex *index;
+  index = JAVA_INDEXER_INDEX (object);
 
   switch (prop_id)
     {
     case PROP_NAME:
-      java_indexer_method_set_name (method, g_value_get_string (value));
+      java_indexer_index_set_name (index, g_value_get_string (value));
       break;
     case PROP_PARAMETERS:
-      java_indexer_method_set_parameters (method, g_value_get_string (value));
+      java_indexer_index_set_parameters (index, g_value_get_string (value));
       break;
     case PROP_MODIFIER:
-      java_indexer_method_set_modifier (method, g_value_get_string (value));
+      java_indexer_index_set_modifier (index, g_value_get_string (value));
       break;
     case PROP_CLASS_NAME:
-      java_indexer_method_set_class_name (method, g_value_get_string (value));
+      java_indexer_index_set_class_name (index, g_value_get_string (value));
       break;
     case PROP_PACKAGE_NAME:
-      java_indexer_method_set_package_name (method, g_value_get_string (value));
+      java_indexer_index_set_package_name (index, g_value_get_string (value));
       break;
     case PROP_FILE_PATH:
-      java_indexer_method_set_file_path (method, g_value_get_string (value));
+      java_indexer_index_set_file_path (index, g_value_get_string (value));
       break;
     case PROP_LINE_NUMBER:
-      java_indexer_method_set_line_number (method, g_value_get_int (value));
+      java_indexer_index_set_line_number (index, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,24 +254,24 @@ java_indexer_method_set_property (GObject      *object,
     }
 }
 
-JavaIndexerMethod*
-java_indexer_method_new (void)
+JavaIndexerIndex*
+java_indexer_index_new (void)
 {
-  return JAVA_INDEXER_METHOD (g_object_new (java_indexer_method_get_type (), NULL));
+  return JAVA_INDEXER_INDEX (g_object_new (java_indexer_index_get_type (), NULL));
 }
 
 const gchar*
-java_indexer_method_get_name (JavaIndexerMethod *method)
+java_indexer_index_get_name (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->name;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->name;
 }
 
 void
-java_indexer_method_set_name (JavaIndexerMethod *method, 
-                              const gchar       *name)
+java_indexer_index_set_name (JavaIndexerIndex *index, 
+                             const gchar      *name)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->name)
     {
       g_free (priv->name);
@@ -281,17 +281,17 @@ java_indexer_method_set_name (JavaIndexerMethod *method,
 }
 
 const gchar*
-java_indexer_method_get_parameters (JavaIndexerMethod *method)
+java_indexer_index_get_parameters (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->parameters;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->parameters;
 }
 
 void
-java_indexer_method_set_parameters (JavaIndexerMethod *method, 
-                                    const gchar       *parameters)
+java_indexer_index_set_parameters (JavaIndexerIndex *index, 
+                                   const gchar      *parameters)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->parameters)
     {
       g_free (priv->parameters);
@@ -301,17 +301,17 @@ java_indexer_method_set_parameters (JavaIndexerMethod *method,
 }
 
 const gchar*
-java_indexer_method_get_modifier (JavaIndexerMethod *method)
+java_indexer_index_get_modifier (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->modifier;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->modifier;
 }
 
 void
-java_indexer_method_set_modifier (JavaIndexerMethod *method, 
-                                  const gchar       *modifier)
+java_indexer_index_set_modifier (JavaIndexerIndex *index, 
+                                 const gchar      *modifier)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->modifier)
     {
       g_free (priv->modifier);
@@ -321,17 +321,17 @@ java_indexer_method_set_modifier (JavaIndexerMethod *method,
 }
 
 const gchar*
-java_indexer_method_get_class_name (JavaIndexerMethod *method)
+java_indexer_index_get_class_name (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->class_name;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->class_name;
 }
 
 void
-java_indexer_method_set_class_name (JavaIndexerMethod *method, 
-                                         const gchar            *class_name)
+java_indexer_index_set_class_name (JavaIndexerIndex *index, 
+                                   const gchar      *class_name)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->class_name)
     {
       g_free (priv->class_name);
@@ -341,17 +341,17 @@ java_indexer_method_set_class_name (JavaIndexerMethod *method,
 }
 
 const gchar*
-java_indexer_method_get_package_name (JavaIndexerMethod *method)
+java_indexer_index_get_package_name (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->package_name;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->package_name;
 }
 
 void
-java_indexer_method_set_package_name (JavaIndexerMethod *method, 
-                                      const gchar       *package_name)
+java_indexer_index_set_package_name (JavaIndexerIndex *index, 
+                                     const gchar      *package_name)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->package_name)
     {
       g_free (priv->package_name);
@@ -361,17 +361,17 @@ java_indexer_method_set_package_name (JavaIndexerMethod *method,
 }
 
 const gchar*
-java_indexer_method_get_file_path (JavaIndexerMethod *method)
+java_indexer_index_get_file_path (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->file_path;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->file_path;
 }
 
 void
-java_indexer_method_set_file_path (JavaIndexerMethod *method, 
-                                        const gchar            *file_path)
+java_indexer_index_set_file_path (JavaIndexerIndex *index, 
+                                  const gchar      *file_path)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   if (priv->file_path)
     {
       g_free (priv->file_path);
@@ -381,16 +381,16 @@ java_indexer_method_set_file_path (JavaIndexerMethod *method,
 }
 
 const gint
-java_indexer_method_get_line_number (JavaIndexerMethod *method)
+java_indexer_index_get_line_number (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_METHOD_GET_PRIVATE (method)->line_number;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->line_number;
 }
 
 void
-java_indexer_method_set_line_number (JavaIndexerMethod *method,
-                                          gint                    line_number)
+java_indexer_index_set_line_number (JavaIndexerIndex *index,
+                                    gint              line_number)
 {
-  JavaIndexerMethodPrivate *priv;
-  priv = JAVA_INDEXER_METHOD_GET_PRIVATE (method);
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
   priv->line_number = line_number;
 }

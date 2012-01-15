@@ -89,14 +89,15 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-notebook.lo \
 	libjavacodeslayerplugin_la-java-notebook-tab.lo \
 	libjavacodeslayerplugin_la-java-indexer.lo \
-	libjavacodeslayerplugin_la-java-indexer-methods.lo \
-	libjavacodeslayerplugin_la-java-indexer-method.lo \
+	libjavacodeslayerplugin_la-java-indexer-index.lo \
 	libjavacodeslayerplugin_la-java-debugger.lo \
 	libjavacodeslayerplugin_la-java-debugger-column.lo \
 	libjavacodeslayerplugin_la-java-debugger-pane.lo \
 	libjavacodeslayerplugin_la-java-debugger-service.lo \
 	libjavacodeslayerplugin_la-java-debugger-breakpoints.lo \
 	libjavacodeslayerplugin_la-java-debugger-breakpoint.lo \
+	libjavacodeslayerplugin_la-java-completion.lo \
+	libjavacodeslayerplugin_la-java-completion-provider.lo \
 	libjavacodeslayerplugin_la-java-utils.lo \
 	libjavacodeslayerplugin_la-java-plugin.lo
 libjavacodeslayerplugin_la_OBJECTS =  \
@@ -270,10 +271,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook-tab.c \
     java-indexer.h \
     java-indexer.c \
-    java-indexer-methods.h \
-    java-indexer-methods.c \
-    java-indexer-method.h \
-    java-indexer-method.c \
+    java-indexer-index.h \
+    java-indexer-index.c \
     java-debugger.h \
     java-debugger.c \
     java-debugger-column.h \
@@ -286,6 +285,10 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-debugger-breakpoints.c \
     java-debugger-breakpoint.h \
     java-debugger-breakpoint.c \
+    java-completion.h \
+    java-completion.c \
+    java-completion-provider.h \
+    java-completion-provider.c \
     java-utils.h \
     java-utils.c \
     java-plugin.c
@@ -365,6 +368,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configuration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configurations.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-breakpoint.Plo@am__quote@
@@ -374,8 +379,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-service.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-engine.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-method.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-methods.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-index.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-menu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-tab.Plo@am__quote@
@@ -493,19 +497,12 @@ libjavacodeslayerplugin_la-java-indexer.lo: java-indexer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-indexer.lo `test -f 'java-indexer.c' || echo '$(srcdir)/'`java-indexer.c
 
-libjavacodeslayerplugin_la-java-indexer-methods.lo: java-indexer-methods.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-indexer-methods.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-methods.Tpo -c -o libjavacodeslayerplugin_la-java-indexer-methods.lo `test -f 'java-indexer-methods.c' || echo '$(srcdir)/'`java-indexer-methods.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-methods.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-methods.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-indexer-methods.c' object='libjavacodeslayerplugin_la-java-indexer-methods.lo' libtool=yes @AMDEPBACKSLASH@
+libjavacodeslayerplugin_la-java-indexer-index.lo: java-indexer-index.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-indexer-index.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-index.Tpo -c -o libjavacodeslayerplugin_la-java-indexer-index.lo `test -f 'java-indexer-index.c' || echo '$(srcdir)/'`java-indexer-index.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-index.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-index.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-indexer-index.c' object='libjavacodeslayerplugin_la-java-indexer-index.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-indexer-methods.lo `test -f 'java-indexer-methods.c' || echo '$(srcdir)/'`java-indexer-methods.c
-
-libjavacodeslayerplugin_la-java-indexer-method.lo: java-indexer-method.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-indexer-method.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-method.Tpo -c -o libjavacodeslayerplugin_la-java-indexer-method.lo `test -f 'java-indexer-method.c' || echo '$(srcdir)/'`java-indexer-method.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-method.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-method.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-indexer-method.c' object='libjavacodeslayerplugin_la-java-indexer-method.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-indexer-method.lo `test -f 'java-indexer-method.c' || echo '$(srcdir)/'`java-indexer-method.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-indexer-index.lo `test -f 'java-indexer-index.c' || echo '$(srcdir)/'`java-indexer-index.c
 
 libjavacodeslayerplugin_la-java-debugger.lo: java-debugger.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-debugger.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-debugger.Tpo -c -o libjavacodeslayerplugin_la-java-debugger.lo `test -f 'java-debugger.c' || echo '$(srcdir)/'`java-debugger.c
@@ -548,6 +545,20 @@ libjavacodeslayerplugin_la-java-debugger-breakpoint.lo: java-debugger-breakpoint
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-debugger-breakpoint.c' object='libjavacodeslayerplugin_la-java-debugger-breakpoint.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-debugger-breakpoint.lo `test -f 'java-debugger-breakpoint.c' || echo '$(srcdir)/'`java-debugger-breakpoint.c
+
+libjavacodeslayerplugin_la-java-completion.lo: java-completion.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-completion.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-completion.Tpo -c -o libjavacodeslayerplugin_la-java-completion.lo `test -f 'java-completion.c' || echo '$(srcdir)/'`java-completion.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-completion.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-completion.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-completion.c' object='libjavacodeslayerplugin_la-java-completion.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion.lo `test -f 'java-completion.c' || echo '$(srcdir)/'`java-completion.c
+
+libjavacodeslayerplugin_la-java-completion-provider.lo: java-completion-provider.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-completion-provider.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Tpo -c -o libjavacodeslayerplugin_la-java-completion-provider.lo `test -f 'java-completion-provider.c' || echo '$(srcdir)/'`java-completion-provider.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-completion-provider.c' object='libjavacodeslayerplugin_la-java-completion-provider.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion-provider.lo `test -f 'java-completion-provider.c' || echo '$(srcdir)/'`java-completion-provider.c
 
 libjavacodeslayerplugin_la-java-utils.lo: java-utils.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-utils.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-utils.Tpo -c -o libjavacodeslayerplugin_la-java-utils.lo `test -f 'java-utils.c' || echo '$(srcdir)/'`java-utils.c

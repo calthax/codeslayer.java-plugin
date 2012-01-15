@@ -26,18 +26,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "java-indexer.h"
-#include "java-indexer-methods.h"
-#include "java-indexer-method.h"
+#include "java-indexer-index.h"
 #include "java-configuration.h"
+#include "java-completion-provider.h"
 #include "java-utils.h"
 
-static void java_indexer_class_init  (JavaIndexerClass      *klass);
-static void java_indexer_init        (JavaIndexer           *indexer);
-static void java_indexer_finalize    (JavaIndexer           *indexer);
+static void java_indexer_class_init  (JavaIndexerClass *klass);
+static void java_indexer_init        (JavaIndexer      *indexer);
+static void java_indexer_finalize    (JavaIndexer      *indexer);
+static void load_indexes             (JavaIndexer     *indexer);
 
-static void editor_added_action      (JavaIndexer           *indexer,
-                                      CodeSlayerEditor      *editor);
-                                       
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
 
@@ -48,7 +46,7 @@ struct _JavaIndexerPrivate
   CodeSlayer         *codeslayer;
   JavaConfigurations *configurations;
   gulong              editor_added_id;
-  JavaIndexerMethods *methods;
+  GList              *list;
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -86,30 +84,39 @@ java_indexer_new (CodeSlayer         *codeslayer,
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
-  priv->methods = java_indexer_methods_new ();
   
-  priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
-                                                    G_CALLBACK (editor_added_action), indexer);
-                     
+  load_indexes (indexer);
+  
   return indexer;
 }
 
 static void
-editor_added_action (JavaIndexer     *indexer,
-                     CodeSlayerEditor *editor)
+load_indexes (JavaIndexer *indexer)
 {
-	GtkSourceCompletionWords *prov_words;
-	GtkSourceCompletion *comp;
-  
-	comp = gtk_source_view_get_completion (GTK_SOURCE_VIEW (editor));
-	prov_words = gtk_source_completion_words_new (NULL, NULL);
-	
-	gtk_source_completion_words_register (prov_words,
-	                                      gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor)));
-	
-	gtk_source_completion_add_provider (comp, 
-	                                    GTK_SOURCE_COMPLETION_PROVIDER (prov_words), 
-	                                    NULL);
+  JavaIndexerPrivate *priv;
+  GList *list;
 
-	g_object_set (prov_words, "priority", 10, NULL);
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+
+  priv->list = codeslayer_utils_get_gobjects (JAVA_INDEXER_INDEX_TYPE,
+                                             FALSE,
+                                             "/home/jeff/.codeslayer-dev/groups/java/indexes/jmesa.xml", 
+                                             "index",
+                                             "name", G_TYPE_STRING, 
+                                             "parameters", G_TYPE_STRING, 
+                                             "modifier", G_TYPE_STRING, 
+                                             "class_name", G_TYPE_STRING, 
+                                             "parameters", G_TYPE_STRING, 
+                                             "file_path", G_TYPE_STRING, 
+                                             "line_number", G_TYPE_INT, 
+                                             NULL);
+               
+  list = priv->list;
+  
+  while (list != NULL)
+    {
+      JavaIndexerIndex *index = list->data;
+      g_print ("method: %s\n", java_indexer_index_get_name (index));
+      list = g_list_next (list);
+    }                                                 
 }

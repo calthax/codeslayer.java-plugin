@@ -30,10 +30,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook-tab.c \
     java-indexer.h \
     java-indexer.c \
-    java-indexer-methods.h \
-    java-indexer-methods.c \
-    java-indexer-method.h \
-    java-indexer-method.c \
+    java-indexer-index.h \
+    java-indexer-index.c \
     java-debugger.h \
     java-debugger.c \
     java-debugger-column.h \
@@ -46,6 +44,10 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-debugger-breakpoints.c \
     java-debugger-breakpoint.h \
     java-debugger-breakpoint.c \
+    java-completion.h \
+    java-completion.c \
+    java-completion-provider.h \
+    java-completion-provider.c \
     java-utils.h \
     java-utils.c \
     java-plugin.c

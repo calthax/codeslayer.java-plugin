@@ -25,6 +25,7 @@
 #include "java-page.h"
 #include "java-project-properties.h"
 #include "java-configuration.h"
+#include "java-completion.h"
 #include "java-notebook.h"
 
 static void java_engine_class_init                       (JavaEngineClass   *klass);
@@ -46,6 +47,7 @@ typedef struct _JavaEnginePrivate JavaEnginePrivate;
 struct _JavaEnginePrivate
 {
   CodeSlayer         *codeslayer;
+  JavaCompletion     *completion;
   JavaConfigurations *configurations;
   JavaOutput         *output;
   JavaDebugger       *debugger;
@@ -108,6 +110,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->output = java_output_new (codeslayer, configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
   priv->indexer = java_indexer_new (codeslayer, configurations);
+  priv->completion = java_completion_new  (codeslayer);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);
