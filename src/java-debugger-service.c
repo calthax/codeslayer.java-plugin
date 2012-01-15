@@ -139,7 +139,7 @@ java_debugger_service_start (JavaDebuggerService *service,
       close (stdout_pipe[0]);
       close (stdout_pipe[1]);
 
-      execvp ("codeslayer-debugger", command);
+      execvp ("codeslayer-jdebugger", command);
 
       g_warning ("Not able to communicate with ejdb.");
     }

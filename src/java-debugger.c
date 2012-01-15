@@ -373,7 +373,7 @@ debug_test_file_action (JavaDebugger *debugger)
   source_path = get_source_path (debugger);
   class_path = get_class_path (debugger);
   
-  command[0] = "codeslayer-debugger";   
+  command[0] = "codeslayer-jdebugger";   
   command[1] = "-interactive";   
   command[2] = "true";   
   command[3] = "-launch";   
@@ -417,7 +417,7 @@ attach_debugger_action (JavaDebugger *debugger)
   
   source_path = get_source_path (debugger);
   
-  command[0] = "codeslayer-debugger";   
+  command[0] = "codeslayer-jdebugger";   
   command[1] = "-interactive";   
   command[2] = "true";   
   command[3] = "-port";   
