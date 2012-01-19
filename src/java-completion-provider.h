@@ -46,7 +46,7 @@ struct _JavaCompletionProviderClass
 
 GType java_completion_provider_get_type (void) G_GNUC_CONST;
 
-JavaCompletionProvider*  java_completion_provider_new  (void);
+JavaCompletionProvider*  java_completion_provider_new  (CodeSlayerEditor *editor);
 
 G_END_DECLS
 

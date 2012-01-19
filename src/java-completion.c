@@ -94,7 +94,10 @@ editor_added_action (JavaCompletion   *completion,
 	JavaCompletionProvider *completion_provider;
   
 	source_completion = gtk_source_view_get_completion (GTK_SOURCE_VIEW (editor));
-	completion_provider = java_completion_provider_new ();
+	g_object_set (source_completion, "show-headers", FALSE, NULL);
+	g_object_set (source_completion, "show-icons", FALSE, NULL);
+	
+	completion_provider = java_completion_provider_new (editor);
 	
 	gtk_source_completion_add_provider (source_completion, 
 	                                    GTK_SOURCE_COMPLETION_PROVIDER (completion_provider), 

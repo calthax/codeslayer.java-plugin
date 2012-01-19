@@ -17,18 +17,11 @@
  */
 
 #include <codeslayer/codeslayer-utils.h>
-#include <gtksourceview/gtksourceview.h>
-#include <gtksourceview/gtksourcecompletion.h>
-#include <gtksourceview/gtksourcecompletioninfo.h>
-#include <gtksourceview/gtksourcecompletionitem.h>
-#include <gtksourceview/gtksourcelanguagemanager.h>
-#include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "java-indexer.h"
 #include "java-indexer-index.h"
 #include "java-configuration.h"
-#include "java-completion-provider.h"
 #include "java-utils.h"
 
 static void java_indexer_class_init  (JavaIndexerClass *klass);
@@ -115,8 +108,8 @@ load_indexes (JavaIndexer *indexer)
   
   while (list != NULL)
     {
-      JavaIndexerIndex *index = list->data;
-      g_print ("method: %s\n", java_indexer_index_get_name (index));
+      /*JavaIndexerIndex *index = list->data;*/
+      /*g_print ("index: %s\n", java_indexer_index_get_name (index));*/
       list = g_list_next (list);
     }                                                 
 }

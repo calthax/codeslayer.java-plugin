@@ -35,6 +35,8 @@ static gboolean provider_match                   (GtkSourceCompletionProvider   
                                                   GtkSourceCompletionContext       *context);
 static void provider_populate                    (GtkSourceCompletionProvider      *provider,
                                                   GtkSourceCompletionContext       *context);
+static gchar* find_start_of_context              (GtkSourceCompletionProvider      *provider,
+                                                  GtkSourceCompletionContext       *context);
 
 #define JAVA_COMPLETION_PROVIDER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_PROVIDER_TYPE, JavaCompletionProviderPrivate))
@@ -43,8 +45,8 @@ typedef struct _JavaCompletionProviderPrivate JavaCompletionProviderPrivate;
 
 struct _JavaCompletionProviderPrivate
 {
-  GList     *proposals;
-  GdkPixbuf *icon;
+  CodeSlayerEditor *editor;
+  GList            *proposals;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaCompletionProvider,
@@ -75,16 +77,12 @@ static void
 java_completion_provider_init (JavaCompletionProvider *completion_provider)
 {
   JavaCompletionProviderPrivate *priv;
-  GtkIconTheme *theme;
   
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (completion_provider);
   priv->proposals = NULL;
   
-  theme = gtk_icon_theme_get_default ();
-	priv->icon = gtk_icon_theme_load_icon (theme, GTK_STOCK_DIALOG_INFO, 16, 0, NULL);
-	    
 	priv->proposals = g_list_prepend (priv->proposals,
-	                            gtk_source_completion_item_new ("Proposal", "Proposal", priv->icon, "Proposal")); 
+	                            gtk_source_completion_item_new ("Proposal", "Proposal", NULL, NULL)); 
 }
 
 static void
@@ -94,10 +92,15 @@ java_completion_provider_finalize (JavaCompletionProvider *completion_provider)
 }
 
 JavaCompletionProvider*
-java_completion_provider_new ()
+java_completion_provider_new (CodeSlayerEditor *editor)
 {
+  JavaCompletionProviderPrivate *priv;
   JavaCompletionProvider *completion_provider;
+
   completion_provider = JAVA_COMPLETION_PROVIDER (g_object_new (java_completion_provider_get_type (), NULL));
+  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (completion_provider);
+  priv->editor = editor;
+
   return completion_provider;
 }
 
@@ -117,7 +120,25 @@ static gboolean
 provider_match (GtkSourceCompletionProvider *provider,
                 GtkSourceCompletionContext  *context)
 {
-	return TRUE;
+  GtkTextIter iter;
+  GtkTextIter start;
+  gchar *text;
+  
+  gtk_source_completion_context_get_iter (context, &iter);
+  start = iter;
+  
+  gtk_text_iter_backward_char (&start);
+  
+  text = gtk_text_iter_get_text (&start, &iter);
+  
+  if (g_strcmp0 (text, ".") == 0)
+    {
+      g_free (text);
+      return TRUE;
+    }
+
+  g_free (text);    
+	return FALSE;
 }
 
 static void
@@ -125,10 +146,58 @@ provider_populate (GtkSourceCompletionProvider *provider,
                    GtkSourceCompletionContext  *context)
 {
   JavaCompletionProviderPrivate *priv;
+  gchar *variable;
 
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
+
+  variable = find_start_of_context (provider, context);
+  
+  if (variable != NULL)
+    {
+      g_print ("variable->%s\n", variable);
+      g_free (variable);
+    }
   
 	gtk_source_completion_context_add_proposals (context, 
 	                                             provider, 
 	                                             priv->proposals, TRUE);
+}
+
+static gchar*
+find_start_of_context (GtkSourceCompletionProvider *provider,
+                       GtkSourceCompletionContext  *context)
+{
+  gchar *result;
+  GString *string;
+  gchar *text;
+  gchar *variable;
+  GtkTextIter iter;
+  GtkTextIter start;
+  
+  string = g_string_new ("");
+
+  gtk_source_completion_context_get_iter (context, &iter);
+
+  start = iter;
+  gtk_text_iter_backward_chars (&start, 100);
+  
+  text = gtk_text_iter_get_text (&start, &iter);
+  variable = text;
+  variable = g_strreverse (variable);  
+  
+  for (; *variable != '\0'; ++variable)
+    {
+      if (*variable == '=')
+        break;
+        
+      string = g_string_append_c (string, *variable);
+    }
+  
+  g_free (text);
+  
+  result = g_string_free (string, FALSE);
+  result = g_strreverse (result);
+  g_strstrip(result);
+    
+  return result;
 }
