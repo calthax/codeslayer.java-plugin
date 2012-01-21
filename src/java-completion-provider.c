@@ -35,8 +35,15 @@ static gboolean provider_match                   (GtkSourceCompletionProvider   
                                                   GtkSourceCompletionContext       *context);
 static void provider_populate                    (GtkSourceCompletionProvider      *provider,
                                                   GtkSourceCompletionContext       *context);
-static gchar* find_start_of_context              (GtkSourceCompletionProvider      *provider,
+static gchar* find_completion_path               (GtkSourceCompletionProvider      *provider,
                                                   GtkSourceCompletionContext       *context);
+static gchar* strip_comments                     (gchar                            *text);
+static gchar* strip_parameters                   (gchar                            *text);
+static gchar* get_completion_list                (GtkSourceCompletionProvider      *provider,
+                                                  GtkSourceCompletionContext       *context, 
+                                                  gchar                            *text);
+static gchar* find_variable                      (gchar                            *variable, 
+                                                  const gchar                      *string);
 
 #define JAVA_COMPLETION_PROVIDER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_PROVIDER_TYPE, JavaCompletionProviderPrivate))
@@ -146,16 +153,25 @@ provider_populate (GtkSourceCompletionProvider *provider,
                    GtkSourceCompletionContext  *context)
 {
   JavaCompletionProviderPrivate *priv;
-  gchar *variable;
+  gchar *text;
 
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
 
-  variable = find_start_of_context (provider, context);
+  text = find_completion_path (provider, context);
   
-  if (variable != NULL)
+  if (text != NULL)
     {
-      g_print ("variable->%s\n", variable);
-      g_free (variable);
+      gchar *text_strip_comments;
+      gchar *text_strip_parameters;
+      gchar *completion_list;
+      text_strip_comments = strip_comments (text);
+      text_strip_parameters = strip_parameters (text_strip_comments);
+      text_strip_parameters = g_strreverse (text_strip_parameters);
+      completion_list = get_completion_list (provider, context, text_strip_parameters);
+      g_print ("completion_list->%s\n", completion_list);
+      g_free (text);
+      g_free (text_strip_comments);
+      g_free (text_strip_parameters);
     }
   
 	gtk_source_completion_context_add_proposals (context, 
@@ -164,8 +180,8 @@ provider_populate (GtkSourceCompletionProvider *provider,
 }
 
 static gchar*
-find_start_of_context (GtkSourceCompletionProvider *provider,
-                       GtkSourceCompletionContext  *context)
+find_completion_path (GtkSourceCompletionProvider *provider,
+                      GtkSourceCompletionContext  *context)
 {
   gchar *result;
   GString *string;
@@ -173,6 +189,7 @@ find_start_of_context (GtkSourceCompletionProvider *provider,
   gchar *variable;
   GtkTextIter iter;
   GtkTextIter start;
+  int brace = 0;
   
   string = g_string_new ("");
 
@@ -187,8 +204,19 @@ find_start_of_context (GtkSourceCompletionProvider *provider,
   
   for (; *variable != '\0'; ++variable)
     {
-      if (*variable == '=')
+      if (*variable == '=' ||
+          *variable == ';' ||
+          *variable == '{')
         break;
+      
+      if (*variable == ')')
+        brace++;
+      if (*variable == '(')
+        {
+          brace--;
+          if (brace == -1)
+            break;
+        }
         
       string = g_string_append_c (string, *variable);
     }
@@ -196,8 +224,157 @@ find_start_of_context (GtkSourceCompletionProvider *provider,
   g_free (text);
   
   result = g_string_free (string, FALSE);
-  result = g_strreverse (result);
   g_strstrip(result);
     
   return result;
+}
+
+static gchar*
+strip_comments (gchar *text)
+{
+  gchar *result;
+  GRegex *regex;
+  GError *error = NULL;
+
+  regex = g_regex_new ("\"([^\"\\\\]*(\\.[^\"\\\\]*)*)\"", 0, 0, &error);
+  
+  if (error != NULL)
+    {
+      g_printerr (error->message);
+      g_error_free (error);
+    }
+  
+  result = g_regex_replace (regex, text, -1, 0, "", 0, NULL);
+  
+  g_regex_unref (regex);
+
+  return result;
+}
+
+static gchar*
+strip_parameters (gchar *text)
+{
+  gchar *result;
+  GString *string;
+  int brace = 0;
+  
+  string = g_string_new ("");
+
+  for (; *text != '\0'; ++text)
+    {
+      if (*text == ')')
+        {
+          brace++;
+          if (brace == 1)
+            string = g_string_append_c (string, *text);
+          continue;
+        }
+      if (*text == '(')
+        {
+          brace--;
+          if (brace == 0)
+            string = g_string_append_c (string, *text);
+          continue;
+        }
+      
+      if (brace == 0)
+        string = g_string_append_c (string, *text);
+    }
+  
+  result = g_string_free (string, FALSE);
+  g_strstrip(result);
+    
+  return result;
+}
+
+static gchar*
+get_completion_list (GtkSourceCompletionProvider *provider,
+                     GtkSourceCompletionContext  *context, 
+                     gchar                       *string)
+{
+  JavaCompletionProviderPrivate *priv;
+  gchar **split;
+  gchar **array;
+
+  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
+  
+  split = g_strsplit (string, ".", -1);
+  array = split;
+  
+  if (*array != NULL)
+    {
+      GtkTextBuffer *buffer;
+      GtkTextIter start;
+      GtkTextIter end;
+      gchar *text;      
+      gchar *variable;      
+
+      buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));      
+      gtk_text_buffer_get_start_iter (buffer, &start);
+      gtk_source_completion_context_get_iter (context, &end);      
+      text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+      
+      variable = find_variable (*array, text);
+      
+      g_print ("variable %s\n", variable);
+      g_free (text);
+      array++;
+    }
+  
+  while (*array != NULL)
+    {
+      g_print ("other %s\n", *array);
+      array++;
+    }
+  
+  if (split != NULL)
+    g_strfreev (split);    
+
+  return string;
+}
+
+static gchar*
+find_variable (gchar *variable, const gchar *text)
+{
+  gchar *result = NULL;
+  GRegex *regex;
+  gchar *concat;
+  GMatchInfo *match_info;
+  GError *error = NULL;
+   
+  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", variable, "\\b", NULL); 
+   
+  regex = g_regex_new (concat, 0, 0, NULL);
+  
+  g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
+  
+  while (g_match_info_matches (match_info))
+    {
+      result = g_match_info_fetch (match_info, 0);
+      if (g_match_info_next (match_info, &error))
+        {
+          g_free (result);        
+        }
+      else
+        {
+          gchar **split;      
+          split = g_strsplit (result, " ", -1);
+          g_free (result);
+          result = g_strdup (*split);
+          g_strstrip (result);
+          g_strfreev (split);
+        }
+    }
+  
+  g_match_info_free (match_info);
+  g_regex_unref (regex);
+  
+  if (error != NULL)
+    {
+      g_printerr ("find variable matching error: %s\n", error->message);
+      g_error_free (error);
+    }
+    
+  g_free (concat);
+  return result;   
 }
