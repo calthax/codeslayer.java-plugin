@@ -323,18 +323,15 @@ get_completion_list (GtkSourceCompletionProvider *provider,
       
       g_print ("variable %s\n", variable);
       
-      indexes = get_package_indexes (priv->indexer, "org.jmesa.model.TableModel");
-      if (indexes != NULL)
-        g_print ("get_completion_list\n");
-        
-      /*while (indexes != NULL)
+      indexes = java_indexer_get_package_indexes (priv->indexer, "org.jmesa.model.TableModel");
+      while (indexes != NULL)
         {
           JavaIndexerIndex *index = indexes->data;
           const gchar *name;
           name = java_indexer_index_get_name (index);
           g_print ("method name %s\n", name);
           indexes = g_list_next (indexes);
-        }*/
+        }
       
       g_free (text);
       array++;

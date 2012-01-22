@@ -27,7 +27,6 @@
 static void java_indexer_class_init  (JavaIndexerClass *klass);
 static void java_indexer_init        (JavaIndexer      *indexer);
 static void java_indexer_finalize    (JavaIndexer      *indexer);
-static void load_indexes             (JavaIndexer     *indexer);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -81,21 +80,19 @@ java_indexer_new (CodeSlayer         *codeslayer,
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
-  
-  load_indexes (indexer);
-  
+
   return indexer;
 }
 
-static void
-load_indexes (JavaIndexer *indexer)
+void
+java_indexer_load_index (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
   GList *list;
 
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
 
-  priv->list = codeslayer_utils_get_gobjects (JAVA_INDEXER_INDEX_TYPE,
+  list = codeslayer_utils_get_gobjects (JAVA_INDEXER_INDEX_TYPE,
                                              FALSE,
                                              "/home/jeff/.codeslayer-dev/groups/java/indexes/jmesa.xml", 
                                              "index",
@@ -108,80 +105,28 @@ load_indexes (JavaIndexer *indexer)
                                              "file_path", G_TYPE_STRING, 
                                              "line_number", G_TYPE_INT, 
                                              NULL);
-               
-  list = priv->list;
+  priv->list = list;
   
   while (list != NULL)
     {
       JavaIndexerIndex *index = list->data;
       gchar *full_package_name;
-      GList **indexes = NULL;
-      
-      g_object_ref (index);
-
+      GList *indexes = NULL;
       full_package_name = java_indexer_index_get_full_package_name (index);
-
       indexes = g_hash_table_lookup (priv->package_hash_table, full_package_name);
-
-      if (indexes == NULL)
-        {
-          GList *temp = NULL;
-          temp = g_list_prepend (temp, index);
-          g_print ("package_name %s\n", full_package_name);
-          g_hash_table_insert (priv->package_hash_table, full_package_name, &temp);
-        }
-      else
-        {
-          GList *tmp = NULL;
-          tmp = *indexes;          
-          while (tmp != NULL)
-            {
-              JavaIndexerIndex *index = tmp->data;
-              const gchar *name;
-              name = java_indexer_index_get_name (index);
-              g_print ("method name %s\n", name);
-              tmp = g_list_next (tmp);
-            }
-  
-          g_print ("length %d\n", g_list_length (*indexes));
-        
-          *indexes = g_list_prepend (*indexes, index);
-        }
-
+      indexes = g_list_prepend (indexes, index);
+      g_hash_table_insert (priv->package_hash_table, full_package_name, indexes);
       list = g_list_next (list);
-    }                                                 
+    }
 }
 
 GList*
-get_package_indexes (JavaIndexer *indexer, 
-                     gchar       *package_name)
+java_indexer_get_package_indexes (JavaIndexer *indexer, 
+                                  gchar       *package_name)
 {
   JavaIndexerPrivate *priv;
-  GList **indexes = NULL;
- 
+  GList *indexes = NULL;
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  
   indexes = g_hash_table_lookup (priv->package_hash_table, package_name);
-  if (indexes != NULL)
-    {
-      /*GList *tmp = NULL;
-      tmp = *indexes;*/
-           
-      /*while (tmp != NULL)
-        {
-          JavaIndexerIndex *index = tmp->data;
-          if (index != NULL)
-            {
-              const gchar *name;
-              name = java_indexer_index_get_name (index);
-              g_print ("method name %s\n", name);
-            }
-          tmp = g_list_next (tmp);
-        }*/
-    }
-
-  if (indexes != NULL)
-    return *indexes;
-  
-  return NULL;
+  return indexes;
 }
