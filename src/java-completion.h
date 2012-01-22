@@ -21,6 +21,7 @@
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
+#include "java-indexer.h"
 
 G_BEGIN_DECLS
 
@@ -45,7 +46,8 @@ struct _JavaCompletionClass
 
 GType java_completion_get_type (void) G_GNUC_CONST;
 
-JavaCompletion*  java_completion_new  (CodeSlayer *codeslayer);
+JavaCompletion*  java_completion_new  (CodeSlayer  *codeslayer, 
+                                       JavaIndexer *indexer);
 
 G_END_DECLS
 

@@ -42,6 +42,7 @@ struct _JavaIndexerIndexPrivate
   gchar *modifier;
   gchar *class_name;
   gchar *package_name;
+  gchar *full_package_name;
   gchar *file_path;
   gint   line_number;
 };
@@ -133,6 +134,7 @@ java_indexer_index_init (JavaIndexerIndex *index)
   priv->modifier = NULL;
   priv->class_name = NULL;
   priv->package_name = NULL;
+  priv->full_package_name = NULL;
   priv->file_path = NULL;
   priv->line_number = 0;
 }
@@ -167,12 +169,18 @@ java_indexer_index_finalize (JavaIndexerIndex *index)
       g_free (priv->package_name);
       priv->package_name = NULL;
     }
+  if (priv->full_package_name)
+    {
+      g_free (priv->full_package_name);
+      priv->full_package_name = NULL;
+    }
   if (priv->file_path)
     {
       g_free (priv->file_path);
       priv->file_path = NULL;
     }
   G_OBJECT_CLASS (java_indexer_index_parent_class)->finalize (G_OBJECT (index));
+  g_print ("java_indexer_index_finalize\n");
 }
 
 static void
@@ -358,6 +366,16 @@ java_indexer_index_set_package_name (JavaIndexerIndex *index,
       priv->package_name = NULL;
     }
   priv->package_name = g_strdup (package_name);
+}
+
+gchar*
+java_indexer_index_get_full_package_name (JavaIndexerIndex *index)
+{
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
+  if (priv->full_package_name == NULL)
+    priv->full_package_name = g_strconcat (priv->package_name, ".", priv->class_name, NULL);
+  return priv->full_package_name;
 }
 
 const gchar*

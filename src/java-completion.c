@@ -42,8 +42,9 @@ typedef struct _JavaCompletionPrivate JavaCompletionPrivate;
 
 struct _JavaCompletionPrivate
 {
-  CodeSlayer *codeslayer;
-  gulong      editor_added_id;
+  CodeSlayer  *codeslayer;
+  JavaIndexer *indexer;
+  gulong       editor_added_id;
 };
 
 G_DEFINE_TYPE (JavaCompletion, java_completion, G_TYPE_OBJECT)
@@ -71,7 +72,8 @@ java_completion_finalize (JavaCompletion *completion)
 }
 
 JavaCompletion*
-java_completion_new (CodeSlayer *codeslayer)
+java_completion_new (CodeSlayer  *codeslayer, 
+                     JavaIndexer *indexer)
 {
   JavaCompletionPrivate *priv;
   JavaCompletion *completion;
@@ -79,6 +81,7 @@ java_completion_new (CodeSlayer *codeslayer)
   completion = JAVA_COMPLETION (g_object_new (java_completion_get_type (), NULL));
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
   priv->codeslayer = codeslayer;
+  priv->indexer = indexer;
   
   priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
                                                     G_CALLBACK (editor_added_action), completion);
@@ -90,14 +93,17 @@ static void
 editor_added_action (JavaCompletion   *completion,
                      CodeSlayerEditor *editor)
 {
+  JavaCompletionPrivate *priv;
 	GtkSourceCompletion *source_completion;
 	JavaCompletionProvider *completion_provider;
   
+  priv = JAVA_COMPLETION_GET_PRIVATE (completion);
+
 	source_completion = gtk_source_view_get_completion (GTK_SOURCE_VIEW (editor));
 	g_object_set (source_completion, "show-headers", FALSE, NULL);
 	g_object_set (source_completion, "show-icons", FALSE, NULL);
 	
-	completion_provider = java_completion_provider_new (editor);
+	completion_provider = java_completion_provider_new (editor, priv->indexer);
 	
 	gtk_source_completion_add_provider (source_completion, 
 	                                    GTK_SOURCE_COMPLETION_PROVIDER (completion_provider), 

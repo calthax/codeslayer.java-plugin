@@ -22,6 +22,7 @@
 #include <gtksourceview/gtksourcecompletionitem.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include "java-completion-provider.h"
+#include "java-indexer-index.h"
 
 static void java_completion_provider_class_init  (JavaCompletionProviderClass      *klass);
 static void java_completion_provider_init        (JavaCompletionProvider           *completion_provider);
@@ -53,6 +54,7 @@ typedef struct _JavaCompletionProviderPrivate JavaCompletionProviderPrivate;
 struct _JavaCompletionProviderPrivate
 {
   CodeSlayerEditor *editor;
+  JavaIndexer      *indexer;
   GList            *proposals;
 };
 
@@ -99,7 +101,8 @@ java_completion_provider_finalize (JavaCompletionProvider *completion_provider)
 }
 
 JavaCompletionProvider*
-java_completion_provider_new (CodeSlayerEditor *editor)
+java_completion_provider_new (CodeSlayerEditor *editor, 
+                              JavaIndexer      *indexer)
 {
   JavaCompletionProviderPrivate *priv;
   JavaCompletionProvider *completion_provider;
@@ -107,6 +110,7 @@ java_completion_provider_new (CodeSlayerEditor *editor)
   completion_provider = JAVA_COMPLETION_PROVIDER (g_object_new (java_completion_provider_get_type (), NULL));
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (completion_provider);
   priv->editor = editor;
+  priv->indexer = indexer;
 
   return completion_provider;
 }
@@ -307,7 +311,8 @@ get_completion_list (GtkSourceCompletionProvider *provider,
       GtkTextIter start;
       GtkTextIter end;
       gchar *text;      
-      gchar *variable;      
+      gchar *variable;
+      GList *indexes;
 
       buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));      
       gtk_text_buffer_get_start_iter (buffer, &start);
@@ -317,6 +322,20 @@ get_completion_list (GtkSourceCompletionProvider *provider,
       variable = find_variable (*array, text);
       
       g_print ("variable %s\n", variable);
+      
+      indexes = get_package_indexes (priv->indexer, "org.jmesa.model.TableModel");
+      if (indexes != NULL)
+        g_print ("get_completion_list\n");
+        
+      /*while (indexes != NULL)
+        {
+          JavaIndexerIndex *index = indexes->data;
+          const gchar *name;
+          name = java_indexer_index_get_name (index);
+          g_print ("method name %s\n", name);
+          indexes = g_list_next (indexes);
+        }*/
+      
       g_free (text);
       array++;
     }

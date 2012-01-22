@@ -110,7 +110,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->output = java_output_new (codeslayer, configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
   priv->indexer = java_indexer_new (codeslayer, configurations);
-  priv->completion = java_completion_new  (codeslayer);
+  priv->completion = java_completion_new  (codeslayer, priv->indexer);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);

@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
 #include "java-debugger-breakpoint.h"
+#include "java-indexer.h"
 
 G_BEGIN_DECLS
 
@@ -46,7 +47,8 @@ struct _JavaCompletionProviderClass
 
 GType java_completion_provider_get_type (void) G_GNUC_CONST;
 
-JavaCompletionProvider*  java_completion_provider_new  (CodeSlayerEditor *editor);
+JavaCompletionProvider*  java_completion_provider_new  (CodeSlayerEditor *editor, 
+                                                        JavaIndexer      *indexer);
 
 G_END_DECLS
 
