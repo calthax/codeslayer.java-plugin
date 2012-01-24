@@ -41,7 +41,7 @@ static gchar* find_completion_path              (GtkSourceCompletionProvider    
                                                  GtkSourceCompletionContext       *context);
 static gchar* strip_completion_path_comments    (gchar                            *text);
 static gchar* strip_completion_path_parameters  (gchar                            *text);
-static gchar* get_completion_list               (GtkSourceCompletionProvider      *provider,
+static GList* get_completion_list               (GtkSourceCompletionProvider      *provider,
                                                  GtkSourceCompletionContext       *context, 
                                                  gchar                            *text);
 static gchar* get_text_to_search                (GtkSourceCompletionContext       *context,
@@ -50,6 +50,8 @@ static gchar* search_text_for_variable          (gchar                          
                                                  const gchar                      *string);
 static GList* search_text_for_potential_imports (gchar                            *variable, 
                                                  const gchar                      *string);
+static GList* get_valid_import_indexes          (GtkSourceCompletionProvider      *provider, 
+                                                 GList                            *imports);
 
 #define JAVA_COMPLETION_PROVIDER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_PROVIDER_TYPE, JavaCompletionProviderPrivate))
@@ -94,9 +96,6 @@ java_completion_provider_init (JavaCompletionProvider *completion_provider)
   
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (completion_provider);
   priv->proposals = NULL;
-  
-	priv->proposals = g_list_prepend (priv->proposals,
-	                            gtk_source_completion_item_new ("Proposal", "Proposal", NULL, NULL)); 
 }
 
 static void
@@ -140,6 +139,8 @@ provider_match (GtkSourceCompletionProvider *provider,
   GtkTextIter start;
   gchar *text;
   
+  g_print ("provider_match\n");
+  
   gtk_source_completion_context_get_iter (context, &iter);
   start = iter;
   
@@ -166,26 +167,35 @@ provider_populate (GtkSourceCompletionProvider *provider,
 
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
 
+  g_print ("provider_populate\n");
+
   text = find_completion_path (provider, context);
   
   if (text != NULL)
     {
       gchar *text_strip_comments;
       gchar *text_strip_parameters;
-      gchar *completion_list;
+      GList *list;
       text_strip_comments = strip_completion_path_comments (text);
       text_strip_parameters = strip_completion_path_parameters (text_strip_comments);
       text_strip_parameters = g_strreverse (text_strip_parameters);
-      completion_list = get_completion_list (provider, context, text_strip_parameters);
-      g_print ("completion_list->%s\n", completion_list);
+      list = get_completion_list (provider, context, text_strip_parameters);
+      while (list != NULL)
+        {
+          JavaIndexerIndex *index = list->data;
+          const gchar *name;
+          name = java_indexer_index_get_name (index);
+          priv->proposals = g_list_prepend (priv->proposals,
+	                                          gtk_source_completion_item_new (name, name, NULL, NULL));
+          list = g_list_next (list);
+        }
+      
       g_free (text);
       g_free (text_strip_comments);
       g_free (text_strip_parameters);
     }
   
-	gtk_source_completion_context_add_proposals (context, 
-	                                             provider, 
-	                                             priv->proposals, TRUE);
+	gtk_source_completion_context_add_proposals (context, provider, priv->proposals, TRUE);
 }
 
 static gchar*
@@ -296,7 +306,7 @@ strip_completion_path_parameters (gchar *text)
   return result;
 }
 
-static gchar*
+static GList*
 get_completion_list (GtkSourceCompletionProvider *provider,
                      GtkSourceCompletionContext  *context, 
                      gchar                       *string)
@@ -305,6 +315,7 @@ get_completion_list (GtkSourceCompletionProvider *provider,
   gchar **split;
   gchar **array;
   gchar *variable;
+  GList *indexes;
 
   priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
   
@@ -318,24 +329,28 @@ get_completion_list (GtkSourceCompletionProvider *provider,
       text = get_text_to_search (context, priv->editor);
       variable = search_text_for_variable (*array, text);
       imports = search_text_for_potential_imports (variable, text);
+      indexes = get_valid_import_indexes (provider, imports);
       if (imports != NULL)
-        g_list_free (imports);
+        {
+          g_list_foreach (imports, (GFunc) g_free, NULL);
+          g_list_free (imports);
+        }
       g_free (text);
       array++;
     }
 
-  g_print ("variable %s\n", variable);
+  /*g_print ("variable %s\n", variable);*/
   
   while (codeslayer_utils_has_text (*array))
     {
-      g_print ("other %s\n", *array);
+      /*g_print ("other %s\n", *array);*/
       array++;
     }
   
   if (split != NULL)
     g_strfreev (split);
     
-  return string;
+  return indexes;
 }
 
 static gchar*
@@ -411,20 +426,28 @@ search_text_for_potential_imports (gchar       *variable,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  regex = g_regex_new ("import\\s+.*?;", 0, 0, NULL);
+  regex = g_regex_new ("import\\s+(.*?);", 0, 0, NULL);
   
   g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
   
   while (g_match_info_matches (match_info))
     {
       gchar *import = NULL;
-      import = g_match_info_fetch (match_info, 0);
-      if (g_match_info_next (match_info, &error))
+      import = g_match_info_fetch (match_info, 1);
+      g_match_info_next (match_info, &error);
+      g_strstrip(import);
+      if (g_str_has_suffix (import, "*"))
+        {
+          gchar *replace; 
+          replace = codeslayer_utils_strreplace (import, "*", variable);
+          results = g_list_prepend (results, g_strdup (replace));
+          g_free (replace);
+        }
+      else
         {
           results = g_list_prepend (results, g_strdup (import));
-          g_print ("import %s\n", import);
-          g_free (import);
         }
+      g_free (import);
     }
   
   g_match_info_free (match_info);
@@ -437,4 +460,24 @@ search_text_for_potential_imports (gchar       *variable,
     }
     
   return results;   
+}
+
+static GList*
+get_valid_import_indexes (GtkSourceCompletionProvider *provider, 
+                          GList                       *imports)
+{
+  JavaCompletionProviderPrivate *priv;
+  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
+  
+  while (imports != NULL)
+    {
+      gchar *import = imports->data;
+      GList *indexes;
+      indexes = java_indexer_get_package_indexes (priv->indexer, import);
+      if (indexes != NULL)
+        return indexes;
+      imports = g_list_next (imports);
+    }
+    
+  return NULL;    
 }
