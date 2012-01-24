@@ -22,51 +22,51 @@
 #include <gtksourceview/gtksourcecompletionitem.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <codeslayer/codeslayer-utils.h>
-#include "java-completion-provider.h"
+#include "java-completion-method.h"
 #include "java-indexer-index.h"
 
-static void java_completion_provider_class_init (JavaCompletionProviderClass      *klass);
-static void java_completion_provider_init       (JavaCompletionProvider           *completion_provider);
-static void java_completion_provider_finalize   (JavaCompletionProvider           *completion_provider);
+static void java_completion_method_class_init    (JavaCompletionMethodClass        *klass);
+static void java_completion_method_init          (JavaCompletionMethod             *completion_method);
+static void java_completion_method_finalize      (JavaCompletionMethod             *completion_method);
 
-static void provider_interface_init             (GtkSourceCompletionProviderIface *iface);
-static gchar* provider_get_name                 (GtkSourceCompletionProvider      *provider);
-static gint provider_get_priority               (GtkSourceCompletionProvider      *provider);
-static gboolean provider_match                  (GtkSourceCompletionProvider      *provider,
-                                                 GtkSourceCompletionContext       *context);
-static void provider_populate                   (GtkSourceCompletionProvider      *provider,
-                                                 GtkSourceCompletionContext       *context);
+static void provider_interface_init              (GtkSourceCompletionProviderIface *iface);
+static gchar* provider_get_name                  (GtkSourceCompletionProvider      *provider);
+static gint provider_get_priority                (GtkSourceCompletionProvider      *provider);
+static gboolean provider_match                   (GtkSourceCompletionProvider      *provider,
+                                                  GtkSourceCompletionContext       *context);
+static void provider_populate                    (GtkSourceCompletionProvider      *provider,
+                                                  GtkSourceCompletionContext       *context);
 
-static gchar* find_completion_path              (GtkSourceCompletionProvider      *provider,
-                                                 GtkSourceCompletionContext       *context);
-static gchar* strip_completion_path_comments    (gchar                            *text);
-static gchar* strip_completion_path_parameters  (gchar                            *text);
-static GList* get_completion_list               (GtkSourceCompletionProvider      *provider,
-                                                 GtkSourceCompletionContext       *context, 
-                                                 gchar                            *text);
-static gchar* get_text_to_search                (GtkSourceCompletionContext       *context,
-                                                 CodeSlayerEditor                 *editor);
-static gchar* search_text_for_variable          (gchar                            *variable, 
-                                                 const gchar                      *string);
-static GList* search_text_for_potential_imports (gchar                            *variable, 
-                                                 const gchar                      *string);
-static GList* get_valid_import_indexes          (GtkSourceCompletionProvider      *provider, 
-                                                 GList                            *imports);
+static gchar* find_completion_path               (GtkSourceCompletionProvider      *provider,
+                                                  GtkSourceCompletionContext       *context);
+static gchar* strip_completion_path_comments     (gchar                            *text);
+static gchar* strip_completion_path_parameters   (gchar                            *text);
+static GList* get_completion_list                (GtkSourceCompletionProvider      *provider,
+                                                  GtkSourceCompletionContext       *context, 
+                                                  gchar                            *text);
+static gchar* get_text_to_search                 (GtkSourceCompletionContext       *context,
+                                                  CodeSlayerEditor                 *editor);
+static gchar* search_text_for_variable           (gchar                            *variable, 
+                                                  const gchar                      *string);
+static GList* search_text_for_potential_imports  (gchar                            *variable, 
+                                                  const gchar                      *string);
+static GList* get_valid_import_indexes           (GtkSourceCompletionProvider      *provider, 
+                                                  GList                            *imports);
 
-#define JAVA_COMPLETION_PROVIDER_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_PROVIDER_TYPE, JavaCompletionProviderPrivate))
+#define JAVA_COMPLETION_METHOD_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_METHOD_TYPE, JavaCompletionMethodPrivate))
 
-typedef struct _JavaCompletionProviderPrivate JavaCompletionProviderPrivate;
+typedef struct _JavaCompletionMethodPrivate JavaCompletionMethodPrivate;
 
-struct _JavaCompletionProviderPrivate
+struct _JavaCompletionMethodPrivate
 {
   CodeSlayerEditor *editor;
   JavaIndexer      *indexer;
   GList            *proposals;
 };
 
-G_DEFINE_TYPE_EXTENDED (JavaCompletionProvider,
-                        java_completion_provider,
+G_DEFINE_TYPE_EXTENDED (JavaCompletionMethod,
+                        java_completion_method,
                         G_TYPE_OBJECT,
                         0,
                         G_IMPLEMENT_INTERFACE (GTK_SOURCE_TYPE_COMPLETION_PROVIDER,
@@ -82,41 +82,41 @@ provider_interface_init (GtkSourceCompletionProviderIface *iface)
 }
      
 static void 
-java_completion_provider_class_init (JavaCompletionProviderClass *klass)
+java_completion_method_class_init (JavaCompletionMethodClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->finalize = (GObjectFinalizeFunc) java_completion_provider_finalize;
-  g_type_class_add_private (klass, sizeof (JavaCompletionProviderPrivate));
+  gobject_class->finalize = (GObjectFinalizeFunc) java_completion_method_finalize;
+  g_type_class_add_private (klass, sizeof (JavaCompletionMethodPrivate));
 }
 
 static void
-java_completion_provider_init (JavaCompletionProvider *completion_provider)
+java_completion_method_init (JavaCompletionMethod *completion_method)
 {
-  JavaCompletionProviderPrivate *priv;
+  JavaCompletionMethodPrivate *priv;
   
-  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (completion_provider);
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
   priv->proposals = NULL;
 }
 
 static void
-java_completion_provider_finalize (JavaCompletionProvider *completion_provider)
+java_completion_method_finalize (JavaCompletionMethod *completion_method)
 {
-  G_OBJECT_CLASS (java_completion_provider_parent_class)->finalize (G_OBJECT (completion_provider));
+  G_OBJECT_CLASS (java_completion_method_parent_class)->finalize (G_OBJECT (completion_method));
 }
 
-JavaCompletionProvider*
-java_completion_provider_new (CodeSlayerEditor *editor, 
+JavaCompletionMethod*
+java_completion_method_new (CodeSlayerEditor *editor, 
                               JavaIndexer      *indexer)
 {
-  JavaCompletionProviderPrivate *priv;
-  JavaCompletionProvider *completion_provider;
+  JavaCompletionMethodPrivate *priv;
+  JavaCompletionMethod *completion_method;
 
-  completion_provider = JAVA_COMPLETION_PROVIDER (g_object_new (java_completion_provider_get_type (), NULL));
-  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (completion_provider);
+  completion_method = JAVA_COMPLETION_METHOD (g_object_new (java_completion_method_get_type (), NULL));
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
   priv->editor = editor;
   priv->indexer = indexer;
 
-  return completion_provider;
+  return completion_method;
 }
 
 static gchar*
@@ -162,10 +162,10 @@ static void
 provider_populate (GtkSourceCompletionProvider *provider,
                    GtkSourceCompletionContext  *context)
 {
-  JavaCompletionProviderPrivate *priv;
+  JavaCompletionMethodPrivate *priv;
   gchar *text;
 
-  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
 
   g_print ("provider_populate\n");
 
@@ -311,13 +311,13 @@ get_completion_list (GtkSourceCompletionProvider *provider,
                      GtkSourceCompletionContext  *context, 
                      gchar                       *string)
 {
-  JavaCompletionProviderPrivate *priv;
+  JavaCompletionMethodPrivate *priv;
   gchar **split;
   gchar **array;
   gchar *variable;
   GList *indexes;
 
-  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
   
   split = g_strsplit (string, ".", -1);
   array = split;
@@ -466,8 +466,8 @@ static GList*
 get_valid_import_indexes (GtkSourceCompletionProvider *provider, 
                           GList                       *imports)
 {
-  JavaCompletionProviderPrivate *priv;
-  priv = JAVA_COMPLETION_PROVIDER_GET_PRIVATE (provider);
+  JavaCompletionMethodPrivate *priv;
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
   
   while (imports != NULL)
     {

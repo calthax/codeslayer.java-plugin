@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "java-completion.h"
-#include "java-completion-provider.h"
+#include "java-completion-method.h"
 #include "java-utils.h"
 
 static void java_completion_class_init  (JavaCompletionClass *klass);
@@ -95,7 +95,7 @@ editor_added_action (JavaCompletion   *completion,
 {
   JavaCompletionPrivate *priv;
 	GtkSourceCompletion *source_completion;
-	JavaCompletionProvider *completion_provider;
+	JavaCompletionMethod *completion_method;
   
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
 
@@ -103,9 +103,9 @@ editor_added_action (JavaCompletion   *completion,
 	g_object_set (source_completion, "show-headers", FALSE, NULL);
 	g_object_set (source_completion, "show-icons", FALSE, NULL);
 	
-	completion_provider = java_completion_provider_new (editor, priv->indexer);
+	completion_method = java_completion_method_new (editor, priv->indexer);
 	
 	gtk_source_completion_add_provider (source_completion, 
-	                                    GTK_SOURCE_COMPLETION_PROVIDER (completion_provider), 
+	                                    GTK_SOURCE_COMPLETION_PROVIDER (completion_method), 
 	                                    NULL);
 }

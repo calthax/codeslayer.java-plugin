@@ -46,8 +46,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-debugger-breakpoint.c \
     java-completion.h \
     java-completion.c \
-    java-completion-provider.h \
-    java-completion-provider.c \
+    java-completion-method.h \
+    java-completion-method.c \
     java-utils.h \
     java-utils.c \
     java-plugin.c

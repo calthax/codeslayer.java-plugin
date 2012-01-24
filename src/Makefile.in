@@ -97,7 +97,7 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-debugger-breakpoints.lo \
 	libjavacodeslayerplugin_la-java-debugger-breakpoint.lo \
 	libjavacodeslayerplugin_la-java-completion.lo \
-	libjavacodeslayerplugin_la-java-completion-provider.lo \
+	libjavacodeslayerplugin_la-java-completion-method.lo \
 	libjavacodeslayerplugin_la-java-utils.lo \
 	libjavacodeslayerplugin_la-java-plugin.lo
 libjavacodeslayerplugin_la_OBJECTS =  \
@@ -287,8 +287,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-debugger-breakpoint.c \
     java-completion.h \
     java-completion.c \
-    java-completion-provider.h \
-    java-completion-provider.c \
+    java-completion-method.h \
+    java-completion-method.c \
     java-utils.h \
     java-utils.c \
     java-plugin.c
@@ -368,7 +368,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-method.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configuration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configurations.Plo@am__quote@
@@ -553,12 +553,12 @@ libjavacodeslayerplugin_la-java-completion.lo: java-completion.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion.lo `test -f 'java-completion.c' || echo '$(srcdir)/'`java-completion.c
 
-libjavacodeslayerplugin_la-java-completion-provider.lo: java-completion-provider.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-completion-provider.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Tpo -c -o libjavacodeslayerplugin_la-java-completion-provider.lo `test -f 'java-completion-provider.c' || echo '$(srcdir)/'`java-completion-provider.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-provider.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-completion-provider.c' object='libjavacodeslayerplugin_la-java-completion-provider.lo' libtool=yes @AMDEPBACKSLASH@
+libjavacodeslayerplugin_la-java-completion-method.lo: java-completion-method.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-completion-method.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-method.Tpo -c -o libjavacodeslayerplugin_la-java-completion-method.lo `test -f 'java-completion-method.c' || echo '$(srcdir)/'`java-completion-method.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-method.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-method.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-completion-method.c' object='libjavacodeslayerplugin_la-java-completion-method.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion-provider.lo `test -f 'java-completion-provider.c' || echo '$(srcdir)/'`java-completion-provider.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion-method.lo `test -f 'java-completion-method.c' || echo '$(srcdir)/'`java-completion-method.c
 
 libjavacodeslayerplugin_la-java-utils.lo: java-utils.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-utils.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-utils.Tpo -c -o libjavacodeslayerplugin_la-java-utils.lo `test -f 'java-utils.c' || echo '$(srcdir)/'`java-utils.c
