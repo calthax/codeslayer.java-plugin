@@ -445,7 +445,13 @@ search_text_for_potential_imports (gchar       *variable,
         }
       else
         {
-          results = g_list_prepend (results, g_strdup (import));
+          gchar *suffix = NULL;
+          suffix = g_strconcat (".", variable, NULL);
+          if (g_str_has_suffix (import, suffix))
+            {
+              results = g_list_prepend (results, g_strdup (import));
+            }
+          g_free (suffix);
         }
       g_free (import);
     }
@@ -475,7 +481,10 @@ get_valid_import_indexes (GtkSourceCompletionProvider *provider,
       GList *indexes;
       indexes = java_indexer_get_package_indexes (priv->indexer, import);
       if (indexes != NULL)
-        return indexes;
+        {
+          g_print ("import %s\n", import);
+          return indexes;
+        }
       imports = g_list_next (imports);
     }
     
