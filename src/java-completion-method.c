@@ -52,6 +52,8 @@ static GList* search_text_for_potential_imports  (gchar                         
                                                   const gchar                      *string);
 static GList* get_valid_import_indexes           (GtkSourceCompletionProvider      *provider, 
                                                   GList                            *imports);
+static gint sort_indexes                         (JavaIndexerIndex                 *index1, 
+                                                  JavaIndexerIndex                 *index2);
 
 #define JAVA_COMPLETION_METHOD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_METHOD_TYPE, JavaCompletionMethodPrivate))
@@ -135,13 +137,13 @@ static gboolean
 provider_match (GtkSourceCompletionProvider *provider,
                 GtkSourceCompletionContext  *context)
 {
-  JavaCompletionMethodPrivate *priv;
+  /*JavaCompletionMethodPrivate *priv;*/
   GtkTextIter iter;
   GtkTextIter start;
   gchar *text;
   
   g_print ("provider_match\n");
-  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
+  /*priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);*/
   
   gtk_source_completion_context_get_iter (context, &iter);
   start = iter;
@@ -153,8 +155,8 @@ provider_match (GtkSourceCompletionProvider *provider,
   if (g_strcmp0 (text, ".") == 0)
     {
       g_free (text);
-      g_list_free (priv->proposals);
-      priv->proposals = NULL;
+      /*g_list_free (priv->proposals);
+      priv->proposals = NULL;*/
       return TRUE;
     }
 
@@ -186,13 +188,29 @@ provider_populate (GtkSourceCompletionProvider *provider,
       parameters_stripped = g_strreverse (parameters_stripped);
       
       list = get_completion_list (provider, context, parameters_stripped);
+      if (list != NULL)
+        list = g_list_sort (list, (GCompareFunc) sort_indexes);
+      
       while (list != NULL)
         {
           JavaIndexerIndex *index = list->data;
           const gchar *name;
           name = java_indexer_index_get_name (index);
-          priv->proposals = g_list_prepend (priv->proposals,
-	                                          gtk_source_completion_item_new (name, name, NULL, NULL));
+
+          if (g_strcmp0 (name, "<init>") != 0)
+            {
+              const gchar *parameters;
+              gchar *concat;
+              
+              parameters = java_indexer_index_get_parameters (index);
+              concat = g_strconcat (name, "(", parameters, ")", NULL);
+              
+              priv->proposals = g_list_prepend (priv->proposals,
+	                                              gtk_source_completion_item_new (concat, concat, NULL, NULL));
+	                                                                  
+              g_free (concat);	                                              
+            }
+          
           list = g_list_next (list);
         }
       
@@ -202,6 +220,17 @@ provider_populate (GtkSourceCompletionProvider *provider,
     }
   
 	gtk_source_completion_context_add_proposals (context, provider, priv->proposals, TRUE);
+}
+
+static gint                
+sort_indexes (JavaIndexerIndex *index1, 
+              JavaIndexerIndex *index2)
+{
+  const gchar *name1;
+  const gchar *name2;
+  name1 = java_indexer_index_get_name (index1);
+  name2 = java_indexer_index_get_name (index2);  
+  return g_strcmp0 (name2, name1);
 }
 
 /*
