@@ -135,11 +135,13 @@ static gboolean
 provider_match (GtkSourceCompletionProvider *provider,
                 GtkSourceCompletionContext  *context)
 {
+  JavaCompletionMethodPrivate *priv;
   GtkTextIter iter;
   GtkTextIter start;
   gchar *text;
   
   g_print ("provider_match\n");
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
   
   gtk_source_completion_context_get_iter (context, &iter);
   start = iter;
@@ -151,6 +153,8 @@ provider_match (GtkSourceCompletionProvider *provider,
   if (g_strcmp0 (text, ".") == 0)
     {
       g_free (text);
+      g_list_free (priv->proposals);
+      priv->proposals = NULL;
       return TRUE;
     }
 
@@ -163,23 +167,25 @@ provider_populate (GtkSourceCompletionProvider *provider,
                    GtkSourceCompletionContext  *context)
 {
   JavaCompletionMethodPrivate *priv;
-  gchar *text;
+  gchar *completion_path;
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
 
   g_print ("provider_populate\n");
 
-  text = find_completion_path (provider, context);
+  completion_path = find_completion_path (provider, context);
   
-  if (text != NULL)
+  if (codeslayer_utils_has_text (completion_path))
     {
-      gchar *text_strip_comments;
-      gchar *text_strip_parameters;
+      gchar *comments_stripped;
+      gchar *parameters_stripped;
       GList *list;
-      text_strip_comments = strip_completion_path_comments (text);
-      text_strip_parameters = strip_completion_path_parameters (text_strip_comments);
-      text_strip_parameters = g_strreverse (text_strip_parameters);
-      list = get_completion_list (provider, context, text_strip_parameters);
+      
+      comments_stripped = strip_completion_path_comments (completion_path);
+      parameters_stripped = strip_completion_path_parameters (comments_stripped);
+      parameters_stripped = g_strreverse (parameters_stripped);
+      
+      list = get_completion_list (provider, context, parameters_stripped);
       while (list != NULL)
         {
           JavaIndexerIndex *index = list->data;
@@ -190,14 +196,22 @@ provider_populate (GtkSourceCompletionProvider *provider,
           list = g_list_next (list);
         }
       
-      g_free (text);
-      g_free (text_strip_comments);
-      g_free (text_strip_parameters);
+      g_free (completion_path);
+      g_free (comments_stripped);
+      g_free (parameters_stripped);
     }
   
 	gtk_source_completion_context_add_proposals (context, provider, priv->proposals, TRUE);
 }
 
+/*
+ * Walk backwards and match braces to find the completion path.
+ *
+ * For example at any point in the following path you would be able to 
+ * find the context, namely the tableModel, or the presidentService.
+ *
+ * tableModel.setItems(presidentService.getPresidents())
+ */
 static gchar*
 find_completion_path (GtkSourceCompletionProvider *provider,
                       GtkSourceCompletionContext  *context)
@@ -243,11 +257,17 @@ find_completion_path (GtkSourceCompletionProvider *provider,
   g_free (text);
   
   result = g_string_free (string, FALSE);
-  g_strstrip(result);
+  g_strstrip (result);
     
   return result;
 }
 
+/*
+ * Take out the comments so that they do not effect how the completion
+ * path is walked to find the context of the variable and methods.
+ *
+ * new DateFilterMatcher("MM/yyyy") becomes new DateFilterMatcher()
+ */
 static gchar*
 strip_completion_path_comments (gchar *text)
 {
@@ -270,6 +290,15 @@ strip_completion_path_comments (gchar *text)
   return result;
 }
 
+/*
+ * Take out everything in the methods (between the braces) that do not 
+ * belong in the context of the path being matched so that they do not 
+ * effect how the completion path is walked to find the context of the 
+ * variable and methods.
+ *
+ * tableModel.setItems(presidentService.getPresidents()) 
+ * becomes tableModel.setItems() if we are in the context of the tableModel.
+ */
 static gchar*
 strip_completion_path_parameters (gchar *text)
 {
@@ -306,6 +335,16 @@ strip_completion_path_parameters (gchar *text)
   return result;
 }
 
+/*
+ * Take the completion path, start at the beginning, and resolve the 
+ * actual classes and methods types.
+ *
+ * For example after the title figure out that this starts as a Column 
+ * object and that the title() method also returns a Column object.
+ *
+ * new Column().title().
+ *
+ */
 static GList*
 get_completion_list (GtkSourceCompletionProvider *provider,
                      GtkSourceCompletionContext  *context, 
@@ -314,8 +353,8 @@ get_completion_list (GtkSourceCompletionProvider *provider,
   JavaCompletionMethodPrivate *priv;
   gchar **split;
   gchar **array;
-  gchar *variable;
-  GList *indexes;
+  gchar *variable = NULL;
+  GList *indexes = NULL;
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (provider);
   
@@ -328,13 +367,18 @@ get_completion_list (GtkSourceCompletionProvider *provider,
       GList *imports;
       text = get_text_to_search (context, priv->editor);
       variable = search_text_for_variable (*array, text);
-      imports = search_text_for_potential_imports (variable, text);
-      indexes = get_valid_import_indexes (provider, imports);
-      if (imports != NULL)
+      
+      if (codeslayer_utils_has_text (variable))
         {
-          g_list_foreach (imports, (GFunc) g_free, NULL);
-          g_list_free (imports);
+          imports = search_text_for_potential_imports (variable, text);
+          indexes = get_valid_import_indexes (provider, imports);
+          if (imports != NULL)
+            {
+              g_list_foreach (imports, (GFunc) g_free, NULL);
+              g_list_free (imports);
+            }
         }
+      
       g_free (text);
       array++;
     }
@@ -349,10 +393,18 @@ get_completion_list (GtkSourceCompletionProvider *provider,
   
   if (split != NULL)
     g_strfreev (split);
+  
+  if (variable != NULL)
+    g_free (variable);
     
   return indexes;
 }
 
+/*
+ * Start at the current place in the editor and get all the previous text.
+ * The idea is that any variables that need to be resolved will come 
+ * before this place in the editor.
+ */
 static gchar*
 get_text_to_search (GtkSourceCompletionContext *context, 
                     CodeSlayerEditor           *editor)
@@ -370,6 +422,13 @@ get_text_to_search (GtkSourceCompletionContext *context,
   return text;
 }
 
+/*
+ * Take the variable and find the type. For instance in the following
+ * example the tableModel will be resolved to TableModel.
+ *  
+ * TableModel tableModel
+ * tableModel.addFilterMatcher()
+ */
 static gchar*
 search_text_for_variable (gchar       *variable, 
                           const gchar *text)
@@ -391,7 +450,7 @@ search_text_for_variable (gchar       *variable,
       result = g_match_info_fetch (match_info, 0);
       if (g_match_info_next (match_info, &error))
         {
-          g_free (result);        
+          g_free (result);
         }
       else
         {
@@ -406,6 +465,7 @@ search_text_for_variable (gchar       *variable,
   
   g_match_info_free (match_info);
   g_regex_unref (regex);
+  g_free (concat);
   
   if (error != NULL)
     {
@@ -413,10 +473,17 @@ search_text_for_variable (gchar       *variable,
       g_error_free (error);
     }
     
-  g_free (concat);
   return result;   
 }
 
+/*
+ * Take the variable and find all the potential imports that could be of this type.
+ * One thing to be aware of is we need to replace the '*' with the class in case
+ * the '*' is used instead of the full package declaration.
+ * 
+ * import org.jmesa.model.*;
+ * import org.jmesa.model.TableModel;
+ */
 static GList*
 search_text_for_potential_imports (gchar       *variable, 
                                    const gchar *text)
@@ -468,6 +535,10 @@ search_text_for_potential_imports (gchar       *variable,
   return results;   
 }
 
+/*
+ * Take the potential imports and see which ones is real to find the class
+ * indexes.
+ */
 static GList*
 get_valid_import_indexes (GtkSourceCompletionProvider *provider, 
                           GList                       *imports)
