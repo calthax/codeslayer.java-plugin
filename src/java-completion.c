@@ -94,18 +94,12 @@ editor_added_action (JavaCompletion   *completion,
                      CodeSlayerEditor *editor)
 {
   JavaCompletionPrivate *priv;
-	GtkSourceCompletion *source_completion;
-	JavaCompletionMethod *completion_method;
+  JavaCompletionMethod *method;
   
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
-
-	source_completion = gtk_source_view_get_completion (GTK_SOURCE_VIEW (editor));
-	g_object_set (source_completion, "show-headers", FALSE, NULL);
-	g_object_set (source_completion, "show-icons", FALSE, NULL);
-	
-	completion_method = java_completion_method_new (editor, priv->indexer);
-	
-	gtk_source_completion_add_provider (source_completion, 
-	                                    GTK_SOURCE_COMPLETION_PROVIDER (completion_method), 
-	                                    NULL);
+  
+  method = java_completion_method_new (editor, priv->indexer);
+  
+  codeslayer_editor_add_completion_provider (editor, 
+                                             CODESLAYER_COMPLETION_PROVIDER (method));
 }
