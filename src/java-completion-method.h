@@ -49,9 +49,6 @@ GType java_completion_method_get_type (void) G_GNUC_CONST;
 
 JavaCompletionMethod*  java_completion_method_new  (CodeSlayerEditor     *editor, 
                                                     JavaIndexer          *indexer);
-                                                    
-GList*                 get_proposals               (JavaCompletionMethod *method,
-                                                    GtkTextIter          *iter);                                                    
 
 G_END_DECLS
 

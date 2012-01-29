@@ -27,17 +27,17 @@ static void java_completion_method_init              (JavaCompletionMethod      
 static void java_completion_method_finalize          (JavaCompletionMethod       *method);
 
 static gboolean java_completion_has_match            (JavaCompletionMethod       *method, 
-                                                      GtkTextIter                *iter);
+                                                      GtkTextIter                 iter);
 static GList* java_completion_get_proposals          (JavaCompletionMethod       *method, 
-                                                      GtkTextIter                *iter);
+                                                      GtkTextIter                 iter);
 static gchar* find_completion_path                   (JavaCompletionMethod       *method,
-                                                      GtkTextIter                *iter);
+                                                      GtkTextIter                 iter);
 static gchar* strip_completion_path_comments         (gchar                      *text);
 static gchar* strip_completion_path_parameters       (gchar                      *text);
 static GList* get_completion_list                    (JavaCompletionMethod       *method,
-                                                      GtkTextIter                *iter, 
+                                                      GtkTextIter                 iter, 
                                                       gchar                      *text);
-static gchar* get_text_to_search                     (GtkTextIter                *iter,
+static gchar* get_text_to_search                     (GtkTextIter                 iter,
                                                       CodeSlayerEditor           *editor);
 static gchar* search_text_for_variable               (gchar                      *variable, 
                                                       const gchar                *string);
@@ -57,7 +57,6 @@ struct _JavaCompletionMethodPrivate
 {
   CodeSlayerEditor *editor;
   JavaIndexer      *indexer;
-  GList            *proposals;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaCompletionMethod,
@@ -68,12 +67,12 @@ G_DEFINE_TYPE_EXTENDED (JavaCompletionMethod,
                                                java_completion_provider_interface_init));
 
 static void
-java_completion_provider_interface_init (gpointer page, 
+java_completion_provider_interface_init (gpointer provider, 
                                          gpointer data)
 {
-  CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) page;
-  provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj)) java_completion_has_match;
-  provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj)) java_completion_get_proposals;
+  CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) provider;
+  provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_has_match;
+  provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
 }
 
 static void 
@@ -85,18 +84,14 @@ java_completion_method_class_init (JavaCompletionMethodClass *klass)
 }
 
 static void
-java_completion_method_init (JavaCompletionMethod *completion_method)
+java_completion_method_init (JavaCompletionMethod *method)
 {
-  JavaCompletionMethodPrivate *priv;
-  
-  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
-  priv->proposals = NULL;
 }
 
 static void
-java_completion_method_finalize (JavaCompletionMethod *completion_method)
+java_completion_method_finalize (JavaCompletionMethod *method)
 {
-  G_OBJECT_CLASS (java_completion_method_parent_class)->finalize (G_OBJECT (completion_method));
+  G_OBJECT_CLASS (java_completion_method_parent_class)->finalize (G_OBJECT (method));
 }
 
 JavaCompletionMethod*
@@ -104,100 +99,47 @@ java_completion_method_new (CodeSlayerEditor *editor,
                             JavaIndexer      *indexer)
 {
   JavaCompletionMethodPrivate *priv;
-  JavaCompletionMethod *completion_method;
+  JavaCompletionMethod *method;
 
-  completion_method = JAVA_COMPLETION_METHOD (g_object_new (java_completion_method_get_type (), NULL));
-  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
+  method = JAVA_COMPLETION_METHOD (g_object_new (java_completion_method_get_type (), NULL));
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
   priv->editor = editor;
   priv->indexer = indexer;
 
-  return completion_method;
+  return method;
 }
 
 static gboolean 
 java_completion_has_match (JavaCompletionMethod *method, 
-                           GtkTextIter          *iter)
+                           GtkTextIter           iter)
 {
-  GtkTextIter *start;
+  GtkTextIter start;
   gchar *text;
   
-  if (iter == NULL)
-    g_print ("we are null;\n");
-    
   start = iter;
   
-  gtk_text_iter_backward_char (start);
+  gtk_text_iter_backward_char (&start);
   
-  text = gtk_text_iter_get_text (start, iter);
+  text = gtk_text_iter_get_text (&start, &iter);
   
-  g_print ("java_completion_has_match %s\n", text);
-
   if (g_strcmp0 (text, ".") == 0)
     {
       g_free (text);
       return TRUE;
     }
 
-  g_free (text);
-  
+  g_free (text);  
   return FALSE;
 }
 
 static GList* 
 java_completion_get_proposals (JavaCompletionMethod *method, 
-                               GtkTextIter          *iter)
+                               GtkTextIter           iter)
 {
-  GtkTextIter *start;
-  gchar *text;
-  
-  start = iter;
-  
-  gtk_text_iter_backward_char (start);
-  
-  text = gtk_text_iter_get_text (start, iter);
-  
-  g_print ("java_completion_get_proposals %s\n", text);
-
-  g_free (text);    
-  
-  return NULL;
-}
-
-/*static gboolean
-provider_match (JavaCompletionMethod *completion_method,
-                GtkTextIter          *iter)
-{
-  GtkTextIter *start;
-  gchar *text;
-  
-  start = iter;
-  
-  gtk_text_iter_backward_char (start);
-  
-  text = gtk_text_iter_get_text (start, iter);
-  
-  if (g_strcmp0 (text, ".") == 0)
-    {
-      g_free (text);
-      return TRUE;
-    }
-
-  g_free (text);    
-	return FALSE;
-}*/
-
-GList*
-get_proposals (JavaCompletionMethod *completion_method,
-               GtkTextIter          *iter)
-{
-  JavaCompletionMethodPrivate *priv;
+  GList *proposals = NULL;
   gchar *completion_path;
 
-  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
-
-  g_print ("provider_populate\n");
-
-  completion_path = find_completion_path (completion_method, iter);
+  completion_path = find_completion_path (method, iter);
   
   if (codeslayer_utils_has_text (completion_path))
     {
@@ -209,7 +151,7 @@ get_proposals (JavaCompletionMethod *completion_method,
       parameters_stripped = strip_completion_path_parameters (comments_stripped);
       parameters_stripped = g_strreverse (parameters_stripped);
       
-      list = get_completion_list (completion_method, iter, parameters_stripped);
+      list = get_completion_list (method, iter, parameters_stripped);
       if (list != NULL)
         list = g_list_sort (list, (GCompareFunc) sort_indexes);
       
@@ -221,13 +163,16 @@ get_proposals (JavaCompletionMethod *completion_method,
 
           if (g_strcmp0 (name, "<init>") != 0)
             {
+              CodeSlayerCompletionProposal *proposal;
               const gchar *parameters;
               gchar *concat;
               
               parameters = java_indexer_index_get_parameters (index);
               concat = g_strconcat (name, "(", parameters, ")", NULL);
               
-              priv->proposals = g_list_prepend (priv->proposals, concat);
+              proposal = codeslayer_completion_proposal_new (concat, concat);
+              
+              proposals = g_list_prepend (proposals, proposal);
 	                                                                  
               g_free (concat);	                                              
             }
@@ -240,7 +185,7 @@ get_proposals (JavaCompletionMethod *completion_method,
       g_free (parameters_stripped);
     }
     
-  return priv->proposals; 
+  return proposals; 
 }
 
 static gint                
@@ -263,22 +208,22 @@ sort_indexes (JavaIndexerIndex *index1,
  * tableModel.setItems(presidentService.getPresidents())
  */
 static gchar*
-find_completion_path (JavaCompletionMethod *completion_method,
-                      GtkTextIter          *iter)
+find_completion_path (JavaCompletionMethod *method,
+                      GtkTextIter           iter)
 {
   gchar *result;
   GString *string;
   gchar *text;
   gchar *variable;
-  GtkTextIter *start;
+  GtkTextIter start;
   int brace = 0;
   
   string = g_string_new ("");
 
   start = iter;
-  gtk_text_iter_backward_chars (start, 100);
+  gtk_text_iter_backward_chars (&start, 100);
   
-  text = gtk_text_iter_get_text (start, iter);
+  text = gtk_text_iter_get_text (&start, &iter);
   variable = text;
   variable = g_strreverse (variable);  
   
@@ -393,8 +338,8 @@ strip_completion_path_parameters (gchar *text)
  *
  */
 static GList*
-get_completion_list (JavaCompletionMethod *completion_method,
-                     GtkTextIter          *iter, 
+get_completion_list (JavaCompletionMethod *method,
+                     GtkTextIter           iter, 
                      gchar                *string)
 {
   JavaCompletionMethodPrivate *priv;
@@ -403,7 +348,7 @@ get_completion_list (JavaCompletionMethod *completion_method,
   gchar *variable = NULL;
   GList *indexes = NULL;
 
-  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
   
   split = g_strsplit (string, ".", -1);
   array = split;
@@ -418,7 +363,7 @@ get_completion_list (JavaCompletionMethod *completion_method,
       if (codeslayer_utils_has_text (variable))
         {
           imports = search_text_for_potential_imports (variable, text);
-          indexes = get_valid_import_indexes (completion_method, imports);
+          indexes = get_valid_import_indexes (method, imports);
           if (imports != NULL)
             {
               g_list_foreach (imports, (GFunc) g_free, NULL);
@@ -453,7 +398,7 @@ get_completion_list (JavaCompletionMethod *completion_method,
  * before this place in the editor.
  */
 static gchar*
-get_text_to_search (GtkTextIter      *iter, 
+get_text_to_search (GtkTextIter       iter, 
                     CodeSlayerEditor *editor)
 {
   GtkTextBuffer *buffer;
@@ -462,7 +407,7 @@ get_text_to_search (GtkTextIter      *iter,
 
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));      
   gtk_text_buffer_get_start_iter (buffer, &start);
-  text = gtk_text_buffer_get_text (buffer, &start, iter, FALSE);
+  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
 
   return text;
 }
@@ -585,11 +530,11 @@ search_text_for_potential_imports (gchar       *variable,
  * indexes.
  */
 static GList*
-get_valid_import_indexes (JavaCompletionMethod *completion_method, 
+get_valid_import_indexes (JavaCompletionMethod *method, 
                           GList                *imports)
 {
   JavaCompletionMethodPrivate *priv;
-  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (completion_method);
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
   
   while (imports != NULL)
     {
@@ -598,7 +543,7 @@ get_valid_import_indexes (JavaCompletionMethod *completion_method,
       indexes = java_indexer_get_package_indexes (priv->indexer, import);
       if (indexes != NULL)
         {
-          g_print ("import %s\n", import);
+          /*g_print ("import %s\n", import);*/
           return indexes;
         }
       imports = g_list_next (imports);
