@@ -37,18 +37,18 @@ typedef struct _JavaCompletionMethodClass JavaCompletionMethodClass;
 
 struct _JavaCompletionMethod
 {
-  GObject parent_instance;
+  GInitiallyUnowned parent_instance;
 };
 
 struct _JavaCompletionMethodClass
 {
-  GObjectClass parent_class;
+  GInitiallyUnownedClass parent_class;
 };
 
 GType java_completion_method_get_type (void) G_GNUC_CONST;
 
-JavaCompletionMethod*  java_completion_method_new  (CodeSlayerEditor     *editor, 
-                                                    JavaIndexer          *indexer);
+JavaCompletionMethod*  java_completion_method_new  (CodeSlayerEditor *editor, 
+                                                    JavaIndexer      *indexer);
 
 G_END_DECLS
 

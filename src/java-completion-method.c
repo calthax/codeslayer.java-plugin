@@ -61,7 +61,7 @@ struct _JavaCompletionMethodPrivate
 
 G_DEFINE_TYPE_EXTENDED (JavaCompletionMethod,
                         java_completion_method,
-                        G_TYPE_OBJECT,
+                        G_TYPE_INITIALLY_UNOWNED,
                         0,
                         G_IMPLEMENT_INTERFACE (CODESLAYER_COMPLETION_PROVIDER_TYPE,
                                                java_completion_provider_interface_init));
