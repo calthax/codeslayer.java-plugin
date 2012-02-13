@@ -128,5 +128,5 @@ java_indexer_get_package_indexes (JavaIndexer *indexer,
   GList *indexes = NULL;
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   indexes = g_hash_table_lookup (priv->package_hash_table, package_name);
-  return indexes;
+  return g_list_copy (indexes);
 }

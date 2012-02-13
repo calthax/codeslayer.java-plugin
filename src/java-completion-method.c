@@ -145,13 +145,16 @@ java_completion_get_proposals (JavaCompletionMethod *method,
     {
       gchar *comments_stripped;
       gchar *parameters_stripped;
+      GList *tmp;
       GList *list;
       
       comments_stripped = strip_completion_path_comments (completion_path);
       parameters_stripped = strip_completion_path_parameters (comments_stripped);
       parameters_stripped = g_strreverse (parameters_stripped);
       
-      list = get_completion_list (method, iter, parameters_stripped);
+      tmp = get_completion_list (method, iter, parameters_stripped);
+      list = tmp;
+      
       if (list != NULL)
         list = g_list_sort (list, (GCompareFunc) sort_indexes);
       
@@ -170,6 +173,8 @@ java_completion_get_proposals (JavaCompletionMethod *method,
               parameters = java_indexer_index_get_parameters (index);
               concat = g_strconcat (name, "(", parameters, ")", NULL);
               
+              g_print ("%s\n", parameters);
+              
               proposal = codeslayer_completion_proposal_new (concat, concat);
               
               proposals = g_list_prepend (proposals, proposal);
@@ -183,6 +188,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
       g_free (completion_path);
       g_free (comments_stripped);
       g_free (parameters_stripped);
+      g_list_free (tmp);
     }
     
   return proposals; 
@@ -543,7 +549,7 @@ get_valid_import_indexes (JavaCompletionMethod *method,
       indexes = java_indexer_get_package_indexes (priv->indexer, import);
       if (indexes != NULL)
         {
-          /*g_print ("import %s\n", import);*/
+          /*g_print ("import %s:%d\n", import, g_list_length (indexes));*/
           return indexes;
         }
       imports = g_list_next (imports);
