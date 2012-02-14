@@ -23,19 +23,19 @@
 
 static GList* get_indexes                        (JavaIndexer      *indexer,
                                                   CodeSlayerEditor *editor,
-                                                  GtkTextIter       iter, 
-                                                  gchar            *text);
+                                                  gchar            *text, 
+                                                  gchar            *path);
 static gint sort_indexes                         (JavaIndexerIndex *index1, 
                                                   JavaIndexerIndex *index2);
-static gchar* find_path                          (GtkTextIter       iter);
+static gchar* find_path                          (gchar            *text);
 static gchar* strip_path_comments                (gchar            *text);
 static gchar* strip_path_parameters              (gchar            *text);
 static gchar* get_text_to_search                 (CodeSlayerEditor *editor, 
                                                   GtkTextIter       iter);
 static gchar* search_text_for_variable           (gchar            *variable, 
-                                                  const gchar      *string);
+                                                  const gchar      *text);
 static GList* search_text_for_potential_imports  (gchar            *variable, 
-                                                  const gchar      *string);
+                                                  const gchar      *text);
 static GList* get_valid_import_indexes           (JavaIndexer      *indexer, 
                                                   GList            *imports);
 
@@ -46,8 +46,11 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
 {
   GList *list = NULL;
   gchar *path;
+  gchar *text;   
 
-  path = find_path (iter);
+  text = get_text_to_search (editor, iter);
+  path = find_path (text);
+
   if (codeslayer_utils_has_text (path))
     {
       gchar *comments_stripped;
@@ -59,7 +62,7 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
       
       g_print ("path %s\n", parameters_stripped);
 
-      list = get_indexes (indexer, editor, iter, parameters_stripped);
+      list = get_indexes (indexer, editor, text, parameters_stripped);
       
       if (list != NULL)
         list = g_list_sort (list, (GCompareFunc) sort_indexes);
@@ -68,6 +71,8 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
       g_free (comments_stripped);
       g_free (parameters_stripped);
     }
+    
+  g_free (text);
     
   return list; 
 }
@@ -85,22 +90,20 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
 static GList*
 get_indexes (JavaIndexer      *indexer,
              CodeSlayerEditor *editor,
-             GtkTextIter       iter, 
-             gchar            *string)
+             gchar            *text,
+             gchar            *path)
 {
   gchar **split;
   gchar **array;
   gchar *variable = NULL;
   GList *indexes = NULL;
   
-  split = g_strsplit (string, ".", -1);
+  split = g_strsplit (path, ".", -1);
   array = split;
   
   if (codeslayer_utils_has_text (*array))
     {
-      gchar *text;   
       GList *imports;
-      text = get_text_to_search (editor, iter);
       variable = search_text_for_variable (*array, text);
       
       if (codeslayer_utils_has_text (variable))
@@ -114,15 +117,14 @@ get_indexes (JavaIndexer      *indexer,
             }
         }
       
-      g_free (text);
       array++;
     }
 
-  /*g_print ("variable %s\n", variable);*/
+  g_print ("variable %s\n", variable);
   
   while (codeslayer_utils_has_text (*array))
     {
-      /*g_print ("other %s\n", *array);*/
+      g_print ("other %s\n", *array);
       array++;
     }
   
@@ -155,22 +157,18 @@ sort_indexes (JavaIndexerIndex *index1,
  * tableModel.setItems(presidentService.getPresidents())
  */
 static gchar*
-find_path (GtkTextIter iter)
+find_path (gchar *text)
 {
   gchar *result;
   GString *string;
-  gchar *text;
   gchar *variable;
-  GtkTextIter start;
+  gchar *tmp;
   int brace = 0;
   
   string = g_string_new ("");
 
-  start = iter;
-  gtk_text_iter_backward_chars (&start, 100);
-  
-  text = gtk_text_iter_get_text (&start, &iter);
-  variable = text;
+  variable = g_strdup (text);
+  tmp = variable;
   variable = g_strreverse (variable);  
   
   for (; *variable != '\0'; ++variable)
@@ -192,10 +190,9 @@ find_path (GtkTextIter iter)
       string = g_string_append_c (string, *variable);
     }
   
-  g_free (text);
-  
   result = g_string_free (string, FALSE);
   g_strstrip (result);
+  g_free (tmp);
     
   return result;
 }
