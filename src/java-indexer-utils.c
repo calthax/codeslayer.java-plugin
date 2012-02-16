@@ -21,23 +21,22 @@
 #include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 
-static GList* get_indexes                        (JavaIndexer      *indexer,
-                                                  CodeSlayerEditor *editor,
-                                                  gchar            *text, 
-                                                  gchar            *path);
-static gint sort_indexes                         (JavaIndexerIndex *index1, 
-                                                  JavaIndexerIndex *index2);
-static gchar* find_path                          (gchar            *text);
-static gchar* strip_path_comments                (gchar            *text);
-static gchar* strip_path_parameters              (gchar            *text);
-static gchar* get_text_to_search                 (CodeSlayerEditor *editor, 
-                                                  GtkTextIter       iter);
-static gchar* search_text_for_variable           (gchar            *variable, 
-                                                  const gchar      *text);
-static GList* search_text_for_potential_imports  (gchar            *variable, 
-                                                  const gchar      *text);
-static GList* get_valid_import_indexes           (JavaIndexer      *indexer, 
-                                                  GList            *imports);
+static GList* get_indexes                   (JavaIndexer      *indexer,
+                                             CodeSlayerEditor *editor,
+                                             gchar            *text, 
+                                             gchar            *path);
+static gint sort_indexes                    (JavaIndexerIndex *index1, 
+                                             JavaIndexerIndex *index2);
+static gchar* find_path                     (gchar            *text);
+static gchar* strip_path_comments           (gchar            *text);
+static gchar* strip_path_parameters         (gchar            *text);
+static gchar* get_text_to_search            (CodeSlayerEditor *editor, 
+                                             GtkTextIter       iter);
+static gchar* search_text_for_class_symbol  (const gchar      *text, 
+                                             gchar            *class_symbol);
+static gchar* search_text_for_import        (JavaIndexer      *indexer, 
+                                             const gchar      *text, 
+                                             gchar            *class_symbol);
 
 GList* 
 java_indexer_utils_completion_indexes  (JavaIndexer      *indexer, 
@@ -95,7 +94,6 @@ get_indexes (JavaIndexer      *indexer,
 {
   gchar **split;
   gchar **array;
-  gchar *variable = NULL;
   GList *indexes = NULL;
   
   split = g_strsplit (path, ".", -1);
@@ -103,25 +101,23 @@ get_indexes (JavaIndexer      *indexer,
   
   if (codeslayer_utils_has_text (*array))
     {
-      GList *imports;
-      variable = search_text_for_variable (*array, text);
-      
-      if (codeslayer_utils_has_text (variable))
+      gchar *class_symbol;
+      class_symbol = search_text_for_class_symbol (text, *array);
+      if (class_symbol != NULL)
         {
-          imports = search_text_for_potential_imports (variable, text);
-          indexes = get_valid_import_indexes (indexer, imports);
-          if (imports != NULL)
+          gchar *import;
+          g_print ("class_symbol %s\n", class_symbol);
+          import = search_text_for_import (indexer, text, class_symbol);
+          if (import != NULL)
             {
-              g_list_foreach (imports, (GFunc) g_free, NULL);
-              g_list_free (imports);
+              indexes = java_indexer_get_package_indexes (indexer, import);
+              g_free (import);
             }
-        }
-      
+          g_free (class_symbol);
+        }      
       array++;
     }
 
-  g_print ("variable %s\n", variable);
-  
   while (codeslayer_utils_has_text (*array))
     {
       g_print ("other %s\n", *array);
@@ -131,9 +127,6 @@ get_indexes (JavaIndexer      *indexer,
   if (split != NULL)
     g_strfreev (split);
   
-  if (variable != NULL)
-    g_free (variable);
-    
   return indexes;
 }
                            
@@ -161,33 +154,33 @@ find_path (gchar *text)
 {
   gchar *result;
   GString *string;
-  gchar *variable;
+  gchar *text_cpy;
   gchar *tmp;
   int brace = 0;
   
   string = g_string_new ("");
 
-  variable = g_strdup (text);
-  tmp = variable;
-  variable = g_strreverse (variable);  
+  text_cpy = g_strdup (text);
+  tmp = text_cpy;
+  text_cpy = g_strreverse (text_cpy);  
   
-  for (; *variable != '\0'; ++variable)
+  for (; *text_cpy != '\0'; ++text_cpy)
     {
-      if (*variable == '=' ||
-          *variable == ';' ||
-          *variable == '{')
+      if (*text_cpy == '=' ||
+          *text_cpy == ';' ||
+          *text_cpy == '{')
         break;
       
-      if (*variable == ')')
+      if (*text_cpy == ')')
         brace++;
-      if (*variable == '(')
+      if (*text_cpy == '(')
         {
           brace--;
           if (brace == -1)
             break;
         }
         
-      string = g_string_append_c (string, *variable);
+      string = g_string_append_c (string, *text_cpy);
     }
   
   result = g_string_free (string, FALSE);
@@ -198,8 +191,8 @@ find_path (gchar *text)
 }
 
 /*
- * Take out the comments so that they do not effect how the completion
- * path is walked to find the context of the variable and methods.
+ * Take out the comments so that they do not effect how the 
+ * completion path is walked to find the context of the methods.
  *
  * new DateFilterMatcher("MM/yyyy") becomes new DateFilterMatcher()
  */
@@ -229,7 +222,7 @@ strip_path_comments (gchar *text)
  * Take out everything in the methods (between the braces) that do not 
  * belong in the context of the path being matched so that they do not 
  * effect how the completion path is walked to find the context of the 
- * variable and methods.
+ * methods.
  *
  * tableModel.setItems(presidentService.getPresidents()) 
  * becomes tableModel.setItems() if we are in the context of the tableModel.
@@ -291,15 +284,15 @@ get_text_to_search (CodeSlayerEditor *editor,
 }
 
 /*
- * Take the variable and find the type. For instance in the following
+ * Take the class_symbol and find the type. For instance in the following
  * example the tableModel will be resolved to TableModel.
  *  
  * TableModel tableModel
  * tableModel.addFilterMatcher()
  */
 static gchar*
-search_text_for_variable (gchar       *variable, 
-                          const gchar *text)
+search_text_for_class_symbol (const gchar *text, 
+                              gchar       *class_symbol)
 {
   gchar *result = NULL;
   GRegex *regex;
@@ -307,7 +300,7 @@ search_text_for_variable (gchar       *variable,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", variable, "\\b", NULL); 
+  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", class_symbol, "\\b", NULL); 
    
   regex = g_regex_new (concat, 0, 0, NULL);
   
@@ -337,7 +330,7 @@ search_text_for_variable (gchar       *variable,
   
   if (error != NULL)
     {
-      g_printerr ("search text for variable error: %s\n", error->message);
+      g_printerr ("search text for class symbol error: %s\n", error->message);
       g_error_free (error);
     }
     
@@ -345,18 +338,19 @@ search_text_for_variable (gchar       *variable,
 }
 
 /*
- * Take the variable and find all the potential imports that could be of this type.
- * One thing to be aware of is we need to replace the '*' with the class in case
+ * Take the class symbol and find the right import. One thing to be 
+ * aware of is we need to replace the '*' with the class in case
  * the '*' is used instead of the full package declaration.
  * 
  * import org.jmesa.model.*;
  * import org.jmesa.model.TableModel;
  */
-static GList*
-search_text_for_potential_imports (gchar       *variable, 
-                                   const gchar *text)
+static gchar*
+search_text_for_import (JavaIndexer *indexer, 
+                        const gchar *text, 
+                        gchar       *class_symbol)
 {
-  GList *results = NULL;
+  gchar* result = NULL;
   GRegex *regex;
   GMatchInfo *match_info;
   GError *error = NULL;
@@ -365,7 +359,7 @@ search_text_for_potential_imports (gchar       *variable,
   
   g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
   
-  while (g_match_info_matches (match_info))
+  while (result == NULL && g_match_info_matches (match_info))
     {
       gchar *import = NULL;
       import = g_match_info_fetch (match_info, 1);
@@ -374,18 +368,17 @@ search_text_for_potential_imports (gchar       *variable,
       if (g_str_has_suffix (import, "*"))
         {
           gchar *replace; 
-          replace = codeslayer_utils_strreplace (import, "*", variable);
-          results = g_list_prepend (results, g_strdup (replace));
+          replace = codeslayer_utils_strreplace (import, "*", class_symbol);
+          if (java_indexer_get_package_indexes (indexer, replace))
+            result = g_strdup (replace);
           g_free (replace);
         }
       else
         {
           gchar *suffix = NULL;
-          suffix = g_strconcat (".", variable, NULL);
+          suffix = g_strconcat (".", class_symbol, NULL);
           if (g_str_has_suffix (import, suffix))
-            {
-              results = g_list_prepend (results, g_strdup (import));
-            }
+            result = g_strdup (import);
           g_free (suffix);
         }
       g_free (import);
@@ -400,29 +393,5 @@ search_text_for_potential_imports (gchar       *variable,
       g_error_free (error);
     }
     
-  return results;   
-}
-
-/*
- * Take the potential imports and see which ones is real to find the class
- * indexes.
- */
-static GList*
-get_valid_import_indexes (JavaIndexer *indexer, 
-                          GList       *imports)
-{
-  while (imports != NULL)
-    {
-      gchar *import = imports->data;
-      GList *indexes;
-      indexes = java_indexer_get_package_indexes (indexer, import);
-      if (indexes != NULL)
-        {
-          /*g_print ("import %s:%d\n", import, g_list_length (indexes));*/
-          return indexes;
-        }
-      imports = g_list_next (imports);
-    }
-    
-  return NULL;    
+  return result;   
 }
