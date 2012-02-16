@@ -197,7 +197,7 @@ find_path (gchar *text)
  * new DateFilterMatcher("MM/yyyy") becomes new DateFilterMatcher()
  */
 static gchar*
-strip_path_comments (gchar *text)
+strip_path_comments (gchar *path)
 {
   gchar *result;
   GRegex *regex;
@@ -211,7 +211,7 @@ strip_path_comments (gchar *text)
       g_error_free (error);
     }
   
-  result = g_regex_replace (regex, text, -1, 0, "", 0, NULL);
+  result = g_regex_replace (regex, path, -1, 0, "", 0, NULL);
   
   g_regex_unref (regex);
 
@@ -228,7 +228,7 @@ strip_path_comments (gchar *text)
  * becomes tableModel.setItems() if we are in the context of the tableModel.
  */
 static gchar*
-strip_path_parameters (gchar *text)
+strip_path_parameters (gchar *path)
 {
   gchar *result;
   GString *string;
@@ -236,25 +236,25 @@ strip_path_parameters (gchar *text)
   
   string = g_string_new ("");
 
-  for (; *text != '\0'; ++text)
+  for (; *path != '\0'; ++path)
     {
-      if (*text == ')')
+      if (*path == ')')
         {
           brace++;
           if (brace == 1)
-            string = g_string_append_c (string, *text);
+            string = g_string_append_c (string, *path);
           continue;
         }
-      if (*text == '(')
+      if (*path == '(')
         {
           brace--;
           if (brace == 0)
-            string = g_string_append_c (string, *text);
+            string = g_string_append_c (string, *path);
           continue;
         }
       
       if (brace == 0)
-        string = g_string_append_c (string, *text);
+        string = g_string_append_c (string, *path);
     }
   
   result = g_string_free (string, FALSE);
