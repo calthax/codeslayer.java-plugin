@@ -48,7 +48,6 @@ GType java_indexer_get_type (void) G_GNUC_CONST;
 
 JavaIndexer*  java_indexer_new                  (CodeSlayer         *codeslayer,
                                                  JavaConfigurations *configurations);
-void          java_indexer_load_index           (JavaIndexer        *indexer);
 GList*        java_indexer_get_package_indexes  (JavaIndexer        *indexer,
                                                  gchar              *package_name);
 

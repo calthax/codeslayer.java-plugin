@@ -28,6 +28,11 @@ static void java_indexer_class_init  (JavaIndexerClass *klass);
 static void java_indexer_init        (JavaIndexer      *indexer);
 static void java_indexer_finalize    (JavaIndexer      *indexer);
 
+static GList* get_package_indexes    (JavaIndexer      *indexer, 
+                                      gchar            *group_folder_path,
+                                      gchar            *index_file_name,
+                                      gchar            *package_name);
+
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
 
@@ -38,8 +43,6 @@ struct _JavaIndexerPrivate
   CodeSlayer         *codeslayer;
   JavaConfigurations *configurations;
   gulong              editor_added_id;
-  GList              *list;
-  GHashTable         *package_hash_table;
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -53,12 +56,7 @@ java_indexer_class_init (JavaIndexerClass *klass)
 }
 
 static void
-java_indexer_init (JavaIndexer *indexer)
-{
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);  
-  priv->package_hash_table = g_hash_table_new (g_str_hash, g_str_equal);
-}
+java_indexer_init (JavaIndexer *indexer){}
 
 static void
 java_indexer_finalize (JavaIndexer *indexer)
@@ -84,49 +82,88 @@ java_indexer_new (CodeSlayer         *codeslayer,
   return indexer;
 }
 
-void
-java_indexer_load_index (JavaIndexer *indexer)
-{
-  JavaIndexerPrivate *priv;
-  GList *list;
-
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-
-  list = codeslayer_utils_get_gobjects (JAVA_INDEXER_INDEX_TYPE,
-                                             FALSE,
-                                             "/home/jeff/.codeslayer-dev/groups/java/indexes/jmesa.xml", 
-                                             "index",
-                                             "name", G_TYPE_STRING, 
-                                             "parameters", G_TYPE_STRING, 
-                                             "modifier", G_TYPE_STRING, 
-                                             "class_name", G_TYPE_STRING, 
-                                             "package_name", G_TYPE_STRING, 
-                                             "parameters", G_TYPE_STRING, 
-                                             "file_path", G_TYPE_STRING, 
-                                             "line_number", G_TYPE_INT, 
-                                             NULL);
-  priv->list = list;
-  
-  while (list != NULL)
-    {
-      JavaIndexerIndex *index = list->data;
-      gchar *full_package_name;
-      GList *indexes = NULL;
-      full_package_name = java_indexer_index_get_full_package_name (index);
-      indexes = g_hash_table_lookup (priv->package_hash_table, full_package_name);
-      indexes = g_list_prepend (indexes, index);
-      g_hash_table_insert (priv->package_hash_table, full_package_name, indexes);
-      list = g_list_next (list);
-    }
-}
-
 GList*
 java_indexer_get_package_indexes (JavaIndexer *indexer, 
                                   gchar       *package_name)
 {
   JavaIndexerPrivate *priv;
   GList *indexes = NULL;
+  gchar *group_folder_path;
+  
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  indexes = g_hash_table_lookup (priv->package_hash_table, package_name);
-  return g_list_copy (indexes);
+  
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+
+  indexes = get_package_indexes (indexer, group_folder_path, "projects.indexes", package_name);
+  if (indexes == NULL)
+    indexes = get_package_indexes (indexer, group_folder_path, "libs.indexes", package_name);
+
+  return indexes;
+}
+
+static GList*
+get_package_indexes (JavaIndexer *indexer,
+                     gchar       *group_folder_path,
+                     gchar       *index_file_name,
+                     gchar       *package_name)
+{
+  JavaIndexerPrivate *priv;
+  GList *indexes = NULL;
+  gchar *file_name;
+  GIOChannel *channel;
+  gchar *text;
+  GError *error = NULL;
+  
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+  file_name = g_build_filename (group_folder_path, "indexes", index_file_name, NULL);
+  
+  if (!g_file_test (file_name, G_FILE_TEST_EXISTS))
+    {
+      g_warning ("There is no projects indexes.");
+      g_free (file_name);
+      return indexes;
+    }
+  
+  channel = g_io_channel_new_file (file_name, "r", &error);
+  
+  while (g_io_channel_read_line (channel, &text, NULL, NULL, NULL) == G_IO_STATUS_NORMAL)
+    {
+      gchar **split;
+      gchar **array;
+    
+      split = g_strsplit (text, "\t", -1);
+      array = split;
+
+      if (g_strcmp0 (package_name, *array) == 0)
+        {
+          JavaIndexerIndex *index;
+          index = java_indexer_index_new ();
+          java_indexer_index_set_package_name (index, g_strdup (*array));
+          java_indexer_index_set_class_name (index, g_strdup (*++array));
+          java_indexer_index_set_method_modifier (index, g_strdup (*++array));
+          java_indexer_index_set_method_name (index, g_strdup (*++array));
+          java_indexer_index_set_method_parameters (index, g_strdup (*++array));
+          java_indexer_index_set_method_completion (index, g_strdup (*++array));
+          java_indexer_index_set_method_return_type (index, g_strdup (*++array));
+          
+          if (*++array != NULL)
+            {
+              java_indexer_index_set_file_path (index, g_strdup (*array));
+              java_indexer_index_set_line_number (index, atoi (*++array));
+            }
+            
+          indexes = g_list_prepend (indexes, index);
+        }
+        
+      g_strfreev (split);
+      g_free (text);
+    }
+    
+  g_io_channel_shutdown(channel, FALSE, NULL);
+  g_io_channel_unref (channel);  
+  g_free (file_name);
+
+  return indexes;
 }

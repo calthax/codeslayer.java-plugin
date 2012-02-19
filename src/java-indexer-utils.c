@@ -43,7 +43,7 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
                                         CodeSlayerEditor *editor,
                                         GtkTextIter       iter)
 {
-  GList *list = NULL;
+  GList *indexes = NULL;
   gchar *path;
   gchar *text;   
 
@@ -61,10 +61,10 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
       
       g_print ("path %s\n", parameters_stripped);
 
-      list = get_indexes (indexer, editor, text, parameters_stripped);
+      indexes = get_indexes (indexer, editor, text, parameters_stripped);
       
-      if (list != NULL)
-        list = g_list_sort (list, (GCompareFunc) sort_indexes);
+      if (indexes != NULL)
+        indexes = g_list_sort (indexes, (GCompareFunc) sort_indexes);
       
       g_free (path);
       g_free (comments_stripped);
@@ -73,7 +73,7 @@ java_indexer_utils_completion_indexes  (JavaIndexer      *indexer,
     
   g_free (text);
     
-  return list; 
+  return indexes; 
 }
 
 /*
@@ -136,8 +136,8 @@ sort_indexes (JavaIndexerIndex *index1,
 {
   const gchar *name1;
   const gchar *name2;
-  name1 = java_indexer_index_get_name (index1);
-  name2 = java_indexer_index_get_name (index2);  
+  name1 = java_indexer_index_get_method_name (index1);
+  name2 = java_indexer_index_get_method_name (index2);  
   return g_strcmp0 (name2, name1);
 }
 

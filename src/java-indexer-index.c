@@ -37,12 +37,13 @@ typedef struct _JavaIndexerIndexPrivate JavaIndexerIndexPrivate;
 
 struct _JavaIndexerIndexPrivate
 {
-  gchar *name;
-  gchar *parameters;
-  gchar *modifier;
-  gchar *class_name;
   gchar *package_name;
-  gchar *full_package_name;
+  gchar *class_name;
+  gchar *method_modifier;
+  gchar *method_name;
+  gchar *method_parameters;
+  gchar *method_completion;
+  gchar *method_return_type;
   gchar *file_path;
   gint   line_number;
 };
@@ -50,11 +51,13 @@ struct _JavaIndexerIndexPrivate
 enum
 {
   PROP_0,
-  PROP_NAME,
-  PROP_PARAMETERS,
-  PROP_MODIFIER,
-  PROP_CLASS_NAME,
   PROP_PACKAGE_NAME,
+  PROP_CLASS_NAME,
+  PROP_METHOD_MODIFIER,
+  PROP_METHOD_NAME,
+  PROP_METHOD_PARAMETERS,
+  PROP_METHOD_COMPLETION,
+  PROP_METHOD_RETURN_TYPE,
   PROP_FILE_PATH,
   PROP_LINE_NUMBER
 };
@@ -74,24 +77,10 @@ java_indexer_index_class_init (JavaIndexerIndexClass *klass)
   g_type_class_add_private (klass, sizeof (JavaIndexerIndexPrivate));
 
   g_object_class_install_property (gobject_class, 
-                                   PROP_NAME,
-                                   g_param_spec_string ("name", 
-                                                        "Name",
-                                                        "Name", "",
-                                                        G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_class, 
-                                   PROP_PARAMETERS,
-                                   g_param_spec_string ("parameters", 
-                                                        "Parameters",
-                                                        "Parameters", "",
-                                                        G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_class, 
-                                   PROP_MODIFIER,
-                                   g_param_spec_string ("modifier", 
-                                                        "Modifier",
-                                                        "Modifier", "",
+                                   PROP_PACKAGE_NAME,
+                                   g_param_spec_string ("package_name", 
+                                                        "Package Name",
+                                                        "Package Name", "",
                                                         G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, 
@@ -102,10 +91,38 @@ java_indexer_index_class_init (JavaIndexerIndexClass *klass)
                                                         G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, 
-                                   PROP_PACKAGE_NAME,
-                                   g_param_spec_string ("package_name", 
-                                                        "Package Name",
-                                                        "Package Name", "",
+                                   PROP_METHOD_MODIFIER,
+                                   g_param_spec_string ("method_modifier", 
+                                                        "Method Modifier",
+                                                        "Method Modifier", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_METHOD_NAME,
+                                   g_param_spec_string ("method_name", 
+                                                        "Method Name",
+                                                        "Method Name", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_METHOD_PARAMETERS,
+                                   g_param_spec_string ("method_parameters", 
+                                                        "Method Parameters",
+                                                        "Method Parameters", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_METHOD_COMPLETION,
+                                   g_param_spec_string ("method_completion", 
+                                                        "Method Completion",
+                                                        "Method Completion", "",
+                                                        G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, 
+                                   PROP_METHOD_RETURN_TYPE,
+                                   g_param_spec_string ("method_return_type", 
+                                                        "Method Return Type",
+                                                        "Method Return Type", "",
                                                         G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, 
@@ -129,12 +146,13 @@ java_indexer_index_init (JavaIndexerIndex *index)
 {
   JavaIndexerIndexPrivate *priv;
   priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  priv->name = NULL;
-  priv->parameters = NULL;
-  priv->modifier = NULL;
-  priv->class_name = NULL;
   priv->package_name = NULL;
-  priv->full_package_name = NULL;
+  priv->class_name = NULL;
+  priv->method_modifier = NULL;
+  priv->method_name = NULL;
+  priv->method_parameters = NULL;
+  priv->method_completion = NULL;
+  priv->method_return_type = NULL;
   priv->file_path = NULL;
   priv->line_number = 0;
 }
@@ -144,35 +162,40 @@ java_indexer_index_finalize (JavaIndexerIndex *index)
 {
   JavaIndexerIndexPrivate *priv;
   priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  if (priv->name)
+  if (priv->package_name)
     {
-      g_free (priv->name);
-      priv->name = NULL;
-    }
-  if (priv->parameters)
-    {
-      g_free (priv->parameters);
-      priv->parameters = NULL;
-    }
-  if (priv->modifier)
-    {
-      g_free (priv->modifier);
-      priv->modifier = NULL;
+      g_free (priv->package_name);
+      priv->package_name = NULL;
     }
   if (priv->class_name)
     {
       g_free (priv->class_name);
       priv->class_name = NULL;
     }
-  if (priv->package_name)
+  if (priv->method_modifier)
     {
-      g_free (priv->package_name);
-      priv->package_name = NULL;
+      g_free (priv->method_modifier);
+      priv->method_modifier = NULL;
     }
-  if (priv->full_package_name)
+  if (priv->method_name)
     {
-      g_free (priv->full_package_name);
-      priv->full_package_name = NULL;
+      g_free (priv->method_name);
+      priv->method_name = NULL;
+    }
+  if (priv->method_parameters)
+    {
+      g_free (priv->method_parameters);
+      priv->method_parameters = NULL;
+    }
+  if (priv->method_completion)
+    {
+      g_free (priv->method_completion);
+      priv->method_completion = NULL;
+    }
+  if (priv->method_return_type)
+    {
+      g_free (priv->method_return_type);
+      priv->method_return_type = NULL;
     }
   if (priv->file_path)
     {
@@ -197,20 +220,26 @@ java_indexer_index_get_property (GObject    *object,
 
   switch (prop_id)
     {
-    case PROP_NAME:
-      g_value_set_string (value, priv->name);
-      break;
-    case PROP_PARAMETERS:
-      g_value_set_string (value, priv->parameters);
-      break;
-    case PROP_MODIFIER:
-      g_value_set_string (value, priv->modifier);
+    case PROP_PACKAGE_NAME:
+      g_value_set_string (value, priv->package_name);
       break;
     case PROP_CLASS_NAME:
       g_value_set_string (value, priv->class_name);
       break;
-    case PROP_PACKAGE_NAME:
-      g_value_set_string (value, priv->package_name);
+    case PROP_METHOD_MODIFIER:
+      g_value_set_string (value, priv->method_modifier);
+      break;
+    case PROP_METHOD_NAME:
+      g_value_set_string (value, priv->method_name);
+      break;
+    case PROP_METHOD_PARAMETERS:
+      g_value_set_string (value, priv->method_parameters);
+      break;
+    case PROP_METHOD_COMPLETION:
+      g_value_set_string (value, priv->method_completion);
+      break;
+    case PROP_METHOD_RETURN_TYPE:
+      g_value_set_string (value, priv->method_return_type);
       break;
     case PROP_FILE_PATH:
       g_value_set_string (value, priv->file_path);
@@ -235,20 +264,26 @@ java_indexer_index_set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_NAME:
-      java_indexer_index_set_name (index, g_value_get_string (value));
-      break;
-    case PROP_PARAMETERS:
-      java_indexer_index_set_parameters (index, g_value_get_string (value));
-      break;
-    case PROP_MODIFIER:
-      java_indexer_index_set_modifier (index, g_value_get_string (value));
+    case PROP_PACKAGE_NAME:
+      java_indexer_index_set_package_name (index, g_value_get_string (value));
       break;
     case PROP_CLASS_NAME:
       java_indexer_index_set_class_name (index, g_value_get_string (value));
       break;
-    case PROP_PACKAGE_NAME:
-      java_indexer_index_set_package_name (index, g_value_get_string (value));
+    case PROP_METHOD_MODIFIER:
+      java_indexer_index_set_method_modifier (index, g_value_get_string (value));
+      break;
+    case PROP_METHOD_NAME:
+      java_indexer_index_set_method_name (index, g_value_get_string (value));
+      break;
+    case PROP_METHOD_PARAMETERS:
+      java_indexer_index_set_method_parameters (index, g_value_get_string (value));
+      break;
+    case PROP_METHOD_COMPLETION:
+      java_indexer_index_set_method_completion (index, g_value_get_string (value));
+      break;
+    case PROP_METHOD_RETURN_TYPE:
+      java_indexer_index_set_method_return_type (index, g_value_get_string (value));
       break;
     case PROP_FILE_PATH:
       java_indexer_index_set_file_path (index, g_value_get_string (value));
@@ -269,63 +304,23 @@ java_indexer_index_new (void)
 }
 
 const gchar*
-java_indexer_index_get_name (JavaIndexerIndex *index)
+java_indexer_index_get_package_name (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->name;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->package_name;
 }
 
 void
-java_indexer_index_set_name (JavaIndexerIndex *index, 
-                             const gchar      *name)
+java_indexer_index_set_package_name (JavaIndexerIndex *index, 
+                                     const gchar      *package_name)
 {
   JavaIndexerIndexPrivate *priv;
   priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  if (priv->name)
+  if (priv->package_name)
     {
-      g_free (priv->name);
-      priv->name = NULL;
+      g_free (priv->package_name);
+      priv->package_name = NULL;
     }
-  priv->name = g_strdup (name);
-}
-
-const gchar*
-java_indexer_index_get_parameters (JavaIndexerIndex *index)
-{
-  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->parameters;
-}
-
-void
-java_indexer_index_set_parameters (JavaIndexerIndex *index, 
-                                   const gchar      *parameters)
-{
-  JavaIndexerIndexPrivate *priv;
-  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  if (priv->parameters)
-    {
-      g_free (priv->parameters);
-      priv->parameters = NULL;
-    }
-  priv->parameters = g_strdup (parameters);
-}
-
-const gchar*
-java_indexer_index_get_modifier (JavaIndexerIndex *index)
-{
-  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->modifier;
-}
-
-void
-java_indexer_index_set_modifier (JavaIndexerIndex *index, 
-                                 const gchar      *modifier)
-{
-  JavaIndexerIndexPrivate *priv;
-  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  if (priv->modifier)
-    {
-      g_free (priv->modifier);
-      priv->modifier = NULL;
-    }
-  priv->modifier = g_strdup (modifier);
+  priv->package_name = g_strdup (package_name);
 }
 
 const gchar*
@@ -349,33 +344,103 @@ java_indexer_index_set_class_name (JavaIndexerIndex *index,
 }
 
 const gchar*
-java_indexer_index_get_package_name (JavaIndexerIndex *index)
+java_indexer_index_get_method_modifier (JavaIndexerIndex *index)
 {
-  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->package_name;
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->method_modifier;
 }
 
 void
-java_indexer_index_set_package_name (JavaIndexerIndex *index, 
-                                     const gchar      *package_name)
+java_indexer_index_set_method_modifier (JavaIndexerIndex *index, 
+                                        const gchar      *method_modifier)
 {
   JavaIndexerIndexPrivate *priv;
   priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  if (priv->package_name)
+  if (priv->method_modifier)
     {
-      g_free (priv->package_name);
-      priv->package_name = NULL;
+      g_free (priv->method_modifier);
+      priv->method_modifier = NULL;
     }
-  priv->package_name = g_strdup (package_name);
+  priv->method_modifier = g_strdup (method_modifier);
 }
 
-gchar*
-java_indexer_index_get_full_package_name (JavaIndexerIndex *index)
+const gchar*
+java_indexer_index_get_method_name (JavaIndexerIndex *index)
+{
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->method_name;
+}
+
+void
+java_indexer_index_set_method_name (JavaIndexerIndex *index, 
+                                    const gchar      *method_name)
 {
   JavaIndexerIndexPrivate *priv;
   priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
-  if (priv->full_package_name == NULL)
-    priv->full_package_name = g_strconcat (priv->package_name, ".", priv->class_name, NULL);
-  return priv->full_package_name;
+  if (priv->method_name)
+    {
+      g_free (priv->method_name);
+      priv->method_name = NULL;
+    }
+  priv->method_name = g_strdup (method_name);
+}
+
+const gchar*
+java_indexer_index_get_method_parameters (JavaIndexerIndex *index)
+{
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->method_parameters;
+}
+
+void
+java_indexer_index_set_method_parameters (JavaIndexerIndex *index, 
+                                          const gchar      *method_parameters)
+{
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
+  if (priv->method_parameters)
+    {
+      g_free (priv->method_parameters);
+      priv->method_parameters = NULL;
+    }
+  priv->method_parameters = g_strdup (method_parameters);
+}
+
+const gchar*
+java_indexer_index_get_method_completion (JavaIndexerIndex *index)
+{
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->method_completion;
+}
+
+void
+java_indexer_index_set_method_completion (JavaIndexerIndex *index, 
+                                          const gchar      *method_completion)
+{
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
+  if (priv->method_completion)
+    {
+      g_free (priv->method_completion);
+      priv->method_completion = NULL;
+    }
+  priv->method_completion = g_strdup (method_completion);
+}
+
+const gchar*
+java_indexer_index_get_method_return_type (JavaIndexerIndex *index)
+{
+  return JAVA_INDEXER_INDEX_GET_PRIVATE (index)->method_return_type;
+}
+
+void
+java_indexer_index_set_method_return_type (JavaIndexerIndex *index, 
+                                           const gchar      *method_return_type)
+{
+  JavaIndexerIndexPrivate *priv;
+  priv = JAVA_INDEXER_INDEX_GET_PRIVATE (index);
+  if (priv->method_return_type)
+    {
+      g_free (priv->method_return_type);
+      priv->method_return_type = NULL;
+    }
+  priv->method_return_type = g_strdup (method_return_type);
 }
 
 const gchar*

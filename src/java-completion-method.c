@@ -122,34 +122,50 @@ java_completion_get_proposals (JavaCompletionMethod *method,
 {
   JavaCompletionMethodPrivate *priv;
   GList *proposals = NULL;
+  GList *indexes; 
   GList *list; 
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
 
-  list = java_indexer_utils_completion_indexes (priv->indexer, priv->editor, iter);
-  while (list != NULL)
+  indexes = java_indexer_utils_completion_indexes (priv->indexer, priv->editor, iter);
+  list = indexes;
+  
+  while (indexes != NULL)
     {
-      JavaIndexerIndex *index = list->data;
+      JavaIndexerIndex *index = indexes->data;
       const gchar *name;
-      name = java_indexer_index_get_name (index);
+      name = java_indexer_index_get_method_name (index);
 
       if (g_strcmp0 (name, "<init>") != 0)
         {
           CodeSlayerCompletionProposal *proposal;
-          const gchar *parameters;
-          gchar *concat;
+          gchar *method_parameters;
+          gchar *method_completion;
           
-          parameters = java_indexer_index_get_parameters (index);
-          concat = g_strconcat (name, "(", parameters, ")", NULL);
+          method_parameters = g_strconcat (name, 
+                                           java_indexer_index_get_method_parameters (index),
+                                           " ",
+                                           java_indexer_index_get_method_return_type (index),
+                                           NULL);
+          method_completion = g_strconcat (name, 
+                                           java_indexer_index_get_method_completion (index), 
+                                           NULL);
           
-          proposal = codeslayer_completion_proposal_new (concat, concat);
+          proposal = codeslayer_completion_proposal_new (method_parameters, method_completion);
           
           proposals = g_list_prepend (proposals, proposal);
                                                                 
-          g_free (concat);	                                              
+          g_free (method_parameters);	                                              
+          g_free (method_completion);	                                              
         }
       
-      list = g_list_next (list);
+      indexes = g_list_next (indexes);
+    }
+    
+  if (list != NULL)
+    {
+      g_list_foreach (list, (GFunc) g_object_unref, NULL);
+      g_list_free (list);
     }
     
   return proposals; 
