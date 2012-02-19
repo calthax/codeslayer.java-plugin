@@ -203,7 +203,6 @@ java_indexer_index_finalize (JavaIndexerIndex *index)
       priv->file_path = NULL;
     }
   G_OBJECT_CLASS (java_indexer_index_parent_class)->finalize (G_OBJECT (index));
-  g_print ("java_indexer_index_finalize\n");
 }
 
 static void

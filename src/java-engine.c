@@ -83,6 +83,8 @@ java_engine_finalize (JavaEngine *engine)
   g_object_unref (priv->output);
   g_object_unref (priv->debugger);
   g_object_unref (priv->configurations);
+  g_object_unref (priv->indexer);
+  g_object_unref (priv->completion);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
 

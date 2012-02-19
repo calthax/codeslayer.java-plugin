@@ -42,7 +42,6 @@ struct _JavaIndexerPrivate
 {
   CodeSlayer         *codeslayer;
   JavaConfigurations *configurations;
-  gulong              editor_added_id;
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -61,9 +60,6 @@ java_indexer_init (JavaIndexer *indexer){}
 static void
 java_indexer_finalize (JavaIndexer *indexer)
 {
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);  
-  g_signal_handler_disconnect (priv->codeslayer, priv->editor_added_id);
   G_OBJECT_CLASS (java_indexer_parent_class)->finalize (G_OBJECT (indexer));
 }
 
@@ -97,6 +93,8 @@ java_indexer_get_package_indexes (JavaIndexer *indexer,
   indexes = get_package_indexes (indexer, group_folder_path, "projects.indexes", package_name);
   if (indexes == NULL)
     indexes = get_package_indexes (indexer, group_folder_path, "libs.indexes", package_name);
+    
+  g_free (group_folder_path);
 
   return indexes;
 }
@@ -140,17 +138,17 @@ get_package_indexes (JavaIndexer *indexer,
         {
           JavaIndexerIndex *index;
           index = java_indexer_index_new ();
-          java_indexer_index_set_package_name (index, g_strdup (*array));
-          java_indexer_index_set_class_name (index, g_strdup (*++array));
-          java_indexer_index_set_method_modifier (index, g_strdup (*++array));
-          java_indexer_index_set_method_name (index, g_strdup (*++array));
-          java_indexer_index_set_method_parameters (index, g_strdup (*++array));
-          java_indexer_index_set_method_completion (index, g_strdup (*++array));
-          java_indexer_index_set_method_return_type (index, g_strdup (*++array));
+          java_indexer_index_set_package_name (index, *array);
+          java_indexer_index_set_class_name (index, *++array);
+          java_indexer_index_set_method_modifier (index, *++array);
+          java_indexer_index_set_method_name (index, *++array);
+          java_indexer_index_set_method_parameters (index, *++array);
+          java_indexer_index_set_method_completion (index, *++array);
+          java_indexer_index_set_method_return_type (index, *++array);
           
           if (*++array != NULL)
             {
-              java_indexer_index_set_file_path (index, g_strdup (*array));
+              java_indexer_index_set_file_path (index, *array);
               java_indexer_index_set_line_number (index, atoi (*++array));
             }
             
