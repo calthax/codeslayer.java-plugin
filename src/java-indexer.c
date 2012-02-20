@@ -37,6 +37,9 @@ static void editor_saved_action       (JavaIndexer      *indexer,
 static void execute_create_indexes    (JavaIndexer      *indexer);
 static gboolean start_create_indexes  (JavaIndexer      *indexer);
 static void finish_create_indexes     (JavaIndexer      *indexer);
+static void find_symbol_action        (JavaIndexer      *indexer);
+/*static void select_editor             (CodeSlayer       *codeslayer, 
+                                       JavaIndexerIndex *index);*/
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -75,6 +78,7 @@ java_indexer_finalize (JavaIndexer *indexer)
 
 JavaIndexer*
 java_indexer_new (CodeSlayer         *codeslayer,
+                  GtkWidget          *menu,
                   JavaConfigurations *configurations)
 {
   JavaIndexerPrivate *priv;
@@ -84,6 +88,9 @@ java_indexer_new (CodeSlayer         *codeslayer,
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
+
+  g_signal_connect_swapped (G_OBJECT (menu), "find-symbol",
+                            G_CALLBACK (find_symbol_action), indexer);
 
   priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-saved", 
                                                      G_CALLBACK (editor_saved_action), indexer);
@@ -213,7 +220,6 @@ static gboolean
 start_create_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
-  CodeSlayerGroup *group;
   gchar *group_folder_path;
   gchar *index_file_name;
   FILE *file;
@@ -228,16 +234,15 @@ start_create_indexes (JavaIndexer *indexer)
   
   string = g_string_new ("codeslayer-jindexer -sourcefolder ");
   
-  group = codeslayer_get_active_group (priv->codeslayer);
-  list = codeslayer_group_get_projects (group);
+  list = java_configurations_get_list (priv->configurations);
   while (list != NULL)
     {
-      CodeSlayerProject *project = list->data;
-      const gchar *project_folder_path;
-      project_folder_path = codeslayer_project_get_folder_path (project);
-      if (codeslayer_utils_has_text (project_folder_path))
+      JavaConfiguration *configuration = list->data;
+      const gchar *source_folder;
+      source_folder = java_configuration_get_source_folder (configuration);
+      if (codeslayer_utils_has_text (source_folder))
         {
-          string = g_string_append (string, project_folder_path);
+          string = g_string_append (string, source_folder);
           string = g_string_append (string, ":");        
         }
       list = g_list_next (list);
@@ -267,3 +272,73 @@ finish_create_indexes (JavaIndexer *indexer)
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->event_source_id = 0;
 }
+
+static void 
+find_symbol_action (JavaIndexer *indexer)
+{
+  JavaIndexerPrivate *priv;
+  CodeSlayerEditor *editor;
+  CodeSlayerDocument *document;
+  const gchar *file_path;
+  GtkTextBuffer *buffer;
+
+  GtkTextMark *insert_mark;
+  GtkTextMark *selection_mark;
+  gchar *text;
+
+  GtkTextIter start, end;
+
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+
+  editor = codeslayer_get_active_editor (priv->codeslayer);
+  
+  if (editor == NULL)
+    return;
+    
+  document = codeslayer_editor_get_document (editor);
+  file_path = codeslayer_document_get_file_path (document);
+  if (!g_str_has_suffix (file_path, ".java"))
+    return;
+  
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
+
+  insert_mark = gtk_text_buffer_get_insert (buffer);    
+  selection_mark = gtk_text_buffer_get_selection_bound (buffer);
+
+  gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
+  gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
+
+  text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  
+  if (text != NULL)
+    g_strstrip (text);
+  
+  g_print ("select %s\n", text);
+    
+  if (text != NULL)
+    g_free (text);
+}
+
+/*static void
+select_editor (CodeSlayer       *codeslayer, 
+               JavaIndexerIndex *index)
+{
+  const gchar *file_path;
+  const gint line_number;
+  CodeSlayerDocument *document;
+  CodeSlayerProject *project;
+  
+  file_path = java_indexer_index_get_file_path (index);
+  line_number = java_indexer_index_get_line_number (index);
+
+  document = codeslayer_document_new ();
+  project = codeslayer_get_project_by_file_path (codeslayer, file_path);
+
+  codeslayer_document_set_file_path (document, file_path);
+  codeslayer_document_set_line_number (document, line_number);
+  codeslayer_document_set_project (document, project);
+
+  codeslayer_select_editor (codeslayer, document);
+  
+  g_object_unref (document);
+}*/

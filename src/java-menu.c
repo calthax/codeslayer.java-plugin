@@ -32,6 +32,7 @@ static void clean_action            (JavaMenu      *menu);
 static void test_file_action        (JavaMenu      *menu);
 static void debug_test_file_action  (JavaMenu      *menu);
 static void attach_debugger_action  (JavaMenu      *menu);
+static void find_symbol_action      (JavaMenu      *menu);
                                         
 enum
 {
@@ -40,6 +41,7 @@ enum
   TEST_FILE,
   DEBUG_TEST_FILE,
   ATTACH_DEBUGGER,
+  FIND_SYMBOL,
   LAST_SIGNAL
 };
 
@@ -90,6 +92,14 @@ java_menu_class_init (JavaMenuClass *klass)
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  java_menu_signals[FIND_SYMBOL] =
+    g_signal_new ("find-symbol", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaMenuClass, find_symbol),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_menu_finalize;
 }
 
@@ -131,25 +141,26 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *test_file_item;
   GtkWidget *debug_test_file_item;
   GtkWidget *attach_debugger_item;
+  GtkWidget *find_symbol_item;
   GtkWidget *separator_item;
 
-  compile_item = codeslayer_menu_item_new_with_label ("compile");
+  compile_item = codeslayer_menu_item_new_with_label ("Compile");
   gtk_widget_add_accelerator (compile_item, "activate", 
                               accel_group, GDK_KEY_F9, 0, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), compile_item);
 
-  clean_item = codeslayer_menu_item_new_with_label ("clean");
+  clean_item = codeslayer_menu_item_new_with_label ("Clean");
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), clean_item);
   
   separator_item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
   
-  test_file_item = codeslayer_menu_item_new_with_label ("test file");
+  test_file_item = codeslayer_menu_item_new_with_label ("Test File");
   gtk_widget_add_accelerator (test_file_item, "activate", 
                               accel_group, GDK_KEY_F6, 0, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), test_file_item);
 
-  debug_test_file_item = codeslayer_menu_item_new_with_label ("debug test file");
+  debug_test_file_item = codeslayer_menu_item_new_with_label ("Debug Test File");
   gtk_widget_add_accelerator (debug_test_file_item, "activate", 
                               accel_group, GDK_KEY_F6, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), debug_test_file_item);
@@ -157,8 +168,16 @@ add_menu_items (JavaMenu      *menu,
   separator_item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
 
-  attach_debugger_item = codeslayer_menu_item_new_with_label ("attach debugger");
+  attach_debugger_item = codeslayer_menu_item_new_with_label ("Attach Debugger");
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), attach_debugger_item);
+  
+  separator_item = gtk_separator_menu_item_new ();
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
+
+  find_symbol_item = codeslayer_menu_item_new_with_label ("Find Symbol");
+  gtk_widget_add_accelerator (find_symbol_item, "activate", 
+                              accel_group, GDK_KEY_J, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), find_symbol_item);
 
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 
                             G_CALLBACK (compile_action), menu);
@@ -174,6 +193,9 @@ add_menu_items (JavaMenu      *menu,
    
   g_signal_connect_swapped (G_OBJECT (attach_debugger_item), "activate", 
                             G_CALLBACK (attach_debugger_action), menu);
+   
+  g_signal_connect_swapped (G_OBJECT (find_symbol_item), "activate", 
+                            G_CALLBACK (find_symbol_action), menu);
 }
 
 static void 
@@ -204,4 +226,10 @@ static void
 attach_debugger_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "attach-debugger");
+}
+
+static void 
+find_symbol_action (JavaMenu *menu) 
+{
+  g_signal_emit_by_name ((gpointer) menu, "find-symbol");
 }
