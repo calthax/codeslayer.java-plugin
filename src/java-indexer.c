@@ -24,14 +24,19 @@
 #include "java-configuration.h"
 #include "java-utils.h"
 
-static void java_indexer_class_init  (JavaIndexerClass *klass);
-static void java_indexer_init        (JavaIndexer      *indexer);
-static void java_indexer_finalize    (JavaIndexer      *indexer);
+static void java_indexer_class_init   (JavaIndexerClass *klass);
+static void java_indexer_init         (JavaIndexer      *indexer);
+static void java_indexer_finalize     (JavaIndexer      *indexer);
 
-static GList* get_package_indexes    (JavaIndexer      *indexer, 
-                                      gchar            *group_folder_path,
-                                      gchar            *index_file_name,
-                                      gchar            *package_name);
+static GList* get_package_indexes     (JavaIndexer      *indexer, 
+                                       gchar            *group_folder_path,
+                                       gchar            *index_file_name,
+                                       gchar            *package_name);
+static void editor_saved_action       (JavaIndexer      *indexer,
+                                       CodeSlayerEditor *editor);
+static void execute_create_indexes    (JavaIndexer      *indexer);
+static gboolean start_create_indexes  (JavaIndexer      *indexer);
+static void finish_create_indexes     (JavaIndexer      *indexer);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -42,6 +47,8 @@ struct _JavaIndexerPrivate
 {
   CodeSlayer         *codeslayer;
   JavaConfigurations *configurations;
+  gulong      saved_handler_id;
+  guint       event_source_id;
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -60,6 +67,9 @@ java_indexer_init (JavaIndexer *indexer){}
 static void
 java_indexer_finalize (JavaIndexer *indexer)
 {
+  JavaIndexerPrivate *priv;
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  g_signal_handler_disconnect (priv->codeslayer, priv->saved_handler_id);
   G_OBJECT_CLASS (java_indexer_parent_class)->finalize (G_OBJECT (indexer));
 }
 
@@ -74,6 +84,9 @@ java_indexer_new (CodeSlayer         *codeslayer,
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
+
+  priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-saved", 
+                                                     G_CALLBACK (editor_saved_action), indexer);
 
   return indexer;
 }
@@ -164,4 +177,93 @@ get_package_indexes (JavaIndexer *indexer,
   g_free (file_name);
 
   return indexes;
+}
+
+static void 
+editor_saved_action (JavaIndexer      *indexer, 
+                     CodeSlayerEditor *editor) 
+{
+  CodeSlayerDocument *document;
+  const gchar *file_path;
+  
+  document = codeslayer_editor_get_document (editor);
+  file_path = codeslayer_document_get_file_path (document);
+  if (!g_str_has_suffix (file_path, ".java"))
+    return;
+  
+  execute_create_indexes (indexer);
+}
+
+static void
+execute_create_indexes (JavaIndexer *indexer) 
+{
+  JavaIndexerPrivate *priv;
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+
+  if (priv->event_source_id == 0)
+    {
+      priv->event_source_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, 2,
+                                                          (GSourceFunc ) start_create_indexes,
+                                                          indexer,
+                                                          (GDestroyNotify) finish_create_indexes);
+    }
+}
+
+static gboolean
+start_create_indexes (JavaIndexer *indexer)
+{
+  JavaIndexerPrivate *priv;
+  CodeSlayerGroup *group;
+  gchar *group_folder_path;
+  gchar *index_file_name;
+  FILE *file;
+  GList *list;
+  GString *string;
+  gchar *command;
+
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+  index_file_name = g_build_filename (group_folder_path, "indexes", "projects.indexes", NULL);
+  
+  string = g_string_new ("codeslayer-jindexer -sourcefolder ");
+  
+  group = codeslayer_get_active_group (priv->codeslayer);
+  list = codeslayer_group_get_projects (group);
+  while (list != NULL)
+    {
+      CodeSlayerProject *project = list->data;
+      const gchar *project_folder_path;
+      project_folder_path = codeslayer_project_get_folder_path (project);
+      if (codeslayer_utils_has_text (project_folder_path))
+        {
+          string = g_string_append (string, project_folder_path);
+          string = g_string_append (string, ":");        
+        }
+      list = g_list_next (list);
+    }
+
+  string = g_string_append (string, " -index ");
+  string = g_string_append (string, index_file_name);
+
+  command = g_string_free (string, FALSE);
+  
+  file = popen (command, "r");
+  
+  if (file != NULL)
+    pclose (file);
+  
+  g_free (command);
+  g_free (group_folder_path);
+  g_free (index_file_name);
+  
+  return FALSE;  
+}
+
+static void
+finish_create_indexes (JavaIndexer *indexer)
+{
+  JavaIndexerPrivate *priv;
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  priv->event_source_id = 0;
 }
