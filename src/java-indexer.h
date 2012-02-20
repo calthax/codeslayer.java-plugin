@@ -46,11 +46,13 @@ struct _JavaIndexerClass
 
 GType java_indexer_get_type (void) G_GNUC_CONST;
 
-JavaIndexer*  java_indexer_new                  (CodeSlayer         *codeslayer,
-                                                 GtkWidget          *menu,
-                                                 JavaConfigurations *configurations);
-GList*        java_indexer_get_package_indexes  (JavaIndexer        *indexer,
-                                                 gchar              *package_name);
+JavaIndexer*  java_indexer_new          (CodeSlayer         *codeslayer,
+                                         GtkWidget          *menu,
+                                         JavaConfigurations *configurations);
+                                                 
+GList*        java_indexer_get_indexes  (JavaIndexer        *indexer, 
+                                         CodeSlayerEditor   *editor,
+                                         GtkTextIter         iter);
 
 G_END_DECLS
 

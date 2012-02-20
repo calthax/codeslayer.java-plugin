@@ -18,7 +18,6 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-method.h"
-#include "java-indexer-utils.h"
 #include "java-indexer-index.h"
 
 static void java_completion_provider_interface_init  (gpointer                    page, 
@@ -127,7 +126,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
 
-  indexes = java_indexer_utils_completion_indexes (priv->indexer, priv->editor, iter);
+  indexes = java_indexer_get_indexes (priv->indexer, priv->editor, iter);
   list = indexes;
   
   while (indexes != NULL)

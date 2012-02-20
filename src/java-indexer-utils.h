@@ -25,10 +25,6 @@
 
 G_BEGIN_DECLS
 
-GList*  java_indexer_utils_completion_indexes  (JavaIndexer      *indexer, 
-                                                CodeSlayerEditor *editor,
-                                                GtkTextIter       iter);
-
 G_END_DECLS
 
 #endif /* __JAVA_INDEXER_UTILS_H__ */

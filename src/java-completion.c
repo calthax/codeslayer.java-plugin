@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include "java-completion.h"
 #include "java-completion-method.h"
-#include "java-utils.h"
 
 static void java_completion_class_init  (JavaCompletionClass *klass);
 static void java_completion_init        (JavaCompletion      *completion);
