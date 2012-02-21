@@ -23,10 +23,9 @@
 #include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 
-static GList* get_package_indexes_by_index_file  (JavaIndexer *indexer, 
-                                                  gchar       *group_folder_path,
-                                                  gchar       *index_file_name,
-                                                  gchar       *package_name);
+static GList* get_package_indexes_by_index_file  (gchar *group_folder_path,
+                                                  gchar *index_file_name,
+                                                  gchar *package_name);
 
 /*
  * Walk backwards and match braces to find the path.
@@ -233,8 +232,7 @@ java_indexer_utils_search_text_for_class_symbol (const gchar *text,
  * import org.jmesa.model.TableModel;
  */
 gchar*
-java_indexer_utils_search_text_for_import (JavaIndexer *indexer,
-                                           gchar       *group_folder_path, 
+java_indexer_utils_search_text_for_import (gchar       *group_folder_path, 
                                            const gchar *text, 
                                            gchar       *class_symbol)
 {
@@ -257,7 +255,7 @@ java_indexer_utils_search_text_for_import (JavaIndexer *indexer,
         {
           gchar *replace; 
           replace = codeslayer_utils_strreplace (import, "*", class_symbol);
-          if (java_indexer_utils_get_package_indexes (indexer, group_folder_path, replace))
+          if (java_indexer_utils_get_package_indexes (group_folder_path, replace))
             result = g_strdup (replace);
           g_free (replace);
         }
@@ -285,17 +283,16 @@ java_indexer_utils_search_text_for_import (JavaIndexer *indexer,
 }
 
 GList*
-java_indexer_utils_get_package_indexes (JavaIndexer *indexer,
-                                        gchar       *group_folder_path,
-                                        gchar       *package_name)
+java_indexer_utils_get_package_indexes (gchar *group_folder_path,
+                                        gchar *package_name)
 {
   GList *indexes = NULL;
   
-  indexes = get_package_indexes_by_index_file (indexer, group_folder_path, 
+  indexes = get_package_indexes_by_index_file (group_folder_path, 
                                                "projects.indexes", package_name);
   if (indexes == NULL)
     {
-      indexes = get_package_indexes_by_index_file (indexer, group_folder_path, 
+      indexes = get_package_indexes_by_index_file (group_folder_path, 
                                                    "libs.indexes", package_name);
     }
     
@@ -303,10 +300,9 @@ java_indexer_utils_get_package_indexes (JavaIndexer *indexer,
 }
 
 static GList*
-get_package_indexes_by_index_file (JavaIndexer *indexer,
-                                   gchar       *group_folder_path,
-                                   gchar       *index_file_name,
-                                   gchar       *package_name)
+get_package_indexes_by_index_file (gchar *group_folder_path,
+                                   gchar *index_file_name,
+                                   gchar *package_name)
 {
   GList *indexes = NULL;
   gchar *file_name;

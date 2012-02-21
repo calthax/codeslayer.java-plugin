@@ -176,10 +176,10 @@ get_indexes (JavaIndexer      *indexer,
           gchar *import;
           g_print ("class_symbol %s\n", class_symbol);
           group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-          import = java_indexer_utils_search_text_for_import (indexer, group_folder_path, text, class_symbol);
+          import = java_indexer_utils_search_text_for_import (group_folder_path, text, class_symbol);
           if (import != NULL)
             {
-              indexes = java_indexer_utils_get_package_indexes (indexer, group_folder_path, import);
+              indexes = java_indexer_utils_get_package_indexes (group_folder_path, import);
               g_free (import);
             }
           g_free (class_symbol);

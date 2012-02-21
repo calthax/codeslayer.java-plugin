@@ -32,12 +32,10 @@ gchar*  java_indexer_utils_get_text_to_search            (CodeSlayerEditor *edit
                                                           GtkTextIter       iter);
 gchar*  java_indexer_utils_search_text_for_class_symbol  (const gchar      *text, 
                                                           gchar            *class_symbol);
-gchar*  java_indexer_utils_search_text_for_import        (JavaIndexer      *indexer, 
-                                                          gchar            *group_folder_path,
+gchar*  java_indexer_utils_search_text_for_import        (gchar            *group_folder_path,
                                                           const gchar      *text, 
                                                           gchar            *class_symbol);
-GList*  java_indexer_utils_get_package_indexes           (JavaIndexer      *indexer,
-                                                          gchar            *group_folder_path,
+GList*  java_indexer_utils_get_package_indexes           (gchar            *group_folder_path,
                                                           gchar            *package_name);
 
 G_END_DECLS
