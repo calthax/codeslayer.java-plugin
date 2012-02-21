@@ -25,6 +25,21 @@
 
 G_BEGIN_DECLS
 
+gchar*  java_indexer_utils_find_path                     (gchar            *text);
+gchar*  java_indexer_utils_strip_path_comments           (gchar            *text);
+gchar*  java_indexer_utils_strip_path_parameters         (gchar            *text);
+gchar*  java_indexer_utils_get_text_to_search            (CodeSlayerEditor *editor, 
+                                                          GtkTextIter       iter);
+gchar*  java_indexer_utils_search_text_for_class_symbol  (const gchar      *text, 
+                                                          gchar            *class_symbol);
+gchar*  java_indexer_utils_search_text_for_import        (JavaIndexer      *indexer, 
+                                                          gchar            *group_folder_path,
+                                                          const gchar      *text, 
+                                                          gchar            *class_symbol);
+GList*  java_indexer_utils_get_package_indexes           (JavaIndexer      *indexer,
+                                                          gchar            *group_folder_path,
+                                                          gchar            *package_name);
+
 G_END_DECLS
 
 #endif /* __JAVA_INDEXER_UTILS_H__ */

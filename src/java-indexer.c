@@ -17,10 +17,9 @@
  */
 
 #include <codeslayer/codeslayer-utils.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "java-indexer.h"
 #include "java-indexer-index.h"
+#include "java-indexer-utils.h"
 #include "java-configuration.h"
 
 static void java_indexer_class_init              (JavaIndexerClass *klass);
@@ -33,22 +32,6 @@ static GList* get_indexes                        (JavaIndexer      *indexer,
                                                   gchar            *path);
 static gint sort_indexes                         (JavaIndexerIndex *index1, 
                                                   JavaIndexerIndex *index2);
-static gchar* find_path                          (gchar            *text);
-static gchar* strip_path_comments                (gchar            *text);
-static gchar* strip_path_parameters              (gchar            *text);
-static gchar* get_text_to_search                 (CodeSlayerEditor *editor, 
-                                                  GtkTextIter       iter);
-static gchar* search_text_for_class_symbol       (const gchar      *text, 
-                                                  gchar            *class_symbol);
-static gchar* search_text_for_import             (JavaIndexer      *indexer, 
-                                                  const gchar      *text, 
-                                                  gchar            *class_symbol);
-static GList* get_package_indexes                (JavaIndexer      *indexer,
-                                                  gchar            *package_name);
-static GList* get_package_indexes_by_index_file  (JavaIndexer      *indexer, 
-                                                  gchar            *group_folder_path,
-                                                  gchar            *index_file_name,
-                                                  gchar            *package_name);
 static void editor_saved_action                  (JavaIndexer      *indexer,
                                                   CodeSlayerEditor *editor);
 static void execute_create_indexes               (JavaIndexer      *indexer);
@@ -128,16 +111,16 @@ java_indexer_get_indexes  (JavaIndexer      *indexer,
   gchar *path;
   gchar *text;   
 
-  text = get_text_to_search (editor, iter);
-  path = find_path (text);
+  text = java_indexer_utils_get_text_to_search (editor, iter);
+  path = java_indexer_utils_find_path (text);
 
   if (codeslayer_utils_has_text (path))
     {
       gchar *comments_stripped;
       gchar *parameters_stripped;
       
-      comments_stripped = strip_path_comments (path);
-      parameters_stripped = strip_path_parameters (comments_stripped);
+      comments_stripped = java_indexer_utils_strip_path_comments (path);
+      parameters_stripped = java_indexer_utils_strip_path_parameters (comments_stripped);
       parameters_stripped = g_strreverse (parameters_stripped);
       
       g_print ("path %s\n", parameters_stripped);
@@ -173,9 +156,12 @@ get_indexes (JavaIndexer      *indexer,
              gchar            *text,
              gchar            *path)
 {
+  JavaIndexerPrivate *priv;
   gchar **split;
   gchar **array;
   GList *indexes = NULL;
+  
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
   split = g_strsplit (path, ".", -1);
   array = split;
@@ -183,18 +169,21 @@ get_indexes (JavaIndexer      *indexer,
   if (codeslayer_utils_has_text (*array))
     {
       gchar *class_symbol;
-      class_symbol = search_text_for_class_symbol (text, *array);
+      class_symbol = java_indexer_utils_search_text_for_class_symbol (text, *array);
       if (class_symbol != NULL)
         {
+          gchar *group_folder_path;
           gchar *import;
           g_print ("class_symbol %s\n", class_symbol);
-          import = search_text_for_import (indexer, text, class_symbol);
+          group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+          import = java_indexer_utils_search_text_for_import (indexer, group_folder_path, text, class_symbol);
           if (import != NULL)
             {
-              indexes = get_package_indexes (indexer, import);
+              indexes = java_indexer_utils_get_package_indexes (indexer, group_folder_path, import);
               g_free (import);
             }
           g_free (class_symbol);
+          g_free (group_folder_path);
         }      
       array++;
     }
@@ -222,348 +211,6 @@ sort_indexes (JavaIndexerIndex *index1,
   return g_strcmp0 (name2, name1);
 }
 
-/*
- * Walk backwards and match braces to find the path.
- *
- * For example at any point in the following path you would be able to 
- * find the context, namely the tableModel, or the presidentService.
- *
- * tableModel.setItems(presidentService.getPresidents())
- */
-static gchar*
-find_path (gchar *text)
-{
-  gchar *result;
-  GString *string;
-  gchar *text_cpy;
-  gchar *tmp;
-  int brace = 0;
-  
-  string = g_string_new ("");
-
-  text_cpy = g_strdup (text);
-  tmp = text_cpy;
-  text_cpy = g_strreverse (text_cpy);  
-  
-  for (; *text_cpy != '\0'; ++text_cpy)
-    {
-      if (*text_cpy == '=' ||
-          *text_cpy == ';' ||
-          *text_cpy == '{')
-        break;
-      
-      if (*text_cpy == ')')
-        brace++;
-      if (*text_cpy == '(')
-        {
-          brace--;
-          if (brace == -1)
-            break;
-        }
-        
-      string = g_string_append_c (string, *text_cpy);
-    }
-  
-  result = g_string_free (string, FALSE);
-  g_strstrip (result);
-  g_free (tmp);
-    
-  return result;
-}
-
-/*
- * Take out the comments so that they do not effect how the 
- * completion path is walked to find the context of the methods.
- *
- * new DateFilterMatcher("MM/yyyy") becomes new DateFilterMatcher()
- */
-static gchar*
-strip_path_comments (gchar *path)
-{
-  gchar *result;
-  GRegex *regex;
-  GError *error = NULL;
-
-  regex = g_regex_new ("\"([^\"\\\\]*(\\.[^\"\\\\]*)*)\"", 0, 0, &error);
-  
-  if (error != NULL)
-    {
-      g_printerr (error->message);
-      g_error_free (error);
-    }
-  
-  result = g_regex_replace (regex, path, -1, 0, "", 0, NULL);
-  
-  g_regex_unref (regex);
-
-  return result;
-}
-
-/*
- * Take out everything in the methods (between the braces) that do not 
- * belong in the context of the path being matched so that they do not 
- * effect how the completion path is walked to find the context of the 
- * methods.
- *
- * tableModel.setItems(presidentService.getPresidents()) 
- * becomes tableModel.setItems() if we are in the context of the tableModel.
- */
-static gchar*
-strip_path_parameters (gchar *path)
-{
-  gchar *result;
-  GString *string;
-  int brace = 0;
-  
-  string = g_string_new ("");
-
-  for (; *path != '\0'; ++path)
-    {
-      if (*path == ')')
-        {
-          brace++;
-          if (brace == 1)
-            string = g_string_append_c (string, *path);
-          continue;
-        }
-      if (*path == '(')
-        {
-          brace--;
-          if (brace == 0)
-            string = g_string_append_c (string, *path);
-          continue;
-        }
-      
-      if (brace == 0)
-        string = g_string_append_c (string, *path);
-    }
-  
-  result = g_string_free (string, FALSE);
-  g_strstrip(result);
-    
-  return result;
-}
-
-/*
- * Start at the current place in the editor and get all the previous text.
- * The idea is that any variables that need to be resolved will come 
- * before this place in the editor.
- */
-static gchar*
-get_text_to_search (CodeSlayerEditor *editor, 
-                    GtkTextIter       iter)
-{
-  GtkTextBuffer *buffer;
-  GtkTextIter start;
-  gchar *text;      
-
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));      
-  gtk_text_buffer_get_start_iter (buffer, &start);
-  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
-
-  return text;
-}
-
-/*
- * Take the class_symbol and find the type. For instance in the following
- * example the tableModel will be resolved to TableModel.
- *  
- * TableModel tableModel
- * tableModel.addFilterMatcher()
- */
-static gchar*
-search_text_for_class_symbol (const gchar *text, 
-                              gchar       *class_symbol)
-{
-  gchar *result = NULL;
-  GRegex *regex;
-  gchar *concat;
-  GMatchInfo *match_info;
-  GError *error = NULL;
-  
-  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", class_symbol, "\\b", NULL); 
-   
-  regex = g_regex_new (concat, 0, 0, NULL);
-  
-  g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
-  
-  while (g_match_info_matches (match_info))
-    {
-      result = g_match_info_fetch (match_info, 0);
-      if (g_match_info_next (match_info, &error))
-        {
-          g_free (result);
-        }
-      else
-        {
-          gchar **split;      
-          split = g_strsplit (result, " ", -1);
-          g_free (result);
-          result = g_strdup (*split);
-          g_strstrip (result);
-          g_strfreev (split);
-        }
-    }
-  
-  g_match_info_free (match_info);
-  g_regex_unref (regex);
-  g_free (concat);
-  
-  if (error != NULL)
-    {
-      g_printerr ("search text for class symbol error: %s\n", error->message);
-      g_error_free (error);
-    }
-    
-  return result;   
-}
-
-/*
- * Take the class symbol and find the right import. One thing to be 
- * aware of is we need to replace the '*' with the class in case
- * the '*' is used instead of the full package declaration.
- * 
- * import org.jmesa.model.*;
- * import org.jmesa.model.TableModel;
- */
-static gchar*
-search_text_for_import (JavaIndexer *indexer, 
-                        const gchar *text, 
-                        gchar       *class_symbol)
-{
-  gchar* result = NULL;
-  GRegex *regex;
-  GMatchInfo *match_info;
-  GError *error = NULL;
-  
-  regex = g_regex_new ("import\\s+(.*?);", 0, 0, NULL);
-  
-  g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
-  
-  while (result == NULL && g_match_info_matches (match_info))
-    {
-      gchar *import = NULL;
-      import = g_match_info_fetch (match_info, 1);
-      g_match_info_next (match_info, &error);
-      g_strstrip(import);
-      if (g_str_has_suffix (import, "*"))
-        {
-          gchar *replace; 
-          replace = codeslayer_utils_strreplace (import, "*", class_symbol);
-          if (get_package_indexes (indexer, replace))
-            result = g_strdup (replace);
-          g_free (replace);
-        }
-      else
-        {
-          gchar *suffix = NULL;
-          suffix = g_strconcat (".", class_symbol, NULL);
-          if (g_str_has_suffix (import, suffix))
-            result = g_strdup (import);
-          g_free (suffix);
-        }
-      g_free (import);
-    }
-  
-  g_match_info_free (match_info);
-  g_regex_unref (regex);
-  
-  if (error != NULL)
-    {
-      g_printerr ("search text for import error: %s\n", error->message);
-      g_error_free (error);
-    }
-    
-  return result;   
-}
-
-static GList*
-get_package_indexes (JavaIndexer *indexer, 
-                     gchar       *package_name)
-{
-  JavaIndexerPrivate *priv;
-  GList *indexes = NULL;
-  gchar *group_folder_path;
-  
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  
-  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-
-  indexes = get_package_indexes_by_index_file (indexer, group_folder_path, 
-                                               "projects.indexes", package_name);
-  if (indexes == NULL)
-    {
-      indexes = get_package_indexes_by_index_file (indexer, group_folder_path, 
-                                                   "libs.indexes", package_name);
-    }
-    
-  g_free (group_folder_path);
-
-  return indexes;
-}
-
-static GList*
-get_package_indexes_by_index_file (JavaIndexer *indexer,
-                                   gchar       *group_folder_path,
-                                   gchar       *index_file_name,
-                                   gchar       *package_name)
-{
-  GList *indexes = NULL;
-  gchar *file_name;
-  GIOChannel *channel;
-  gchar *text;
-  GError *error = NULL;
-  
-  file_name = g_build_filename (group_folder_path, "indexes", index_file_name, NULL);
-
-  if (!g_file_test (file_name, G_FILE_TEST_EXISTS))
-    {
-      g_warning ("There is no projects indexes.");
-      g_free (file_name);
-      return indexes;
-    }
-  
-  channel = g_io_channel_new_file (file_name, "r", &error);
-  
-  while (g_io_channel_read_line (channel, &text, NULL, NULL, NULL) == G_IO_STATUS_NORMAL)
-    {
-      gchar **split;
-      gchar **array;
-    
-      split = g_strsplit (text, "\t", -1);
-      array = split;
-
-      if (g_strcmp0 (package_name, *array) == 0)
-        {
-          JavaIndexerIndex *index;
-          index = java_indexer_index_new ();
-          java_indexer_index_set_package_name (index, *array);
-          java_indexer_index_set_class_name (index, *++array);
-          java_indexer_index_set_method_modifier (index, *++array);
-          java_indexer_index_set_method_name (index, *++array);
-          java_indexer_index_set_method_parameters (index, *++array);
-          java_indexer_index_set_method_completion (index, *++array);
-          java_indexer_index_set_method_return_type (index, *++array);
-          
-          if (*++array != NULL)
-            {
-              java_indexer_index_set_file_path (index, *array);
-              java_indexer_index_set_line_number (index, atoi (*++array));
-            }
-            
-          indexes = g_list_prepend (indexes, index);
-        }
-        
-      g_strfreev (split);
-      g_free (text);
-    }
-    
-  g_io_channel_shutdown(channel, FALSE, NULL);
-  g_io_channel_unref (channel);  
-  g_free (file_name);
-
-  return indexes;
-}
 
 static void 
 editor_saved_action (JavaIndexer      *indexer, 

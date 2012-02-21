@@ -32,6 +32,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-indexer.c \
     java-indexer-index.h \
     java-indexer-index.c \
+    java-indexer-utils.h \
+    java-indexer-utils.c \
     java-debugger.h \
     java-debugger.c \
     java-debugger-column.h \
