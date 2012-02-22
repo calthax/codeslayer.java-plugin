@@ -26,9 +26,8 @@ static void java_indexer_class_init   (JavaIndexerClass *klass);
 static void java_indexer_init         (JavaIndexer      *indexer);
 static void java_indexer_finalize     (JavaIndexer      *indexer);
 
-static GList* get_indexes             (JavaIndexer      *indexer,
-                                       CodeSlayerEditor *editor,
-                                       gchar            *text, 
+static GList* get_indexes             (gchar            *group_folder_path,
+                                       gchar            *text,
                                        gchar            *context_path);
 static gint sort_indexes              (JavaIndexerIndex *index1, 
                                        JavaIndexerIndex *index2);
@@ -103,14 +102,17 @@ java_indexer_new (CodeSlayer         *codeslayer,
 }
 
 GList* 
-java_indexer_get_indexes  (JavaIndexer      *indexer, 
-                           CodeSlayerEditor *editor,
-                           GtkTextIter       iter)
+java_indexer_get_indexes (JavaIndexer      *indexer, 
+                          CodeSlayerEditor *editor,
+                          GtkTextIter       iter)
 {
+  JavaIndexerPrivate *priv;
   GList *indexes = NULL;
   gchar *context_path;
   gchar *text;   
 
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
   text = java_indexer_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
   
   if (text == NULL)
@@ -119,10 +121,16 @@ java_indexer_get_indexes  (JavaIndexer      *indexer,
   context_path = java_indexer_utils_get_context_path (text);
   if (context_path != NULL)
     {
+      gchar *group_folder_path;
+      group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+
       g_print ("context path %s\n", context_path);
-      indexes = get_indexes (indexer, editor, text, context_path);
+
+      indexes = get_indexes (group_folder_path, text, context_path);
       if (indexes != NULL)
         indexes = g_list_sort (indexes, (GCompareFunc) sort_indexes);
+
+      g_free (group_folder_path);
       g_free (context_path);
     }
   
@@ -142,17 +150,13 @@ java_indexer_get_indexes  (JavaIndexer      *indexer,
  *
  */
 static GList*
-get_indexes (JavaIndexer      *indexer,
-             CodeSlayerEditor *editor,
-             gchar            *text,
-             gchar            *context_path)
+get_indexes (gchar *group_folder_path,
+             gchar *text,
+             gchar *context_path)
 {
-  JavaIndexerPrivate *priv;
   gchar **split;
   gchar **array;
   GList *indexes = NULL;
-  
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
   split = g_strsplit (context_path, ".", -1);
   array = split;
@@ -163,18 +167,18 @@ get_indexes (JavaIndexer      *indexer,
       class_name = java_indexer_utils_get_class_name (text, *array);
       if (class_name != NULL)
         {
-          gchar *group_folder_path;
           gchar *package_name;
+          
           g_print ("class name %s\n", class_name);
-          group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+          
           package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
           if (package_name != NULL)
             {
               indexes = java_indexer_utils_get_indexes (group_folder_path, package_name);
               g_free (package_name);
             }
+          
           g_free (class_name);
-          g_free (group_folder_path);
         }      
       array++;
     }
