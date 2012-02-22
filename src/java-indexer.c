@@ -22,28 +22,28 @@
 #include "java-indexer-utils.h"
 #include "java-configuration.h"
 
-static void java_indexer_class_init              (JavaIndexerClass *klass);
-static void java_indexer_init                    (JavaIndexer      *indexer);
-static void java_indexer_finalize                (JavaIndexer      *indexer);
+static void java_indexer_class_init   (JavaIndexerClass *klass);
+static void java_indexer_init         (JavaIndexer      *indexer);
+static void java_indexer_finalize     (JavaIndexer      *indexer);
 
-static GList* get_indexes                        (JavaIndexer      *indexer,
-                                                  CodeSlayerEditor *editor,
-                                                  gchar            *text, 
-                                                  gchar            *path);
-static gint sort_indexes                         (JavaIndexerIndex *index1, 
-                                                  JavaIndexerIndex *index2);
-static void editor_saved_action                  (JavaIndexer      *indexer,
-                                                  CodeSlayerEditor *editor);
-static void execute_create_indexes               (JavaIndexer      *indexer);
-static gboolean start_create_indexes             (JavaIndexer      *indexer);
-static void finish_create_indexes                (JavaIndexer      *indexer);
-static void find_symbol_action                   (JavaIndexer      *indexer);
-static void find_symbol                          (JavaIndexer      *indexer, 
-                                                  CodeSlayerEditor *editor,
-                                                  GtkTextIter       iter, 
-                                                  gchar            *text);
-static void select_editor                        (CodeSlayer       *codeslayer, 
-                                                  JavaIndexerIndex *index);
+static GList* get_indexes             (JavaIndexer      *indexer,
+                                       CodeSlayerEditor *editor,
+                                       gchar            *text, 
+                                       gchar            *context_path);
+static gint sort_indexes              (JavaIndexerIndex *index1, 
+                                       JavaIndexerIndex *index2);
+static void editor_saved_action       (JavaIndexer      *indexer,
+                                       CodeSlayerEditor *editor);
+static void execute_create_indexes    (JavaIndexer      *indexer);
+static gboolean start_create_indexes  (JavaIndexer      *indexer);
+static void finish_create_indexes     (JavaIndexer      *indexer);
+static void find_symbol_action        (JavaIndexer      *indexer);
+static void find_symbol               (JavaIndexer      *indexer, 
+                                       CodeSlayerEditor *editor,
+                                       GtkTextIter       iter, 
+                                       gchar            *text);
+static void select_editor             (CodeSlayer       *codeslayer, 
+                                       JavaIndexerIndex *index);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -108,40 +108,31 @@ java_indexer_get_indexes  (JavaIndexer      *indexer,
                            GtkTextIter       iter)
 {
   GList *indexes = NULL;
-  gchar *path;
+  gchar *context_path;
   gchar *text;   
 
-  text = java_indexer_utils_get_text_to_search (editor, iter);
-  path = java_indexer_utils_find_path (text);
-
-  if (codeslayer_utils_has_text (path))
+  text = java_indexer_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
+  
+  if (text == NULL)
+    return NULL;
+  
+  context_path = java_indexer_utils_get_context_path (text);
+  if (context_path != NULL)
     {
-      gchar *comments_stripped;
-      gchar *parameters_stripped;
-      
-      comments_stripped = java_indexer_utils_strip_path_comments (path);
-      parameters_stripped = java_indexer_utils_strip_path_parameters (comments_stripped);
-      parameters_stripped = g_strreverse (parameters_stripped);
-      
-      g_print ("path %s\n", parameters_stripped);
-
-      indexes = get_indexes (indexer, editor, text, parameters_stripped);
-      
+      g_print ("context path %s\n", context_path);
+      indexes = get_indexes (indexer, editor, text, context_path);
       if (indexes != NULL)
         indexes = g_list_sort (indexes, (GCompareFunc) sort_indexes);
-      
-      g_free (path);
-      g_free (comments_stripped);
-      g_free (parameters_stripped);
+      g_free (context_path);
     }
-    
+  
   g_free (text);
     
   return indexes; 
 }
 
 /*
- * Take the path, start at the beginning, and resolve the 
+ * Take the context path, start at the beginning, and resolve the 
  * actual classes and methods types.
  *
  * For example after the title figure out that this starts as a Column 
@@ -154,7 +145,7 @@ static GList*
 get_indexes (JavaIndexer      *indexer,
              CodeSlayerEditor *editor,
              gchar            *text,
-             gchar            *path)
+             gchar            *context_path)
 {
   JavaIndexerPrivate *priv;
   gchar **split;
@@ -163,26 +154,26 @@ get_indexes (JavaIndexer      *indexer,
   
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  split = g_strsplit (path, ".", -1);
+  split = g_strsplit (context_path, ".", -1);
   array = split;
   
   if (codeslayer_utils_has_text (*array))
     {
-      gchar *class_symbol;
-      class_symbol = java_indexer_utils_search_text_for_class_symbol (text, *array);
-      if (class_symbol != NULL)
+      gchar *class_name;
+      class_name = java_indexer_utils_get_class_name (text, *array);
+      if (class_name != NULL)
         {
           gchar *group_folder_path;
-          gchar *import;
-          g_print ("class_symbol %s\n", class_symbol);
+          gchar *package_name;
+          g_print ("class name %s\n", class_name);
           group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-          import = java_indexer_utils_search_text_for_import (group_folder_path, text, class_symbol);
-          if (import != NULL)
+          package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
+          if (package_name != NULL)
             {
-              indexes = java_indexer_utils_get_package_indexes (group_folder_path, import);
-              g_free (import);
+              indexes = java_indexer_utils_get_indexes (group_folder_path, package_name);
+              g_free (package_name);
             }
-          g_free (class_symbol);
+          g_free (class_name);
           g_free (group_folder_path);
         }      
       array++;
@@ -210,7 +201,6 @@ sort_indexes (JavaIndexerIndex *index1,
   name2 = java_indexer_index_get_method_name (index2);  
   return g_strcmp0 (name2, name1);
 }
-
 
 static void 
 editor_saved_action (JavaIndexer      *indexer, 

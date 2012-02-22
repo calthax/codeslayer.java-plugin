@@ -20,23 +20,20 @@
 #define	__JAVA_INDEXER_UTILS_H__
 
 #include <gtk/gtk.h>
-#include <codeslayer/codeslayer.h>
 #include "java-indexer.h"
 
 G_BEGIN_DECLS
 
-gchar*  java_indexer_utils_find_path                     (gchar            *text);
-gchar*  java_indexer_utils_strip_path_comments           (gchar            *text);
-gchar*  java_indexer_utils_strip_path_parameters         (gchar            *text);
-gchar*  java_indexer_utils_get_text_to_search            (CodeSlayerEditor *editor, 
-                                                          GtkTextIter       iter);
-gchar*  java_indexer_utils_search_text_for_class_symbol  (const gchar      *text, 
-                                                          gchar            *class_symbol);
-gchar*  java_indexer_utils_search_text_for_import        (gchar            *group_folder_path,
-                                                          const gchar      *text, 
-                                                          gchar            *class_symbol);
-GList*  java_indexer_utils_get_package_indexes           (gchar            *group_folder_path,
-                                                          gchar            *package_name);
+gchar*  java_indexer_utils_get_text_to_search  (GtkTextView *text_view, 
+                                                GtkTextIter  iter);
+gchar*  java_indexer_utils_get_context_path    (gchar       *text);
+gchar*  java_indexer_utils_get_class_name      (const gchar *text, 
+                                                gchar       *variable);
+gchar*  java_indexer_utils_get_package_name    (gchar       *group_folder_path,
+                                                const gchar *text, 
+                                                gchar       *class_name);
+GList*  java_indexer_utils_get_indexes         (gchar       *group_folder_path,
+                                                gchar       *package_name);
 
 G_END_DECLS
 

@@ -23,20 +23,69 @@
 #include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 
-static GList* get_package_indexes_by_index_file  (gchar *group_folder_path,
-                                                  gchar *index_file_name,
-                                                  gchar *package_name);
+static gchar* find_path              (gchar *text);
+static gchar* strip_path_comments    (gchar *text);
+static gchar* strip_path_parameters  (gchar *text);
+static GList* get_package_indexes    (gchar *group_folder_path,
+                                      gchar *index_file_name,
+                                      gchar *package_name);
 
 /*
- * Walk backwards and match braces to find the path.
+ * Start at the current place in the editor and get all the previous text.
+ * The idea is that any variables that need to be resolved will come 
+ * before this place in the editor.
+ */
+gchar*
+java_indexer_utils_get_text_to_search (GtkTextView *text_view, 
+                                       GtkTextIter  iter)
+{
+  GtkTextBuffer *buffer;
+  GtkTextIter start;
+  gchar *text;      
+
+  buffer = gtk_text_view_get_buffer (text_view);      
+  gtk_text_buffer_get_start_iter (buffer, &start);
+  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
+
+  return text;
+}
+
+gchar*
+java_indexer_utils_get_context_path (gchar *text)
+{
+  gchar *result = NULL;
+  gchar *path;
+
+  path = find_path (text);
+  if (path != NULL)
+    {
+      gchar *comments_stripped;
+      gchar *parameters_stripped;
+      
+      comments_stripped = strip_path_comments (path);
+      parameters_stripped = strip_path_parameters (comments_stripped);
+      parameters_stripped = g_strreverse (parameters_stripped);
+      
+      result = g_strdup (parameters_stripped);
+      
+      g_free (path);
+      g_free (comments_stripped);
+      g_free (parameters_stripped);
+    }
+
+  return result; 
+}
+
+/*
+ * Walk backwards and match braces to find the context path.
  *
  * For example at any point in the following path you would be able to 
  * find the context, namely the tableModel, or the presidentService.
  *
  * tableModel.setItems(presidentService.getPresidents())
  */
-gchar*
-java_indexer_utils_find_path (gchar *text)
+static gchar*
+find_path (gchar *text)
 {
   gchar *result;
   GString *string;
@@ -82,8 +131,8 @@ java_indexer_utils_find_path (gchar *text)
  *
  * new DateFilterMatcher("MM/yyyy") becomes new DateFilterMatcher()
  */
-gchar*
-java_indexer_utils_strip_path_comments (gchar *path)
+static gchar*
+strip_path_comments (gchar *path)
 {
   gchar *result;
   GRegex *regex;
@@ -113,8 +162,8 @@ java_indexer_utils_strip_path_comments (gchar *path)
  * tableModel.setItems(presidentService.getPresidents()) 
  * becomes tableModel.setItems() if we are in the context of the tableModel.
  */
-gchar*
-java_indexer_utils_strip_path_parameters (gchar *path)
+static gchar*
+strip_path_parameters (gchar *path)
 {
   gchar *result;
   GString *string;
@@ -150,35 +199,15 @@ java_indexer_utils_strip_path_parameters (gchar *path)
 }
 
 /*
- * Start at the current place in the editor and get all the previous text.
- * The idea is that any variables that need to be resolved will come 
- * before this place in the editor.
- */
-gchar*
-java_indexer_utils_get_text_to_search (CodeSlayerEditor *editor, 
-                                       GtkTextIter       iter)
-{
-  GtkTextBuffer *buffer;
-  GtkTextIter start;
-  gchar *text;      
-
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));      
-  gtk_text_buffer_get_start_iter (buffer, &start);
-  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
-
-  return text;
-}
-
-/*
- * Take the class_symbol and find the type. For instance in the following
+ * Take the variable and find the type. For instance in the following
  * example the tableModel will be resolved to TableModel.
  *  
  * TableModel tableModel
  * tableModel.addFilterMatcher()
  */
 gchar*
-java_indexer_utils_search_text_for_class_symbol (const gchar *text, 
-                                                 gchar       *class_symbol)
+java_indexer_utils_get_class_name (const gchar *text, 
+                                   gchar       *variable)
 {
   gchar *result = NULL;
   GRegex *regex;
@@ -186,7 +215,7 @@ java_indexer_utils_search_text_for_class_symbol (const gchar *text,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", class_symbol, "\\b", NULL); 
+  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", variable, "\\b", NULL); 
    
   regex = g_regex_new (concat, 0, 0, NULL);
   
@@ -232,9 +261,9 @@ java_indexer_utils_search_text_for_class_symbol (const gchar *text,
  * import org.jmesa.model.TableModel;
  */
 gchar*
-java_indexer_utils_search_text_for_import (gchar       *group_folder_path, 
-                                           const gchar *text, 
-                                           gchar       *class_symbol)
+java_indexer_utils_get_package_name (gchar *group_folder_path, 
+                                                 const  gchar *text, 
+                                                 gchar *class_name)
 {
   gchar* result = NULL;
   GRegex *regex;
@@ -254,15 +283,15 @@ java_indexer_utils_search_text_for_import (gchar       *group_folder_path,
       if (g_str_has_suffix (import, "*"))
         {
           gchar *replace; 
-          replace = codeslayer_utils_strreplace (import, "*", class_symbol);
-          if (java_indexer_utils_get_package_indexes (group_folder_path, replace))
+          replace = codeslayer_utils_strreplace (import, "*", class_name);
+          if (java_indexer_utils_get_indexes (group_folder_path, replace))
             result = g_strdup (replace);
           g_free (replace);
         }
       else
         {
           gchar *suffix = NULL;
-          suffix = g_strconcat (".", class_symbol, NULL);
+          suffix = g_strconcat (".", class_name, NULL);
           if (g_str_has_suffix (import, suffix))
             result = g_strdup (import);
           g_free (suffix);
@@ -283,26 +312,22 @@ java_indexer_utils_search_text_for_import (gchar       *group_folder_path,
 }
 
 GList*
-java_indexer_utils_get_package_indexes (gchar *group_folder_path,
-                                        gchar *package_name)
+java_indexer_utils_get_indexes (gchar *group_folder_path,
+                                                gchar *package_name)
 {
   GList *indexes = NULL;
-  
-  indexes = get_package_indexes_by_index_file (group_folder_path, 
-                                               "projects.indexes", package_name);
+  indexes = get_package_indexes (group_folder_path, "projects.indexes", package_name);
+
   if (indexes == NULL)
-    {
-      indexes = get_package_indexes_by_index_file (group_folder_path, 
-                                                   "libs.indexes", package_name);
-    }
-    
+    indexes = get_package_indexes (group_folder_path, "libs.indexes", package_name);
+
   return indexes;
 }
 
 static GList*
-get_package_indexes_by_index_file (gchar *group_folder_path,
-                                   gchar *index_file_name,
-                                   gchar *package_name)
+get_package_indexes (gchar *group_folder_path,
+                     gchar *index_file_name,
+                     gchar *package_name)
 {
   GList *indexes = NULL;
   gchar *file_name;
