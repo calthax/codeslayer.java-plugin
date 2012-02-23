@@ -219,29 +219,14 @@ java_indexer_utils_get_class_name (const gchar *text,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  concat = g_strconcat ("[A-Z][a-zA-Z0-9_]+\\s+\\b", variable, "\\b", NULL); 
+  concat = g_strconcat ("([A-Z][a-zA-Z0-9_]+)(?:<[a-zA-Z0-9_<>,?\\s]*)?(\\s+\\b", variable, "\\b)", NULL);
    
   regex = g_regex_new (concat, 0, 0, NULL);
   
   g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
   
-  while (g_match_info_matches (match_info))
-    {
-      result = g_match_info_fetch (match_info, 0);
-      if (g_match_info_next (match_info, &error))
-        {
-          g_free (result);
-        }
-      else
-        {
-          gchar **split;      
-          split = g_strsplit (result, " ", -1);
-          g_free (result);
-          result = g_strdup (*split);
-          g_strstrip (result);
-          g_strfreev (split);
-        }
-    }
+  if (g_match_info_matches (match_info))
+    result = g_match_info_fetch (match_info, 1);
   
   g_match_info_free (match_info);
   g_regex_unref (regex);
