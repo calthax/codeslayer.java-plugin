@@ -53,8 +53,8 @@ struct _JavaIndexerPrivate
 {
   CodeSlayer         *codeslayer;
   JavaConfigurations *configurations;
-  gulong      saved_handler_id;
-  guint       event_source_id;
+  gulong              saved_handler_id;
+  guint               event_source_id;
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -124,7 +124,7 @@ java_indexer_get_indexes (JavaIndexer      *indexer,
       gchar *group_folder_path;
       group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
 
-      g_print ("context path %s\n", context_path);
+      g_print ("context path: %s\n", context_path);
 
       indexes = get_indexes (group_folder_path, text, context_path);
       if (indexes != NULL)
@@ -169,7 +169,7 @@ get_indexes (gchar *group_folder_path,
         {
           gchar *package_name;
           
-          g_print ("class name %s\n", class_name);
+          g_print ("class name: %s\n", class_name);
           
           package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
           if (package_name != NULL)

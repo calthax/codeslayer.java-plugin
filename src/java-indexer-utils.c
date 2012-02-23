@@ -23,12 +23,15 @@
 #include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 
-static gchar* find_path              (gchar *text);
-static gchar* strip_path_comments    (gchar *text);
-static gchar* strip_path_parameters  (gchar *text);
-static GList* get_package_indexes    (gchar *group_folder_path,
-                                      gchar *index_file_name,
-                                      gchar *package_name);
+static gchar* find_path              (gchar       *text);
+static gchar* strip_path_comments    (gchar       *text);
+static gchar* strip_path_parameters  (gchar       *text);
+static GList* get_package_indexes    (gchar       *group_folder_path,
+                                      gchar       *index_file_name,
+                                      gchar       *package_name);
+gchar* get_local_package_name        (gchar       *group_folder_path, 
+                                      const gchar *text, 
+                                      gchar       *class_name);
 
 /*
  * Start at the current place in the editor and get all the previous text.
@@ -97,12 +100,13 @@ find_path (gchar *text)
 
   text_cpy = g_strdup (text);
   tmp = text_cpy;
-  text_cpy = g_strreverse (text_cpy);  
+  text_cpy = g_strreverse (text_cpy);
   
   for (; *text_cpy != '\0'; ++text_cpy)
     {
       if (*text_cpy == '=' ||
           *text_cpy == ';' ||
+          *text_cpy == ' ' ||
           *text_cpy == '{')
         break;
       
@@ -215,7 +219,7 @@ java_indexer_utils_get_class_name (const gchar *text,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  concat = g_strconcat ("[a-zA-Z0-9_]+\\s+\\b", variable, "\\b", NULL); 
+  concat = g_strconcat ("[A-Z][a-zA-Z0-9_]+\\s+\\b", variable, "\\b", NULL); 
    
   regex = g_regex_new (concat, 0, 0, NULL);
   
@@ -261,9 +265,9 @@ java_indexer_utils_get_class_name (const gchar *text,
  * import org.jmesa.model.TableModel;
  */
 gchar*
-java_indexer_utils_get_package_name (gchar *group_folder_path, 
-                                                 const  gchar *text, 
-                                                 gchar *class_name)
+java_indexer_utils_get_package_name (gchar       *group_folder_path, 
+                                     const gchar *text, 
+                                     gchar       *class_name)
 {
   gchar* result = NULL;
   GRegex *regex;
@@ -308,12 +312,61 @@ java_indexer_utils_get_package_name (gchar *group_folder_path,
       g_error_free (error);
     }
     
+  if (result == NULL)
+    result = get_local_package_name (group_folder_path, text, class_name);
+    
+  return result;   
+}
+
+/*
+ * Check to see if this is declared in the current package.
+ */
+ gchar*
+get_local_package_name (gchar       *group_folder_path, 
+                        const gchar *text, 
+                        gchar       *class_name)
+{
+  gchar* result = NULL;
+  GRegex *regex;
+  GMatchInfo *match_info;
+  GError *error = NULL;
+  
+  regex = g_regex_new ("package\\s(.*?);", 0, 0, NULL);
+  
+  g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
+  
+  if (result == NULL && g_match_info_matches (match_info))
+    {
+      gchar *import = NULL;
+      gchar *replace; 
+
+      import = g_match_info_fetch (match_info, 1);
+      g_match_info_next (match_info, &error);
+      g_strstrip(import);
+      
+      replace = g_strconcat (import, ".", class_name, NULL);
+      if (java_indexer_utils_get_indexes (group_folder_path, replace))
+        result = g_strdup (replace);
+
+      g_free (replace);
+      g_free (import);
+    }
+  
+  g_match_info_free (match_info);
+  g_regex_unref (regex);
+  
+  if (error != NULL)
+    {
+      g_printerr ("search text for package error: %s\n", error->message);
+      g_error_free (error);
+    }
+    
   return result;   
 }
 
 GList*
 java_indexer_utils_get_indexes (gchar *group_folder_path,
-                                                gchar *package_name)
+                                gchar *package_name)
 {
   GList *indexes = NULL;
   indexes = get_package_indexes (group_folder_path, "projects.indexes", package_name);
