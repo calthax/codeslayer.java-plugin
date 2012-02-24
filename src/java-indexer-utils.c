@@ -326,7 +326,6 @@ get_local_package_name (gchar       *group_folder_path,
       gchar *replace; 
 
       import = g_match_info_fetch (match_info, 1);
-      g_match_info_next (match_info, &error);
       g_strstrip(import);
       
       replace = g_strconcat (import, ".", class_name, NULL);

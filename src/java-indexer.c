@@ -37,12 +37,17 @@ static void execute_create_indexes    (JavaIndexer      *indexer);
 static gboolean start_create_indexes  (JavaIndexer      *indexer);
 static void finish_create_indexes     (JavaIndexer      *indexer);
 static void find_symbol_action        (JavaIndexer      *indexer);
-static void find_symbol               (JavaIndexer      *indexer, 
+static void find_method               (JavaIndexer      *indexer, 
                                        CodeSlayerEditor *editor,
                                        GtkTextIter       iter, 
                                        gchar            *text);
+static void find_class                (JavaIndexer      *indexer, 
+                                       CodeSlayerEditor *editor,
+                                       GtkTextIter       iter, 
+                                       gchar            *class_name);
 static void select_editor             (CodeSlayer       *codeslayer, 
-                                       JavaIndexerIndex *index);
+                                       JavaIndexerIndex *index, 
+                                       gboolean          has_line_number);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -335,14 +340,55 @@ find_symbol_action (JavaIndexer *indexer)
   
   g_print ("select %s\n", text);
   
-  find_symbol (indexer, editor, start, text);
-    
+  if (g_ascii_isupper (*text))
+    find_class (indexer, editor, start, text);
+  else
+    find_method (indexer, editor, start, text);
+  
   if (text != NULL)
     g_free (text);
 }
 
 static void
-find_symbol (JavaIndexer      *indexer, 
+find_class (JavaIndexer      *indexer, 
+            CodeSlayerEditor *editor,
+            GtkTextIter       iter, 
+            gchar            *class_name)
+{
+  JavaIndexerPrivate *priv;
+  gchar *text;
+  gchar *package_name;
+  gchar *group_folder_path;
+  GList *indexes;
+  GList *list = NULL;
+  
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  text = java_indexer_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+  package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
+  
+  g_print ("package_name %s\n", package_name);
+  
+  indexes = java_indexer_utils_get_indexes (group_folder_path, package_name);
+  g_free (group_folder_path);
+  
+  list = indexes;
+  
+  if (indexes != NULL)
+    {
+      JavaIndexerIndex *index = indexes->data;
+      select_editor (priv->codeslayer, index, FALSE);
+    }
+
+  if (list != NULL)
+    {
+      g_list_foreach (list, (GFunc) g_object_unref, NULL);
+      g_list_free (list);
+    }
+}
+static void
+find_method (JavaIndexer      *indexer, 
              CodeSlayerEditor *editor,
              GtkTextIter       iter, 
              gchar            *text)
@@ -365,7 +411,7 @@ find_symbol (JavaIndexer      *indexer,
 
       if (g_strcmp0 (method_name, text) == 0)
         {
-          select_editor (priv->codeslayer, index);
+          select_editor (priv->codeslayer, index, TRUE);
           break;
         }
         
@@ -381,7 +427,8 @@ find_symbol (JavaIndexer      *indexer,
 
 static void
 select_editor (CodeSlayer       *codeslayer, 
-               JavaIndexerIndex *index)
+               JavaIndexerIndex *index, 
+               gboolean          has_line_number)
 {
   const gchar *file_path;
   gint line_number;
@@ -395,7 +442,8 @@ select_editor (CodeSlayer       *codeslayer,
   project = codeslayer_get_project_by_file_path (codeslayer, file_path);
 
   codeslayer_document_set_file_path (document, file_path);
-  codeslayer_document_set_line_number (document, line_number);
+  if (has_line_number)
+    codeslayer_document_set_line_number (document, line_number);
   codeslayer_document_set_project (document, project);
 
   codeslayer_select_editor (codeslayer, document);
