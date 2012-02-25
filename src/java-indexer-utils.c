@@ -24,7 +24,7 @@
 #include "java-indexer-utils.h"
 
 static gchar* find_path              (gchar       *text);
-static gchar* strip_path_comments    (gchar       *text);
+static gchar* strip_comments    (gchar       *text);
 static gchar* strip_path_parameters  (gchar       *text);
 static GList* get_package_indexes    (gchar       *group_folder_path,
                                       gchar       *index_file_name,
@@ -57,24 +57,28 @@ gchar*
 java_indexer_utils_get_context_path (gchar *text)
 {
   gchar *result = NULL;
+  gchar *comments_stripped;
   gchar *path;
+  
+  comments_stripped = strip_comments (text);
+  
+  g_print ("%s\n", comments_stripped);
 
-  path = find_path (text);
+  path = find_path (comments_stripped);
   if (path != NULL)
     {
-      gchar *comments_stripped;
       gchar *parameters_stripped;
       
-      comments_stripped = strip_path_comments (path);
-      parameters_stripped = strip_path_parameters (comments_stripped);
+      parameters_stripped = strip_path_parameters (path);
       parameters_stripped = g_strreverse (parameters_stripped);
       
       result = g_strdup (parameters_stripped);
       
       g_free (path);
-      g_free (comments_stripped);
       g_free (parameters_stripped);
     }
+    
+  g_free (comments_stripped);
 
   return result; 
 }
@@ -136,7 +140,7 @@ find_path (gchar *text)
  * new DateFilterMatcher("MM/yyyy") becomes new DateFilterMatcher()
  */
 static gchar*
-strip_path_comments (gchar *path)
+strip_comments (gchar *text)
 {
   gchar *result;
   GRegex *regex;
@@ -150,7 +154,7 @@ strip_path_comments (gchar *path)
       g_error_free (error);
     }
   
-  result = g_regex_replace (regex, path, -1, 0, "", 0, NULL);
+  result = g_regex_replace (regex, text, -1, 0, "", 0, NULL);
   
   g_regex_unref (regex);
 
