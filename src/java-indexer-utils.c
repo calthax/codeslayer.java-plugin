@@ -23,15 +23,15 @@
 #include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 
-static gchar* find_path              (gchar       *text);
-static gchar* strip_comments    (gchar       *text);
-static gchar* strip_path_parameters  (gchar       *text);
-static GList* get_package_indexes    (gchar       *group_folder_path,
-                                      gchar       *index_file_name,
-                                      gchar       *package_name);
-gchar* get_local_package_name        (gchar       *group_folder_path, 
-                                      const gchar *text, 
-                                      gchar       *class_name);
+static gchar* find_path               (gchar       *text);
+static gchar* strip_comments          (gchar       *text);
+static gchar* strip_path_parameters   (gchar       *text);
+static GList* get_package_indexes     (gchar       *group_folder_path,
+                                       gchar       *index_file_name,
+                                       gchar       *package_name);
+static gchar* get_local_package_name  (gchar       *group_folder_path, 
+                                       const gchar *text, 
+                                       gchar       *class_name);
 
 /*
  * Start at the current place in the editor and get all the previous text.
@@ -62,8 +62,6 @@ java_indexer_utils_get_context_path (gchar *text)
   
   comments_stripped = strip_comments (text);
   
-  g_print ("%s\n", comments_stripped);
-
   path = find_path (comments_stripped);
   if (path != NULL)
     {
@@ -334,7 +332,7 @@ java_indexer_utils_get_package_name (gchar       *group_folder_path,
 /*
  * Check to see if this is declared in the current package.
  */
- gchar*
+static gchar*
 get_local_package_name (gchar       *group_folder_path, 
                         const gchar *text, 
                         gchar       *class_name)
