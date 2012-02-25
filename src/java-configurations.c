@@ -151,7 +151,7 @@ java_configurations_save (JavaConfigurations *configurations,
     
   priv = JAVA_CONFIGURATIONS_GET_PRIVATE (configurations);
   
-  if (configuration)
+  if (configuration != NULL)
     priv->list = g_list_prepend (priv->list, configuration);
 
   list = g_list_copy (priv->list);
@@ -172,7 +172,7 @@ java_configurations_save (JavaConfigurations *configurations,
       tmp = g_list_next (tmp);
     }
     
-  g_list_free (list);    
+  g_list_free (list);
   
   file_path = get_configuration_file_path (configurations);  
   codeslayer_utils_save_gobjects (priv->list,
@@ -184,7 +184,7 @@ java_configurations_save (JavaConfigurations *configurations,
                                   "lib_folder", G_TYPE_STRING, 
                                   "source_folder", G_TYPE_STRING, 
                                   "test_folder", G_TYPE_STRING, 
-                                  NULL);  
+                                  NULL);
   g_free (file_path);
 }
 

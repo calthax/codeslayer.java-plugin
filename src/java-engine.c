@@ -159,7 +159,9 @@ project_properties_saved_action (JavaEngine        *engine,
   if (java_project_properties_saved (JAVA_PROJECT_PROPERTIES (priv->project_properties), 
                                      configuration, project))
     {
-      save_ant_build_properties (configuration);    
+      if (configuration == NULL)
+        configuration = java_configurations_find_configuration (priv->configurations, project_key);
+      save_ant_build_properties (configuration);
     }
 }
 

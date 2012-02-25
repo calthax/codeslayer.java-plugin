@@ -441,7 +441,7 @@ java_project_properties_opened (JavaProjectProperties *project_properties,
   priv = JAVA_PROJECT_PROPERTIES_GET_PRIVATE (project_properties);  
   priv->project = project;
   
-  if (configuration)
+  if (configuration != NULL)
     {
       const gchar *ant_file;
       const gchar *build_folder;
@@ -477,6 +477,7 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
                                CodeSlayerProject     *project)
 {
   JavaProjectPropertiesPrivate *priv;
+  gboolean result = FALSE;
   gchar *ant_file;
   gchar *build_folder;
   gchar *lib_folder;
@@ -497,7 +498,7 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
   g_strstrip (source_folder);
   g_strstrip (test_folder);
   
-  if (configuration)
+  if (configuration != NULL)
     {
       if (g_strcmp0 (ant_file, java_configuration_get_ant_file (configuration)) == 0 &&
           g_strcmp0 (build_folder, java_configuration_get_build_folder (configuration)) == 0 &&
@@ -519,12 +520,12 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
       java_configuration_set_source_folder (configuration, source_folder);
       java_configuration_set_test_folder (configuration, test_folder);
       g_signal_emit_by_name((gpointer)project_properties, "save-configuration", NULL);
+      result = TRUE;
     }
   else if (entry_has_text (priv->ant_file_entry) &&
            entry_has_text (priv->build_folder_entry) &&
            entry_has_text (priv->lib_folder_entry) &&
-           entry_has_text (priv->source_folder_entry)
-           )
+           entry_has_text (priv->source_folder_entry))
     {
       JavaConfiguration *configuration;
       const gchar *project_key;
@@ -537,6 +538,7 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
       java_configuration_set_source_folder (configuration, source_folder);
       java_configuration_set_test_folder (configuration, test_folder);
       g_signal_emit_by_name((gpointer)project_properties, "save-configuration", configuration);
+      result = TRUE;
     }
     
   g_free (ant_file);
@@ -544,7 +546,8 @@ java_project_properties_saved (JavaProjectProperties *project_properties,
   g_free (lib_folder);
   g_free (source_folder);
   g_free (test_folder);
-  return TRUE;
+  
+  return result;
 }
 
 static gboolean
