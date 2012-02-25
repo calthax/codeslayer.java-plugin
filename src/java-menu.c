@@ -176,7 +176,7 @@ add_menu_items (JavaMenu      *menu,
 
   find_symbol_item = codeslayer_menu_item_new_with_label ("Find Symbol");
   gtk_widget_add_accelerator (find_symbol_item, "activate", 
-                              accel_group, GDK_KEY_F3, 0, GTK_ACCEL_VISIBLE);  
+                              accel_group, GDK_KEY_F4, 0, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), find_symbol_item);
 
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 

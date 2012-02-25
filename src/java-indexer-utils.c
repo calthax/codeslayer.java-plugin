@@ -219,18 +219,42 @@ java_indexer_utils_get_class_name (const gchar *text,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  concat = g_strconcat ("([A-Z][a-zA-Z0-9_]+)(?:<[a-zA-Z0-9_<>,?\\s]*)?(\\s+\\b", variable, "\\b)", NULL);
-   
-  regex = g_regex_new (concat, 0, 0, NULL);
-  
-  g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
-  
-  if (g_match_info_matches (match_info))
-    result = g_match_info_fetch (match_info, 1);
-  
-  g_match_info_free (match_info);
-  g_regex_unref (regex);
-  g_free (concat);
+  if (g_ascii_isupper (*variable))
+    {
+      concat = g_strconcat ("([A-Z][a-zA-Z0-9_]+)", NULL);
+    
+      regex = g_regex_new (concat, 0, 0, NULL);
+      
+      if (regex != NULL && g_regex_match_full (regex, variable, -1, 0, 0, &match_info, &error))
+        {
+          if (g_match_info_matches (match_info))
+            result = g_match_info_fetch (match_info, 1);
+          g_match_info_free (match_info);
+        }
+      
+      if (regex != NULL)      
+        g_regex_unref (regex);
+
+      g_free (concat);
+    }
+  else
+    {
+      concat = g_strconcat ("([A-Z][a-zA-Z0-9_]+)(?:<[a-zA-Z0-9_<>,?\\s]*)?(\\s+\\b", variable, "\\b)", NULL);
+    
+      regex = g_regex_new (concat, 0, 0, NULL);
+      
+      if (regex != NULL && g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error))
+        {
+          if (g_match_info_matches (match_info))
+            result = g_match_info_fetch (match_info, 1);
+          g_match_info_free (match_info);
+        }
+      
+      if (regex != NULL)      
+        g_regex_unref (regex);
+      
+      g_free (concat);
+    }
   
   if (error != NULL)
     {
@@ -376,7 +400,7 @@ get_package_indexes (gchar *group_folder_path,
 
   if (!g_file_test (file_name, G_FILE_TEST_EXISTS))
     {
-      g_warning ("There is no projects indexes.");
+      g_warning ("There is no %s file.", index_file_name);
       g_free (file_name);
       return indexes;
     }

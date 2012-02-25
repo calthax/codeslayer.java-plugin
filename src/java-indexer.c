@@ -48,6 +48,7 @@ static void find_class                (JavaIndexer      *indexer,
 static void select_editor             (CodeSlayer       *codeslayer, 
                                        JavaIndexerIndex *index, 
                                        gboolean          has_line_number);
+static void verify_dir_exists         (CodeSlayer       *codeslayer);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -102,6 +103,8 @@ java_indexer_new (CodeSlayer         *codeslayer,
 
   priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-saved", 
                                                      G_CALLBACK (editor_saved_action), indexer);
+                                                     
+  verify_dir_exists (codeslayer);
 
   return indexer;
 }
@@ -449,4 +452,23 @@ select_editor (CodeSlayer       *codeslayer,
   codeslayer_select_editor (codeslayer, document);
   
   g_object_unref (document);
+}
+
+static void
+verify_dir_exists (CodeSlayer *codeslayer)
+{
+  gchar *group_folder_path;
+  gchar *file_name;
+  GFile *file;
+  
+  group_folder_path = codeslayer_get_active_group_folder_path (codeslayer);  
+  file_name = g_build_filename (group_folder_path, "indexes", NULL);
+  file = g_file_new_for_path (file_name);
+
+  if (!g_file_query_exists (file, NULL)) 
+    g_file_make_directory (file, NULL, NULL);
+
+  g_free (group_folder_path);    
+  g_free (file_name);
+  g_object_unref (file);
 }
