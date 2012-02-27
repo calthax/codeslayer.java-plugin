@@ -49,3 +49,23 @@ java_utils_get_class_name (JavaConfiguration  *configuration,
   g_free (substr);
   return replace;
 }
+
+/*
+ * Start at the current place in the editor and get all the previous text.
+ * The idea is that any variables that need to be resolved will come 
+ * before this place in the editor.
+ */
+gchar*
+java_utils_get_text_to_search (GtkTextView *text_view, 
+                               GtkTextIter  iter)
+{
+  GtkTextBuffer *buffer;
+  GtkTextIter start;
+  gchar *text;      
+
+  buffer = gtk_text_view_get_buffer (text_view);      
+  gtk_text_buffer_get_start_iter (buffer, &start);
+  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
+
+  return text;
+}

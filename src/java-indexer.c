@@ -20,6 +20,7 @@
 #include "java-indexer.h"
 #include "java-indexer-index.h"
 #include "java-indexer-utils.h"
+#include "java-utils.h"
 #include "java-configuration.h"
 
 static void java_indexer_class_init   (JavaIndexerClass *klass);
@@ -121,7 +122,7 @@ java_indexer_get_indexes (JavaIndexer      *indexer,
 
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  text = java_indexer_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
+  text = java_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
   
   if (text == NULL)
     return NULL;
@@ -367,7 +368,7 @@ find_class (JavaIndexer      *indexer,
   
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  text = java_indexer_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
+  text = java_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
   group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
   package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
   

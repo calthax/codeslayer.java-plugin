@@ -24,8 +24,6 @@
 
 G_BEGIN_DECLS
 
-gchar*  java_indexer_utils_get_text_to_search  (GtkTextView *text_view, 
-                                                GtkTextIter  iter);
 gchar*  java_indexer_utils_get_context_path    (gchar       *text);
 gchar*  java_indexer_utils_get_class_name      (const gchar *text, 
                                                 gchar       *variable);

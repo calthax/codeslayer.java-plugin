@@ -25,8 +25,10 @@
 
 G_BEGIN_DECLS
 
-gchar*  java_utils_get_class_name  (JavaConfiguration  *configuration,
-                                    CodeSlayerDocument *document);
+gchar*  java_utils_get_class_name      (JavaConfiguration  *configuration,
+                                        CodeSlayerDocument *document);                                    
+gchar*  java_utils_get_text_to_search  (GtkTextView        *text_view, 
+                                        GtkTextIter         iter);                                    
 
 G_END_DECLS
 

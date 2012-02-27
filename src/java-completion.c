@@ -16,17 +16,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <codeslayer/codeslayer-utils.h>
-#include <gtksourceview/gtksourceview.h>
-#include <gtksourceview/gtksourcecompletion.h>
-#include <gtksourceview/gtksourcecompletioninfo.h>
-#include <gtksourceview/gtksourcecompletionitem.h>
-#include <gtksourceview/gtksourcelanguagemanager.h>
-#include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "java-completion.h"
 #include "java-completion-method.h"
+#include "java-completion-word.h"
 
 static void java_completion_class_init  (JavaCompletionClass *klass);
 static void java_completion_init        (JavaCompletion      *completion);
@@ -94,11 +86,16 @@ editor_added_action (JavaCompletion   *completion,
 {
   JavaCompletionPrivate *priv;
   JavaCompletionMethod *method;
+  JavaCompletionWord *word;
   
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
   
   method = java_completion_method_new (editor, priv->indexer);
+  word = java_completion_word_new (editor);
   
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (method));
+  
+  codeslayer_editor_add_completion_provider (editor, 
+                                             CODESLAYER_COMPLETION_PROVIDER (word));
 }

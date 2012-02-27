@@ -20,16 +20,16 @@
 #include "java-completion-method.h"
 #include "java-indexer-index.h"
 
-static void java_completion_provider_interface_init  (gpointer                    page, 
-                                                      gpointer                    data);
-static void java_completion_method_class_init        (JavaCompletionMethodClass  *klass);
-static void java_completion_method_init              (JavaCompletionMethod       *method);
-static void java_completion_method_finalize          (JavaCompletionMethod       *method);
+static void java_completion_provider_interface_init                  (gpointer                    page, 
+                                                                      gpointer                    data);
+static void java_completion_method_class_init                        (JavaCompletionMethodClass  *klass);
+static void java_completion_method_init                              (JavaCompletionMethod       *method);
+static void java_completion_method_finalize                          (JavaCompletionMethod       *method);
 
-static gboolean java_completion_has_match            (JavaCompletionMethod       *method, 
-                                                      GtkTextIter                 iter);
-static GList* java_completion_get_proposals          (JavaCompletionMethod       *method, 
-                                                      GtkTextIter                 iter);
+static gboolean java_completion_has_match                            (JavaCompletionMethod       *method, 
+                                                                      GtkTextIter                 iter);
+static CodeSlayerCompletionProposals* java_completion_get_proposals  (JavaCompletionMethod       *method, 
+                                                                      GtkTextIter                 iter);
 
 #define JAVA_COMPLETION_METHOD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_METHOD_TYPE, JavaCompletionMethodPrivate))
@@ -55,7 +55,7 @@ java_completion_provider_interface_init (gpointer provider,
 {
   CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) provider;
   provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_has_match;
-  provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
+  provider_interface->get_proposals = (CodeSlayerCompletionProposals* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
 }
 
 static void 
@@ -115,16 +115,18 @@ java_completion_has_match (JavaCompletionMethod *method,
   return FALSE;
 }
 
-static GList* 
+static CodeSlayerCompletionProposals* 
 java_completion_get_proposals (JavaCompletionMethod *method, 
                                GtkTextIter           iter)
 {
   JavaCompletionMethodPrivate *priv;
-  GList *proposals = NULL;
+  CodeSlayerCompletionProposals *proposals = NULL;
   GList *indexes; 
   GList *list; 
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
+  
+  proposals = codeslayer_completion_proposals_new ();
 
   indexes = java_indexer_get_indexes (priv->indexer, priv->editor, iter);
   list = indexes;
@@ -152,7 +154,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
           
           proposal = codeslayer_completion_proposal_new (method_parameters, method_completion);
           
-          proposals = g_list_prepend (proposals, proposal);
+          codeslayer_completion_proposals_add_proposal (proposals, proposal);
                                                                 
           g_free (method_parameters);	                                              
           g_free (method_completion);	                                              
