@@ -30,8 +30,6 @@ static void java_indexer_finalize     (JavaIndexer      *indexer);
 static GList* get_indexes             (gchar            *group_folder_path,
                                        gchar            *text,
                                        gchar            *context_path);
-static gint sort_indexes              (JavaIndexerIndex *index1, 
-                                       JavaIndexerIndex *index2);
 static void editor_saved_action       (JavaIndexer      *indexer,
                                        CodeSlayerEditor *editor);
 static void execute_create_indexes    (JavaIndexer      *indexer);
@@ -136,8 +134,6 @@ java_indexer_get_indexes (JavaIndexer      *indexer,
       g_print ("context path: %s\n", context_path);
 
       indexes = get_indexes (group_folder_path, text, context_path);
-      if (indexes != NULL)
-        indexes = g_list_sort (indexes, (GCompareFunc) sort_indexes);
 
       g_free (group_folder_path);
       g_free (context_path);
@@ -202,17 +198,6 @@ get_indexes (gchar *group_folder_path,
     g_strfreev (split);
   
   return indexes;
-}
-                           
-static gint                
-sort_indexes (JavaIndexerIndex *index1, 
-              JavaIndexerIndex *index2)
-{
-  const gchar *name1;
-  const gchar *name2;
-  name1 = java_indexer_index_get_method_name (index1);
-  name2 = java_indexer_index_get_method_name (index2);  
-  return g_strcmp0 (name2, name1);
 }
 
 static void 
