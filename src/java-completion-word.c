@@ -30,7 +30,7 @@ static gboolean java_completion_has_match                            (JavaComple
                                                                       GtkTextIter               iter);
 static CodeSlayerCompletionProposals* java_completion_get_proposals  (JavaCompletionWord       *word, 
                                                                       GtkTextIter               iter);
-static gchar* find_word                                              (gchar                    *text);
+static GtkTextIter find_word_start                                   (GtkTextIter               iter);
 static GList* find_matches                                           (gchar                    *text,
                                                                       gchar                    *word);
 static gint compare_match                                            (gchar                    *a,
@@ -123,17 +123,27 @@ java_completion_get_proposals (JavaCompletionWord *word,
 {
   JavaCompletionWordPrivate *priv;
   CodeSlayerCompletionProposals *proposals = NULL;
+  GtkTextBuffer *buffer;
   GList *list = NULL;
   GList *tmp = NULL;
-  gchar *text;
+  GtkTextIter start;
   gchar *start_word;
+  GtkTextMark *mark;
+  gchar *text;
   
   priv = JAVA_COMPLETION_WORD_GET_PRIVATE (word);
 
-  proposals = codeslayer_completion_proposals_new ();
-
   text = java_utils_get_text_to_search (GTK_TEXT_VIEW (priv->editor), iter);
-  start_word = find_word (text);
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
+
+  start = find_word_start (iter);
+  start_word = gtk_text_iter_get_text (&start, &iter);
+  
+  proposals = codeslayer_completion_proposals_new ();
+  mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
+  codeslayer_completion_proposals_set_mark (proposals, mark);
+  
+  g_print ("start word %s\n", start_word);
   
   list = find_matches (text, start_word);
   tmp = list;
@@ -161,35 +171,31 @@ java_completion_get_proposals (JavaCompletionWord *word,
   return proposals;
 }
 
-static gchar*
-find_word (gchar *text)
+static GtkTextIter
+find_word_start (GtkTextIter iter)
 {
-  gchar *result;
-  GString *string;
-  gchar *text_cpy;
-  gchar *tmp;
+  GtkTextIter start;
   
-  string = g_string_new ("");
+  start = iter;
 
-  text_cpy = g_strdup (text);
-  tmp = text_cpy;
-  text_cpy = g_strreverse (text_cpy);
-  
-  for (; *text_cpy != '\0'; ++text_cpy)
+  while (!gtk_text_iter_is_start (&start))
     {
-      if (*text_cpy == '(' ||
-          g_ascii_isspace (*text_cpy))
-        break;
-      
-      string = g_string_append_c (string, *text_cpy);
+      gchar *text;
+      GtkTextIter end;
+      end = start;
+      gtk_text_iter_backward_char (&start);
+      text = gtk_text_iter_get_text (&start, &end);
+
+      if (*text == '(' ||
+          g_ascii_isspace (*text))
+        {
+          g_free (text);
+          break;
+        }
+       g_free (text);
     }
-  
-  result = g_string_free (string, FALSE);
-  g_strstrip (result);
-  result = g_strreverse (result);
-  g_free (tmp);
     
-  return result;
+  return start;
 }
 
 GList*
