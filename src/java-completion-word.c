@@ -20,21 +20,21 @@
 #include "java-completion-word.h"
 #include "java-utils.h"
 
-static void java_completion_provider_interface_init                  (gpointer                  page, 
-                                                                      gpointer                  data);
-static void java_completion_word_class_init                          (JavaCompletionWordClass  *klass);
-static void java_completion_word_init                                (JavaCompletionWord       *word);
-static void java_completion_word_finalize                            (JavaCompletionWord       *word);
+static void java_completion_provider_interface_init  (gpointer                  page, 
+                                                      gpointer                  data);
+static void java_completion_word_class_init          (JavaCompletionWordClass  *klass);
+static void java_completion_word_init                (JavaCompletionWord       *word);
+static void java_completion_word_finalize            (JavaCompletionWord       *word);
 
-static gboolean java_completion_has_match                            (JavaCompletionWord       *word, 
-                                                                      GtkTextIter               iter);
-static CodeSlayerCompletionProposals* java_completion_get_proposals  (JavaCompletionWord       *word, 
-                                                                      GtkTextIter               iter);
-static GtkTextIter find_word_start                                   (GtkTextIter               iter);
-static GList* find_matches                                           (gchar                    *text,
-                                                                      gchar                    *word);
-static gint compare_match                                            (gchar                    *a,
-                                                                      gchar                    *b);
+static gboolean java_completion_has_match            (JavaCompletionWord       *word, 
+                                                      GtkTextIter               iter);
+static GList* java_completion_get_proposals          (JavaCompletionWord       *word, 
+                                                      GtkTextIter               iter);
+static GtkTextIter find_word_start                   (GtkTextIter               iter);
+static GList* find_matches                           (gchar                    *text,
+                                                      gchar                    *word);
+static gint compare_match                            (gchar                    *a,
+                                                      gchar                    *b);
 
 #define JAVA_COMPLETION_WORD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_WORD_TYPE, JavaCompletionWordPrivate))
@@ -59,7 +59,7 @@ java_completion_provider_interface_init (gpointer provider,
 {
   CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) provider;
   provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_has_match;
-  provider_interface->get_proposals = (CodeSlayerCompletionProposals* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
+  provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
 }
 
 static void 
@@ -117,18 +117,18 @@ java_completion_has_match (JavaCompletionWord *word,
   return FALSE;
 }
 
-static CodeSlayerCompletionProposals* 
+static GList* 
 java_completion_get_proposals (JavaCompletionWord *word, 
                                GtkTextIter         iter)
 {
   JavaCompletionWordPrivate *priv;
-  CodeSlayerCompletionProposals *proposals = NULL;
+  GList *proposals = NULL;
   GtkTextBuffer *buffer;
+  GtkTextMark *mark;
   GList *list = NULL;
   GList *tmp = NULL;
   GtkTextIter start;
   gchar *start_word;
-  GtkTextMark *mark;
   gchar *text;
   
   priv = JAVA_COMPLETION_WORD_GET_PRIVATE (word);
@@ -139,9 +139,7 @@ java_completion_get_proposals (JavaCompletionWord *word,
   start = find_word_start (iter);
   start_word = gtk_text_iter_get_text (&start, &iter);
   
-  proposals = codeslayer_completion_proposals_new ();
   mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
-  codeslayer_completion_proposals_set_mark (proposals, mark);
   
   g_print ("start word %s\n", start_word);
   
@@ -152,8 +150,8 @@ java_completion_get_proposals (JavaCompletionWord *word,
     {
       gchar *match_text = list->data;
       CodeSlayerCompletionProposal *proposal;
-      proposal = codeslayer_completion_proposal_new (match_text, match_text);
-      codeslayer_completion_proposals_add_proposal (proposals, proposal);
+      proposal = codeslayer_completion_proposal_new (match_text, match_text, mark);
+      proposals = g_list_prepend (proposals, proposal);
       list = g_list_next (list);
     }
 
