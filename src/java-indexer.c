@@ -244,7 +244,7 @@ start_create_indexes (JavaIndexer *indexer)
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
   group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-  index_file_name = g_build_filename (group_folder_path, "indexes", "projects.indexes", NULL);
+  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
   
   string = g_string_new ("codeslayer-jindexer -sourcefolder ");
   
@@ -262,8 +262,9 @@ start_create_indexes (JavaIndexer *indexer)
       list = g_list_next (list);
     }
 
-  string = g_string_append (string, " -index ");
+  string = g_string_append (string, " -indexes ");
   string = g_string_append (string, index_file_name);
+  string = g_string_append (string, " -type projects ");
 
   command = g_string_free (string, FALSE);
   
