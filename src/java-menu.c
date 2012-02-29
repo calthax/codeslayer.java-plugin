@@ -33,6 +33,7 @@ static void test_file_action        (JavaMenu      *menu);
 static void debug_test_file_action  (JavaMenu      *menu);
 static void attach_debugger_action  (JavaMenu      *menu);
 static void find_symbol_action      (JavaMenu      *menu);
+static void class_search_action      (JavaMenu      *menu);
                                         
 enum
 {
@@ -42,6 +43,7 @@ enum
   DEBUG_TEST_FILE,
   ATTACH_DEBUGGER,
   FIND_SYMBOL,
+  CLASS_SEARCH,
   LAST_SIGNAL
 };
 
@@ -100,6 +102,14 @@ java_menu_class_init (JavaMenuClass *klass)
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  java_menu_signals[CLASS_SEARCH] =
+    g_signal_new ("class-search", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaMenuClass, class_search),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_menu_finalize;
 }
 
@@ -142,6 +152,7 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *debug_test_file_item;
   GtkWidget *attach_debugger_item;
   GtkWidget *find_symbol_item;
+  GtkWidget *class_search_item;
   GtkWidget *separator_item;
 
   compile_item = codeslayer_menu_item_new_with_label ("Compile");
@@ -179,6 +190,11 @@ add_menu_items (JavaMenu      *menu,
                               accel_group, GDK_KEY_F4, 0, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), find_symbol_item);
 
+  class_search_item = codeslayer_menu_item_new_with_label ("Class Search");
+  gtk_widget_add_accelerator (class_search_item, "activate", 
+                              accel_group, GDK_KEY_O, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), class_search_item);
+
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 
                             G_CALLBACK (compile_action), menu);
    
@@ -196,6 +212,9 @@ add_menu_items (JavaMenu      *menu,
    
   g_signal_connect_swapped (G_OBJECT (find_symbol_item), "activate", 
                             G_CALLBACK (find_symbol_action), menu);
+   
+  g_signal_connect_swapped (G_OBJECT (class_search_item), "activate", 
+                            G_CALLBACK (class_search_action), menu);
 }
 
 static void 
@@ -232,4 +251,10 @@ static void
 find_symbol_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "find-symbol");
+}
+
+static void 
+class_search_action (JavaMenu *menu) 
+{
+  g_signal_emit_by_name ((gpointer) menu, "class-search");
 }

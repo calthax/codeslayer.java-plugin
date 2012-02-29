@@ -47,6 +47,7 @@ struct _JavaMenuClass
   void (*debug_test_file) (JavaMenu *menu);
   void (*attach_debugger) (JavaMenu *menu);
   void (*find_symbol) (JavaMenu *menu);
+  void (*class_search) (JavaMenu *menu);
 };
 
 GType java_menu_get_type (void) G_GNUC_CONST;

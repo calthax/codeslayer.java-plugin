@@ -54,6 +54,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-completion-word.c \
     java-utils.h \
     java-utils.c \
+    java-class-search.h \
+    java-class-search.c \
     java-plugin.c
 
 libjavacodeslayerplugin_la_CPPFLAGS = -I$(top_srcdir)
