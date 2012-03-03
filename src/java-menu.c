@@ -192,7 +192,7 @@ add_menu_items (JavaMenu      *menu,
 
   class_search_item = codeslayer_menu_item_new_with_label ("Class Search");
   gtk_widget_add_accelerator (class_search_item, "activate", 
-                              accel_group, GDK_KEY_O, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
+                              accel_group, GDK_KEY_E, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), class_search_item);
 
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 

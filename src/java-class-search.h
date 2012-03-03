@@ -45,7 +45,8 @@ struct _JavaClassSearchClass
 
 GType java_class_search_get_type (void) G_GNUC_CONST;
      
-JavaClassSearch*  java_class_search_new  (GtkWidget *menu);
+JavaClassSearch*  java_class_search_new  (CodeSlayer *codeslayer, 
+                                          GtkWidget  *menu);
                                      
 G_END_DECLS
 
