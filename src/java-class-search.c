@@ -56,8 +56,7 @@ struct _JavaClassSearchPrivate
 
 enum
 {
-  CLASSNAME = 0,
-  PACKAGENAME,
+  PACKAGENAME = 0,
   INDEX,
   COLUMNS
 };
@@ -156,7 +155,7 @@ run_dialog (JavaClassSearch *search)
       
       /* the tree view */   
          
-      priv->store = gtk_list_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER);
+      priv->store = gtk_list_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_POINTER);
       priv->tree =  gtk_tree_view_new ();
       gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (priv->tree), FALSE);
       gtk_tree_view_set_enable_search (GTK_TREE_VIEW (priv->tree), FALSE);
@@ -167,7 +166,7 @@ run_dialog (JavaClassSearch *search)
       gtk_tree_view_column_set_sizing (column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
       renderer = gtk_cell_renderer_text_new ();
       gtk_tree_view_column_pack_start (column, renderer, FALSE);
-      gtk_tree_view_column_add_attribute (column, renderer, "text", CLASSNAME);
+      gtk_tree_view_column_add_attribute (column, renderer, "text", PACKAGENAME);
       gtk_tree_view_append_column (GTK_TREE_VIEW (priv->tree), column);
       
       scrolled_window = gtk_scrolled_window_new (NULL, NULL);
@@ -248,7 +247,6 @@ key_release_action (JavaClassSearch *search,
         {
           gtk_list_store_append (priv->store, &tree_iter);
           gtk_list_store_set (priv->store, &tree_iter, 
-                              CLASSNAME, class_name, 
                               PACKAGENAME, package_name, 
                               INDEX, index, 
                               -1);
@@ -316,6 +314,7 @@ get_class_indexes (JavaClassSearch *search,
   g_io_channel_shutdown(channel, FALSE, NULL);
   g_io_channel_unref (channel);  
   g_free (file_name);
+  g_free (group_folder_path);
   
   indexes = g_list_sort (indexes, (GCompareFunc) sort_indexes);
 
@@ -364,12 +363,9 @@ row_activated_action (JavaClassSearch   *search,
       gtk_tree_model_get_iter (tree_model, &treeiter, tree_path);
       gtk_tree_model_get (GTK_TREE_MODEL (priv->store), &treeiter, INDEX, &index, -1);
       
-      file_path = java_indexer_index_get_file_path (index);
-      g_print ("file_path %s\n", file_path);
-      
-      project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
-      
       document = codeslayer_document_new ();
+      file_path = java_indexer_index_get_file_path (index);
+      project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
       codeslayer_document_set_file_path (document, file_path);
       codeslayer_document_set_project (document, project);
       
