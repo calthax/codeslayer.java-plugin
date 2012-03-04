@@ -187,6 +187,9 @@ insert_import_line (JavaClassImport *import,
       gtk_text_buffer_end_user_action (buffer);
       g_free (concat);
     }
+  
+  if (local_package_name != NULL)
+    g_free (local_package_name);
 }
 
 static gchar*
