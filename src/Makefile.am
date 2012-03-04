@@ -52,6 +52,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-completion-method.c \
     java-completion-word.h \
     java-completion-word.c \
+    java-completion-class.h \
+    java-completion-class.c \
     java-utils.h \
     java-utils.c \
     java-class-search.h \
