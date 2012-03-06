@@ -194,6 +194,7 @@ run_dialog (JavaClassSearch *search)
       gtk_widget_show_all (content_area);
     }
     
+  gtk_widget_grab_focus (priv->entry);
   gtk_dialog_run (GTK_DIALOG (priv->dialog));
   gtk_widget_hide (priv->dialog);
 }

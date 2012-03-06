@@ -253,10 +253,17 @@ start_create_indexes (JavaIndexer *indexer)
     {
       JavaConfiguration *configuration = list->data;
       const gchar *source_folder;
+      const gchar *test_folder;
       source_folder = java_configuration_get_source_folder (configuration);
+      test_folder = java_configuration_get_test_folder (configuration);
       if (codeslayer_utils_has_text (source_folder))
         {
           string = g_string_append (string, source_folder);
+          string = g_string_append (string, ":");        
+        }
+      if (codeslayer_utils_has_text (test_folder))
+        {
+          string = g_string_append (string, test_folder);
           string = g_string_append (string, ":");        
         }
       list = g_list_next (list);
