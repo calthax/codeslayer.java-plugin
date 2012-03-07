@@ -185,7 +185,7 @@ run_dialog (JavaClassSearch *search)
       
       /* render everything */
       
-      gtk_widget_set_size_request (content_area, 350, 400);
+      gtk_widget_set_size_request (content_area, 600, 400);
       
       gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
       gtk_box_pack_start (GTK_BOX (vbox), scrolled_window, TRUE, TRUE, 0);

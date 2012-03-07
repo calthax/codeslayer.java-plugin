@@ -23,31 +23,32 @@
 #include "java-utils.h"
 #include "java-configuration.h"
 
-static void java_indexer_class_init   (JavaIndexerClass *klass);
-static void java_indexer_init         (JavaIndexer      *indexer);
-static void java_indexer_finalize     (JavaIndexer      *indexer);
+static void java_indexer_class_init    (JavaIndexerClass *klass);
+static void java_indexer_init          (JavaIndexer      *indexer);
+static void java_indexer_finalize      (JavaIndexer      *indexer);
 
-static GList* get_indexes             (gchar            *group_folder_path,
-                                       gchar            *text,
-                                       gchar            *context_path);
-static void editor_saved_action       (JavaIndexer      *indexer,
-                                       CodeSlayerEditor *editor);
-static void execute_create_indexes    (JavaIndexer      *indexer);
-static gboolean start_create_indexes  (JavaIndexer      *indexer);
-static void finish_create_indexes     (JavaIndexer      *indexer);
-static void find_symbol_action        (JavaIndexer      *indexer);
-static void find_method               (JavaIndexer      *indexer, 
-                                       CodeSlayerEditor *editor,
-                                       GtkTextIter       iter, 
-                                       gchar            *text);
-static void find_class                (JavaIndexer      *indexer, 
-                                       CodeSlayerEditor *editor,
-                                       GtkTextIter       iter, 
-                                       gchar            *class_name);
-static void select_editor             (CodeSlayer       *codeslayer, 
-                                       JavaIndexerIndex *index, 
-                                       gboolean          has_line_number);
-static void verify_dir_exists         (CodeSlayer       *codeslayer);
+static GList* get_indexes              (gchar            *group_folder_path,
+                                        gchar            *text,
+                                        gchar            *context_path);
+static void editor_saved_action        (JavaIndexer      *indexer,
+                                        CodeSlayerEditor *editor);
+static void create_indexes_timer       (JavaIndexer      *indexer);
+static void create_indexes             (JavaIndexer      *indexer);
+static gboolean create_indexes_thread  (JavaIndexer      *indexer);
+static void destroy_indexes_timer      (JavaIndexer      *indexer);
+static void find_symbol_action         (JavaIndexer      *indexer);
+static void find_method                (JavaIndexer      *indexer, 
+                                        CodeSlayerEditor *editor,
+                                        GtkTextIter       iter, 
+                                        gchar            *text);
+static void find_class                 (JavaIndexer      *indexer, 
+                                        CodeSlayerEditor *editor,
+                                        GtkTextIter       iter, 
+                                        gchar            *class_name);
+static void select_editor              (CodeSlayer       *codeslayer, 
+                                        JavaIndexerIndex *index, 
+                                        gboolean          has_line_number);
+static void verify_dir_exists          (CodeSlayer       *codeslayer);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -212,11 +213,11 @@ editor_saved_action (JavaIndexer      *indexer,
   if (!g_str_has_suffix (file_path, ".java"))
     return;
   
-  execute_create_indexes (indexer);
+  create_indexes_timer (indexer);
 }
 
 static void
-execute_create_indexes (JavaIndexer *indexer) 
+create_indexes_timer (JavaIndexer *indexer) 
 {
   JavaIndexerPrivate *priv;
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
@@ -224,14 +225,29 @@ execute_create_indexes (JavaIndexer *indexer)
   if (priv->event_source_id == 0)
     {
       priv->event_source_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, 2,
-                                                          (GSourceFunc ) start_create_indexes,
+                                                          (GSourceFunc ) create_indexes_thread,
                                                           indexer,
-                                                          (GDestroyNotify) finish_create_indexes);
+                                                          (GDestroyNotify) destroy_indexes_timer);
     }
 }
 
+static void
+destroy_indexes_timer (JavaIndexer *indexer)
+{
+  JavaIndexerPrivate *priv;
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  priv->event_source_id = 0;
+}
+
 static gboolean
-start_create_indexes (JavaIndexer *indexer)
+create_indexes_thread (JavaIndexer *indexer)
+{  
+  g_thread_create ((GThreadFunc) create_indexes, indexer, FALSE, NULL);
+  return FALSE;  
+}
+
+static void
+create_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
   gchar *group_folder_path;
@@ -242,6 +258,8 @@ start_create_indexes (JavaIndexer *indexer)
   gchar *command;
 
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  g_print ("create_indexes\n");
   
   group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
   index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
@@ -283,16 +301,6 @@ start_create_indexes (JavaIndexer *indexer)
   g_free (command);
   g_free (group_folder_path);
   g_free (index_file_name);
-  
-  return FALSE;  
-}
-
-static void
-finish_create_indexes (JavaIndexer *indexer)
-{
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  priv->event_source_id = 0;
 }
 
 static void 
