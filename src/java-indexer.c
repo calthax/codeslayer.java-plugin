@@ -30,12 +30,9 @@ static void java_indexer_finalize      (JavaIndexer      *indexer);
 static GList* get_indexes              (gchar            *group_folder_path,
                                         gchar            *text,
                                         gchar            *context_path);
-static void editor_saved_action        (JavaIndexer      *indexer,
-                                        CodeSlayerEditor *editor);
-static void create_indexes_timer       (JavaIndexer      *indexer);
+static void editors_all_saved_action   (JavaIndexer      *indexer,
+                                        GList            *editors);
 static void create_indexes             (JavaIndexer      *indexer);
-static gboolean create_indexes_thread  (JavaIndexer      *indexer);
-static void destroy_indexes_timer      (JavaIndexer      *indexer);
 static void find_symbol_action         (JavaIndexer      *indexer);
 static void find_method                (JavaIndexer      *indexer, 
                                         CodeSlayerEditor *editor,
@@ -101,8 +98,8 @@ java_indexer_new (CodeSlayer         *codeslayer,
   g_signal_connect_swapped (G_OBJECT (menu), "find-symbol",
                             G_CALLBACK (find_symbol_action), indexer);
 
-  priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-saved", 
-                                                     G_CALLBACK (editor_saved_action), indexer);
+  priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
+                                                     G_CALLBACK (editors_all_saved_action), indexer);
                                                      
   verify_dir_exists (codeslayer);
 
@@ -202,48 +199,28 @@ get_indexes (gchar *group_folder_path,
 }
 
 static void 
-editor_saved_action (JavaIndexer      *indexer, 
-                     CodeSlayerEditor *editor) 
+editors_all_saved_action (JavaIndexer *indexer,
+                          GList      *editors)
 {
-  CodeSlayerDocument *document;
-  const gchar *file_path;
+  gboolean found;
+  found = FALSE;
   
-  document = codeslayer_editor_get_document (editor);
-  file_path = codeslayer_document_get_file_path (document);
-  if (!g_str_has_suffix (file_path, ".java"))
-    return;
-  
-  create_indexes_timer (indexer);
-}
-
-static void
-create_indexes_timer (JavaIndexer *indexer) 
-{
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-
-  if (priv->event_source_id == 0)
+  while (editors != NULL)
     {
-      priv->event_source_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, 2,
-                                                          (GSourceFunc ) create_indexes_thread,
-                                                          indexer,
-                                                          (GDestroyNotify) destroy_indexes_timer);
+      CodeSlayerEditor *editor = editors->data;
+      CodeSlayerDocument *document;
+      const gchar *file_path;
+      
+      document = codeslayer_editor_get_document (editor);
+      file_path = codeslayer_document_get_file_path (document);
+      if (g_str_has_suffix (file_path, ".java"))
+        found = TRUE;
+        
+      editors = g_list_next (editors);
     }
-}
 
-static void
-destroy_indexes_timer (JavaIndexer *indexer)
-{
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  priv->event_source_id = 0;
-}
-
-static gboolean
-create_indexes_thread (JavaIndexer *indexer)
-{  
-  g_thread_create ((GThreadFunc) create_indexes, indexer, FALSE, NULL);
-  return FALSE;
+  if (found)
+    g_thread_create ((GThreadFunc) create_indexes, indexer, FALSE, NULL);
 }
 
 static void
