@@ -19,6 +19,7 @@
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-method.h"
 #include "java-indexer-index.h"
+#include "java-utils.h"
 
 static void java_completion_provider_interface_init  (gpointer                    page, 
                                                       gpointer                    data);
@@ -26,10 +27,9 @@ static void java_completion_method_class_init        (JavaCompletionMethodClass 
 static void java_completion_method_init              (JavaCompletionMethod       *method);
 static void java_completion_method_finalize          (JavaCompletionMethod       *method);
 
-static gboolean java_completion_has_match            (JavaCompletionMethod       *method, 
-                                                      GtkTextIter                 iter);
 static GList* java_completion_get_proposals          (JavaCompletionMethod       *method, 
                                                       GtkTextIter                 iter);
+static gboolean has_match                            (GtkTextIter                 start);
 
 #define JAVA_COMPLETION_METHOD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_METHOD_TYPE, JavaCompletionMethodPrivate))
@@ -54,7 +54,6 @@ java_completion_provider_interface_init (gpointer provider,
                                          gpointer data)
 {
   CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) provider;
-  provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_has_match;
   provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
 }
 
@@ -92,29 +91,6 @@ java_completion_method_new (CodeSlayerEditor *editor,
   return method;
 }
 
-static gboolean 
-java_completion_has_match (JavaCompletionMethod *method, 
-                           GtkTextIter           iter)
-{
-  GtkTextIter start;
-  gchar *text;
-  
-  start = iter;
-  
-  gtk_text_iter_backward_char (&start);
-  
-  text = gtk_text_iter_get_text (&start, &iter);
-  
-  if (g_strcmp0 (text, ".") == 0)
-    {
-      g_free (text);
-      return TRUE;
-    }
-
-  g_free (text);  
-  return FALSE;
-}
-
 static GList* 
 java_completion_get_proposals (JavaCompletionMethod *method, 
                                GtkTextIter           iter)
@@ -122,16 +98,23 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   JavaCompletionMethodPrivate *priv;
   GList *proposals = NULL;
   GtkTextBuffer *buffer;
+  GtkTextIter start;
   GtkTextMark *mark;
   GList *indexes; 
-  GList *list; 
+  GList *list;
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
   
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
-  mark = gtk_text_buffer_create_mark (buffer, NULL, &iter, TRUE);
+  start = iter;
+  java_utils_move_iter_word_start (&start);
 
-  indexes = java_indexer_get_indexes (priv->indexer, priv->editor, iter);
+  if (!has_match (start))
+    return NULL;
+  
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
+  mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
+
+  indexes = java_indexer_get_indexes (priv->indexer, priv->editor, start);
   list = indexes;
   
   while (indexes != NULL)
@@ -172,4 +155,24 @@ java_completion_get_proposals (JavaCompletionMethod *method,
     }
     
   return proposals; 
+}
+
+static gboolean
+has_match (GtkTextIter start)
+{
+  gboolean result = TRUE;
+  GtkTextIter prev;
+  gchar *text;
+  
+  prev = start;
+
+  gtk_text_iter_backward_char (&prev);
+  text = gtk_text_iter_get_text (&prev, &start);
+  
+  if (g_strcmp0 (text, ".") != 0)
+    result = FALSE;
+    
+  g_free (text);
+
+  return result;   
 }

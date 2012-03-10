@@ -26,15 +26,13 @@ static void java_completion_word_class_init          (JavaCompletionWordClass  *
 static void java_completion_word_init                (JavaCompletionWord       *word);
 static void java_completion_word_finalize            (JavaCompletionWord       *word);
 
-static gboolean java_completion_has_match            (JavaCompletionWord       *word, 
-                                                      GtkTextIter               iter);
 static GList* java_completion_get_proposals          (JavaCompletionWord       *word, 
                                                       GtkTextIter               iter);
-static GtkTextIter find_word_start                   (GtkTextIter               iter);
 static GList* find_matches                           (gchar                    *text,
                                                       gchar                    *word);
 static gint compare_match                            (gchar                    *a,
                                                       gchar                    *b);
+static gboolean has_match                            (GtkTextIter                 start);
 
 #define JAVA_COMPLETION_WORD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_WORD_TYPE, JavaCompletionWordPrivate))
@@ -58,7 +56,6 @@ java_completion_provider_interface_init (gpointer provider,
                                          gpointer data)
 {
   CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) provider;
-  provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_has_match;
   provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
 }
 
@@ -94,29 +91,6 @@ java_completion_word_new (CodeSlayerEditor *editor)
   return word;
 }
 
-static gboolean 
-java_completion_has_match (JavaCompletionWord *word, 
-                           GtkTextIter         iter)
-{
-  GtkTextIter start;
-  gchar *text;
-  
-  start = iter;
-  
-  gtk_text_iter_backward_char (&start);
-  
-  text = gtk_text_iter_get_text (&start, &iter);
-  
-  if (g_strcmp0 (text, ".") != 0)
-    {
-      g_free (text);
-      return TRUE;
-    }
-
-  g_free (text);  
-  return FALSE;
-}
-
 static GList* 
 java_completion_get_proposals (JavaCompletionWord *word, 
                                GtkTextIter         iter)
@@ -133,16 +107,17 @@ java_completion_get_proposals (JavaCompletionWord *word,
   
   priv = JAVA_COMPLETION_WORD_GET_PRIVATE (word);
 
+  start = iter;
+  java_utils_move_iter_word_start (&start);
+  
+  if (!has_match (start))
+    return NULL;
+
   text = java_utils_get_text_to_search (GTK_TEXT_VIEW (priv->editor), iter);
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
-
-  start = find_word_start (iter);
-  start_word = gtk_text_iter_get_text (&start, &iter);
-  
   mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
   
-  g_print ("start word %s\n", start_word);
-  
+  start_word = gtk_text_iter_get_text (&start, &iter);
   list = find_matches (text, start_word);
   tmp = list;
 
@@ -169,34 +144,35 @@ java_completion_get_proposals (JavaCompletionWord *word,
   return proposals;
 }
 
-static GtkTextIter
-find_word_start (GtkTextIter iter)
+static gboolean
+has_match (GtkTextIter start)
 {
-  GtkTextIter start;
+  gboolean result = TRUE;
+  GtkTextIter prev;
+  GtkTextIter next;
+  gchar *prev_text;
+  gchar *next_text;
   
-  start = iter;
+  prev = start;
+  next = start;
 
-  while (!gtk_text_iter_is_start (&start))
-    {
-      gchar *text;
-      GtkTextIter end;
-      end = start;
-      gtk_text_iter_backward_char (&start);
-      text = gtk_text_iter_get_text (&start, &end);
+  gtk_text_iter_backward_char (&prev);
+  gtk_text_iter_forward_char (&next);
 
-      if (*text == '(' ||
-          g_ascii_isspace (*text))
-        {
-          g_free (text);
-          break;
-        }
-       g_free (text);
-    }
+  prev_text = gtk_text_iter_get_text (&prev, &start);
+  next_text = gtk_text_iter_get_text (&start, &next);    
+  
+  if (g_strcmp0 (prev_text, ".") == 0 || 
+      g_ascii_isupper (*next_text)) 
+    result = FALSE;
     
-  return start;
+  g_free (prev_text);
+  g_free (next_text);
+
+  return result;
 }
 
-GList*
+static GList*
 find_matches (gchar *text, 
               gchar *word)
 {

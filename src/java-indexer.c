@@ -236,8 +236,6 @@ create_indexes (JavaIndexer *indexer)
 
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  g_print ("start indexing\n");
-  
   group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
   index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
   
@@ -278,8 +276,6 @@ create_indexes (JavaIndexer *indexer)
   g_free (command);
   g_free (group_folder_path);
   g_free (index_file_name);
-  
-  g_print ("finished indexing\n");
 }
 
 static void 

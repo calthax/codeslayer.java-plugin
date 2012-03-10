@@ -19,6 +19,7 @@
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-class.h"
 #include "java-indexer-index.h"
+#include "java-utils.h"
 
 static void java_completion_provider_interface_init  (gpointer                    page, 
                                                       gpointer                    data);
@@ -26,8 +27,6 @@ static void java_completion_klass_class_init         (JavaCompletionKlassClass  
 static void java_completion_klass_init               (JavaCompletionKlass       *klass);
 static void java_completion_klass_finalize           (JavaCompletionKlass       *klass);
 
-static gboolean java_completion_has_match            (JavaCompletionKlass       *klass, 
-                                                      GtkTextIter                 iter);
 static GList* java_completion_get_proposals          (JavaCompletionKlass       *klass, 
                                                       GtkTextIter                 iter);                                                      
 static GList* get_class_indexes                      (JavaCompletionKlass       *klass, 
@@ -35,6 +34,7 @@ static GList* get_class_indexes                      (JavaCompletionKlass       
 static GList* get_class_indexes_by_file_name         (gchar                     *group_folder_path,
                                                       const gchar               *index_file_name,
                                                       const gchar               *class_name);
+static gboolean has_match                            (GtkTextIter                 start);
 
 #define JAVA_COMPLETION_KLASS_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_KLASS_TYPE, JavaCompletionKlassPrivate))
@@ -59,7 +59,6 @@ java_completion_provider_interface_init (gpointer provider,
                                          gpointer data)
 {
   CodeSlayerCompletionProviderInterface *provider_interface = (CodeSlayerCompletionProviderInterface*) provider;
-  provider_interface->has_match = (gboolean (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_has_match;
   provider_interface->get_proposals = (GList* (*) (CodeSlayerCompletionProvider *obj, GtkTextIter iter)) java_completion_get_proposals;
 }
 
@@ -97,30 +96,6 @@ java_completion_klass_new (CodeSlayer       *codeslayer,
   return klass;
 }
 
-static gboolean 
-java_completion_has_match (JavaCompletionKlass *klass, 
-                           GtkTextIter           iter)
-{
-  GtkTextIter start;
-  gchar *text;
-  
-  start = iter;
-  
-  while (!gtk_text_iter_starts_word (&start))
-    gtk_text_iter_backward_char (&start);
-  
-  text = gtk_text_iter_get_text (&start, &iter);
-  
-  if (g_ascii_isupper (*text))
-    {
-      g_free (text);
-      return TRUE;
-    }
-
-  g_free (text);  
-  return FALSE;
-}
-
 static GList* 
 java_completion_get_proposals (JavaCompletionKlass *klass, 
                                GtkTextIter          iter)
@@ -137,12 +112,12 @@ java_completion_get_proposals (JavaCompletionKlass *klass,
   priv = JAVA_COMPLETION_KLASS_GET_PRIVATE (klass);
   
   start = iter;
+  java_utils_move_iter_word_start (&start);
   
-  while (!gtk_text_iter_starts_word (&start))
-    gtk_text_iter_backward_char (&start);
-  
-  text = gtk_text_iter_get_text (&start, &iter);
+  if (!has_match (start))
+    return NULL;
 
+  text = gtk_text_iter_get_text (&start, &iter);
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
   mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
   indexes = get_class_indexes (klass, text);
@@ -169,6 +144,26 @@ java_completion_get_proposals (JavaCompletionKlass *klass,
   g_free (text);  
 
   return proposals; 
+}
+
+static gboolean
+has_match (GtkTextIter start)
+{
+  gboolean result = TRUE;
+  GtkTextIter next;
+  gchar *text;
+  
+  next = start;
+  
+  gtk_text_iter_forward_char (&next);
+  text = gtk_text_iter_get_text (&start, &next);
+  
+  if (!g_ascii_isupper (*text))
+    result = FALSE;
+    
+  g_free (text);
+  
+  return result;
 }
 
 static GList*

@@ -69,3 +69,16 @@ java_utils_get_text_to_search (GtkTextView *text_view,
 
   return text;
 }
+
+void
+java_utils_move_iter_word_start (GtkTextIter *iter)
+{
+  if (!gtk_text_iter_inside_word (iter) && !gtk_text_iter_ends_word (iter))
+    return;
+    
+  if (gtk_text_iter_starts_word (iter))
+    return;
+    
+  while (!gtk_text_iter_starts_word (iter))
+    gtk_text_iter_backward_char (iter);
+}
