@@ -46,6 +46,7 @@ static void select_editor              (CodeSlayer       *codeslayer,
                                         JavaIndexerIndex *index, 
                                         gboolean          has_line_number);
 static void verify_dir_exists          (CodeSlayer       *codeslayer);
+static void index_projects_action      (JavaIndexer      *indexer);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -102,6 +103,9 @@ java_indexer_new (CodeSlayer         *codeslayer,
                                                      G_CALLBACK (editors_all_saved_action), indexer);
                                                      
   verify_dir_exists (codeslayer);
+
+  g_signal_connect_swapped (G_OBJECT (menu), "index-projects",
+                            G_CALLBACK (index_projects_action), indexer);
 
   return indexer;
 }
@@ -224,6 +228,12 @@ editors_all_saved_action (JavaIndexer *indexer,
 }
 
 static void
+index_projects_action (JavaIndexer *indexer)
+{
+  g_thread_create ((GThreadFunc) create_indexes, indexer, FALSE, NULL);
+}
+
+static void
 create_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
@@ -272,6 +282,8 @@ create_indexes (JavaIndexer *indexer)
   
   if (file != NULL)
     pclose (file);
+    
+  g_message ("indexed projects");
   
   g_free (command);
   g_free (group_folder_path);

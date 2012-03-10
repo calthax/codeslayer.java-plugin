@@ -35,6 +35,7 @@ static void attach_debugger_action  (JavaMenu      *menu);
 static void find_symbol_action      (JavaMenu      *menu);
 static void class_search_action     (JavaMenu      *menu);
 static void class_import_action     (JavaMenu      *menu);
+static void index_projects_action     (JavaMenu      *menu);
                                         
 enum
 {
@@ -46,6 +47,7 @@ enum
   FIND_SYMBOL,
   CLASS_SEARCH,
   CLASS_IMPORT,
+  INDEX_PRODUCTS,
   LAST_SIGNAL
 };
 
@@ -120,6 +122,14 @@ java_menu_class_init (JavaMenuClass *klass)
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  java_menu_signals[INDEX_PRODUCTS] =
+    g_signal_new ("index-projects", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaMenuClass, index_projects),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_menu_finalize;
 }
 
@@ -164,6 +174,7 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *find_symbol_item;
   GtkWidget *class_search_item;
   GtkWidget *class_import_item;
+  GtkWidget *index_projects_item;
   GtkWidget *separator_item;
 
   compile_item = codeslayer_menu_item_new_with_label ("Compile");
@@ -210,6 +221,12 @@ add_menu_items (JavaMenu      *menu,
   gtk_widget_add_accelerator (class_import_item, "activate", 
                               accel_group, GDK_KEY_I, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), class_import_item);
+  
+  separator_item = gtk_separator_menu_item_new ();
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
+  
+  index_projects_item = codeslayer_menu_item_new_with_label ("Index Projects");
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), index_projects_item);
 
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 
                             G_CALLBACK (compile_action), menu);
@@ -234,6 +251,9 @@ add_menu_items (JavaMenu      *menu,
    
   g_signal_connect_swapped (G_OBJECT (class_import_item), "activate", 
                             G_CALLBACK (class_import_action), menu);
+   
+  g_signal_connect_swapped (G_OBJECT (index_projects_item), "activate", 
+                            G_CALLBACK (index_projects_action), menu);
 }
 
 static void 
@@ -282,4 +302,10 @@ static void
 class_import_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "class-import");
+}
+
+static void 
+index_projects_action (JavaMenu *menu) 
+{
+  g_signal_emit_by_name ((gpointer) menu, "index-projects");
 }

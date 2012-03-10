@@ -113,11 +113,12 @@ java_completion_get_proposals (JavaCompletionWord *word,
   if (!has_match (start))
     return NULL;
 
-  text = java_utils_get_text_to_search (GTK_TEXT_VIEW (priv->editor), iter);
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
   mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
   
   start_word = gtk_text_iter_get_text (&start, &iter);
+  
+  text = java_utils_get_text_to_search (GTK_TEXT_VIEW (priv->editor), start);
   list = find_matches (text, start_word);
   tmp = list;
 
@@ -125,7 +126,7 @@ java_completion_get_proposals (JavaCompletionWord *word,
     {
       gchar *match_text = list->data;
       CodeSlayerCompletionProposal *proposal;
-      proposal = codeslayer_completion_proposal_new (match_text, match_text, mark);
+      proposal = codeslayer_completion_proposal_new (match_text, g_strstrip (match_text), mark);
       proposals = g_list_prepend (proposals, proposal);
       list = g_list_next (list);
     }
@@ -182,7 +183,7 @@ find_matches (gchar *text,
   GMatchInfo *match_info;
   GError *error = NULL;
   
-  concat = g_strconcat ("(", word, "[a-zA-Z0-9_]+)", NULL);
+  concat = g_strconcat ("(\\s", word, "[a-zA-Z0-9_]+)", NULL);
   
   regex = g_regex_new (concat, 0, 0, NULL);
   

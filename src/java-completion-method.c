@@ -99,6 +99,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   GList *proposals = NULL;
   GtkTextBuffer *buffer;
   GtkTextIter start;
+  gchar *start_word;
   GtkTextMark *mark;
   GList *indexes; 
   GList *list;
@@ -113,6 +114,10 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
   mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
+  
+  start_word = gtk_text_iter_get_text (&start, &iter);
+  
+  g_print ("start_word %s \n", start_word);
 
   indexes = java_indexer_get_indexes (priv->indexer, priv->editor, start);
   list = indexes;
@@ -122,6 +127,12 @@ java_completion_get_proposals (JavaCompletionMethod *method,
       JavaIndexerIndex *index = indexes->data;
       const gchar *name;
       name = java_indexer_index_get_method_name (index);
+      
+      if (codeslayer_utils_has_text (start_word) && !g_str_has_prefix (name, start_word))
+        {
+          indexes = g_list_next (indexes);
+          continue;
+        }
 
       if (g_strcmp0 (name, "<init>") != 0)
         {
@@ -154,6 +165,9 @@ java_completion_get_proposals (JavaCompletionMethod *method,
       g_list_free (list);
     }
     
+  if (start_word != NULL)
+    g_free (start_word);
+
   return proposals; 
 }
 
