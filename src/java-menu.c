@@ -35,7 +35,8 @@ static void attach_debugger_action  (JavaMenu      *menu);
 static void find_symbol_action      (JavaMenu      *menu);
 static void class_search_action     (JavaMenu      *menu);
 static void class_import_action     (JavaMenu      *menu);
-static void index_projects_action     (JavaMenu      *menu);
+static void index_projects_action   (JavaMenu      *menu);
+static void index_libs_action       (JavaMenu      *menu);
                                         
 enum
 {
@@ -48,6 +49,7 @@ enum
   CLASS_SEARCH,
   CLASS_IMPORT,
   INDEX_PRODUCTS,
+  INDEX_LIBS,
   LAST_SIGNAL
 };
 
@@ -130,6 +132,14 @@ java_menu_class_init (JavaMenuClass *klass)
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  java_menu_signals[INDEX_LIBS] =
+    g_signal_new ("index-libs", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaMenuClass, index_libs),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
   G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_menu_finalize;
 }
 
@@ -175,6 +185,7 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *class_search_item;
   GtkWidget *class_import_item;
   GtkWidget *index_projects_item;
+  GtkWidget *index_libs_item;
   GtkWidget *separator_item;
 
   compile_item = codeslayer_menu_item_new_with_label ("Compile");
@@ -228,6 +239,9 @@ add_menu_items (JavaMenu      *menu,
   index_projects_item = codeslayer_menu_item_new_with_label ("Index Projects");
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), index_projects_item);
 
+  index_libs_item = codeslayer_menu_item_new_with_label ("Index Libs");
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), index_libs_item);
+
   g_signal_connect_swapped (G_OBJECT (compile_item), "activate", 
                             G_CALLBACK (compile_action), menu);
    
@@ -254,6 +268,9 @@ add_menu_items (JavaMenu      *menu,
    
   g_signal_connect_swapped (G_OBJECT (index_projects_item), "activate", 
                             G_CALLBACK (index_projects_action), menu);
+   
+  g_signal_connect_swapped (G_OBJECT (index_libs_item), "activate", 
+                            G_CALLBACK (index_libs_action), menu);
 }
 
 static void 
@@ -308,4 +325,10 @@ static void
 index_projects_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "index-projects");
+}
+
+static void 
+index_libs_action (JavaMenu *menu) 
+{
+  g_signal_emit_by_name ((gpointer) menu, "index-libs");
 }

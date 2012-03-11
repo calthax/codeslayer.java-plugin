@@ -20,6 +20,7 @@
 #include "java-completion-method.h"
 #include "java-completion-class.h"
 #include "java-completion-word.h"
+#include "java-completion-variable.h"
 
 static void java_completion_class_init  (JavaCompletionClass *klass);
 static void java_completion_init        (JavaCompletion      *completion);
@@ -89,12 +90,14 @@ editor_added_action (JavaCompletion   *completion,
   JavaCompletionKlass *class;
   JavaCompletionMethod *method;
   JavaCompletionWord *word;
+  JavaCompletionVariable *variable;
   
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
   
   class = java_completion_klass_new (priv->codeslayer, editor);
   method = java_completion_method_new (editor, priv->indexer);
   word = java_completion_word_new (editor);
+  variable = java_completion_variable_new (editor);
   
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (class));
@@ -104,4 +107,7 @@ editor_added_action (JavaCompletion   *completion,
   
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (word));
+  
+  codeslayer_editor_add_completion_provider (editor, 
+                                             CODESLAYER_COMPLETION_PROVIDER (variable));
 }

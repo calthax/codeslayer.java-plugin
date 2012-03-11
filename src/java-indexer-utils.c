@@ -416,6 +416,15 @@ get_package_indexes (gchar *group_folder_path,
             }
             
           indexes = g_list_prepend (indexes, index);
+        } 
+      else 
+        {
+          if (indexes != NULL)
+            {
+              g_strfreev (split);
+              g_free (text);
+              break;            
+            }
         }
         
       g_strfreev (split);

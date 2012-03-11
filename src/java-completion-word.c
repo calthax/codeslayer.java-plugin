@@ -113,11 +113,14 @@ java_completion_get_proposals (JavaCompletionWord *word,
   if (!has_match (start))
     return NULL;
 
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
-  mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
-  
   start_word = gtk_text_iter_get_text (&start, &iter);
   
+  if (g_utf8_strlen (start_word, -1) == 0)
+    return NULL;
+
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
+  mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
+
   text = java_utils_get_text_to_search (GTK_TEXT_VIEW (priv->editor), start);
   list = find_matches (text, start_word);
   tmp = list;

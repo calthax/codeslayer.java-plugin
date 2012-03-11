@@ -100,6 +100,7 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-completion.lo \
 	libjavacodeslayerplugin_la-java-completion-method.lo \
 	libjavacodeslayerplugin_la-java-completion-word.lo \
+	libjavacodeslayerplugin_la-java-completion-variable.lo \
 	libjavacodeslayerplugin_la-java-completion-class.lo \
 	libjavacodeslayerplugin_la-java-utils.lo \
 	libjavacodeslayerplugin_la-java-class-search.lo \
@@ -298,6 +299,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-completion-method.c \
     java-completion-word.h \
     java-completion-word.c \
+    java-completion-variable.h \
+    java-completion-variable.c \
     java-completion-class.h \
     java-completion-class.c \
     java-utils.h \
@@ -387,6 +390,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-class-search.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-class.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-method.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-variable.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-word.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-configuration.Plo@am__quote@
@@ -593,6 +597,13 @@ libjavacodeslayerplugin_la-java-completion-word.lo: java-completion-word.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-completion-word.c' object='libjavacodeslayerplugin_la-java-completion-word.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion-word.lo `test -f 'java-completion-word.c' || echo '$(srcdir)/'`java-completion-word.c
+
+libjavacodeslayerplugin_la-java-completion-variable.lo: java-completion-variable.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-completion-variable.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-variable.Tpo -c -o libjavacodeslayerplugin_la-java-completion-variable.lo `test -f 'java-completion-variable.c' || echo '$(srcdir)/'`java-completion-variable.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-variable.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-variable.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='java-completion-variable.c' object='libjavacodeslayerplugin_la-java-completion-variable.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-completion-variable.lo `test -f 'java-completion-variable.c' || echo '$(srcdir)/'`java-completion-variable.c
 
 libjavacodeslayerplugin_la-java-completion-class.lo: java-completion-class.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-completion-class.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-completion-class.Tpo -c -o libjavacodeslayerplugin_la-java-completion-class.lo `test -f 'java-completion-class.c' || echo '$(srcdir)/'`java-completion-class.c

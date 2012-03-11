@@ -32,7 +32,8 @@ static GList* get_indexes              (gchar            *group_folder_path,
                                         gchar            *context_path);
 static void editors_all_saved_action   (JavaIndexer      *indexer,
                                         GList            *editors);
-static void create_indexes             (JavaIndexer      *indexer);
+static void create_projects_indexes    (JavaIndexer      *indexer);
+static void create_libs_indexes        (JavaIndexer      *indexer);
 static void find_symbol_action         (JavaIndexer      *indexer);
 static void find_method                (JavaIndexer      *indexer, 
                                         CodeSlayerEditor *editor,
@@ -47,6 +48,7 @@ static void select_editor              (CodeSlayer       *codeslayer,
                                         gboolean          has_line_number);
 static void verify_dir_exists          (CodeSlayer       *codeslayer);
 static void index_projects_action      (JavaIndexer      *indexer);
+static void index_libs_action          (JavaIndexer      *indexer);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -106,6 +108,9 @@ java_indexer_new (CodeSlayer         *codeslayer,
 
   g_signal_connect_swapped (G_OBJECT (menu), "index-projects",
                             G_CALLBACK (index_projects_action), indexer);
+
+  g_signal_connect_swapped (G_OBJECT (menu), "index-libs",
+                            G_CALLBACK (index_libs_action), indexer);
 
   return indexer;
 }
@@ -224,17 +229,23 @@ editors_all_saved_action (JavaIndexer *indexer,
     }
 
   if (found)
-    g_thread_create ((GThreadFunc) create_indexes, indexer, FALSE, NULL);
+    g_thread_create ((GThreadFunc) create_projects_indexes, indexer, FALSE, NULL);
 }
 
 static void
 index_projects_action (JavaIndexer *indexer)
 {
-  g_thread_create ((GThreadFunc) create_indexes, indexer, FALSE, NULL);
+  g_thread_create ((GThreadFunc) create_projects_indexes, indexer, FALSE, NULL);
 }
 
 static void
-create_indexes (JavaIndexer *indexer)
+index_libs_action (JavaIndexer *indexer)
+{
+  g_thread_create ((GThreadFunc) create_libs_indexes, indexer, FALSE, NULL);
+}
+
+static void
+create_projects_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
   gchar *group_folder_path;
@@ -272,7 +283,7 @@ create_indexes (JavaIndexer *indexer)
       list = g_list_next (list);
     }
 
-  string = g_string_append (string, " -indexes ");
+  string = g_string_append (string, " -indexesfolder ");
   string = g_string_append (string, index_file_name);
   string = g_string_append (string, " -type projects ");
 
@@ -288,6 +299,69 @@ create_indexes (JavaIndexer *indexer)
   g_free (command);
   g_free (group_folder_path);
   g_free (index_file_name);
+}
+
+static void
+create_libs_indexes (JavaIndexer *indexer)
+{
+  JavaIndexerPrivate *priv;
+  gchar *group_folder_path;
+  gchar *index_file_name;
+  gchar *zip_file_name;
+  gchar *tmp_file_name;
+  FILE *file;
+  GList *list;
+  GString *string;
+  gchar *command;
+
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
+  tmp_file_name = g_build_filename (group_folder_path, "indexes", "tmp", NULL);
+  zip_file_name = g_build_filename (g_getenv ("JAVA_HOME"), "src.zip", NULL);
+  
+  string = g_string_new ("codeslayer-jindexer -libfolder ");
+  
+  list = java_configurations_get_list (priv->configurations);
+  while (list != NULL)
+    {
+      JavaConfiguration *configuration = list->data;
+      const gchar *lib_folder;
+      lib_folder = java_configuration_get_lib_folder (configuration);
+      if (codeslayer_utils_has_text (lib_folder))
+        {
+          string = g_string_append (string, lib_folder);
+          string = g_string_append (string, ":");        
+        }
+      list = g_list_next (list);
+    }
+
+  string = g_string_append (string, " -indexesfolder ");
+  string = g_string_append (string, index_file_name);
+  string = g_string_append (string, " -zipfile ");
+  string = g_string_append (string, zip_file_name);
+  string = g_string_append (string, " -tmpfolder ");
+  string = g_string_append (string, tmp_file_name);
+  string = g_string_append (string, " -type libs ");
+
+  command = g_string_free (string, FALSE);
+  
+  g_print ("env %s\n", g_getenv ("JAVA_HOME"));
+  
+  g_print ("command: %s\n", command);
+  
+  file = popen (command, "r");
+  
+  if (file != NULL)
+    pclose (file);
+    
+  g_message ("indexed libs");
+  
+  g_free (command);
+  g_free (group_folder_path);
+  g_free (index_file_name);
+  g_free (zip_file_name);
 }
 
 static void 

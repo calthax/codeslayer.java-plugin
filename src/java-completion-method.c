@@ -117,8 +117,6 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   
   start_word = gtk_text_iter_get_text (&start, &iter);
   
-  g_print ("start_word %s \n", start_word);
-
   indexes = java_indexer_get_indexes (priv->indexer, priv->editor, start);
   list = indexes;
   

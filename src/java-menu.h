@@ -50,6 +50,7 @@ struct _JavaMenuClass
   void (*class_search) (JavaMenu *menu);
   void (*class_import) (JavaMenu *menu);
   void (*index_projects) (JavaMenu *menu);
+  void (*index_libs) (JavaMenu *menu);
 };
 
 GType java_menu_get_type (void) G_GNUC_CONST;
