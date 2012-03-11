@@ -308,6 +308,7 @@ create_libs_indexes (JavaIndexer *indexer)
   gchar *group_folder_path;
   gchar *index_file_name;
   gchar *zip_file_name;
+  gchar *suppressions_file_name;
   gchar *tmp_file_name;
   FILE *file;
   GList *list;
@@ -320,6 +321,8 @@ create_libs_indexes (JavaIndexer *indexer)
   index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
   tmp_file_name = g_build_filename (group_folder_path, "indexes", "tmp", NULL);
   zip_file_name = g_build_filename (g_getenv ("JAVA_HOME"), "src.zip", NULL);
+  suppressions_file_name = g_build_filename (g_getenv ("CODESLAYER_JAVA_HOME"), 
+                                             "bin", "jindexer.suppressions", NULL);
   
   string = g_string_new ("codeslayer-jindexer -libfolder ");
   
@@ -343,11 +346,11 @@ create_libs_indexes (JavaIndexer *indexer)
   string = g_string_append (string, zip_file_name);
   string = g_string_append (string, " -tmpfolder ");
   string = g_string_append (string, tmp_file_name);
+  string = g_string_append (string, " -suppressionsfile ");
+  string = g_string_append (string, suppressions_file_name);
   string = g_string_append (string, " -type libs ");
 
   command = g_string_free (string, FALSE);
-  
-  g_print ("env %s\n", g_getenv ("JAVA_HOME"));
   
   g_print ("command: %s\n", command);
   
@@ -356,12 +359,13 @@ create_libs_indexes (JavaIndexer *indexer)
   if (file != NULL)
     pclose (file);
     
-  g_message ("indexed libs");
+  g_print ("The libs are indexed.");
   
   g_free (command);
   g_free (group_folder_path);
   g_free (index_file_name);
   g_free (zip_file_name);
+  g_free (suppressions_file_name);
 }
 
 static void 
