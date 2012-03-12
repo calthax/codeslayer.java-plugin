@@ -289,12 +289,14 @@ create_projects_indexes (JavaIndexer *indexer)
 
   command = g_string_free (string, FALSE);
   
+  g_print ("command: %s\n", command);
+  
   file = popen (command, "r");
   
   if (file != NULL)
     pclose (file);
     
-  g_message ("indexed projects");
+  g_print ("The projects are indexed.\n");
   
   g_free (command);
   g_free (group_folder_path);
@@ -340,14 +342,14 @@ create_libs_indexes (JavaIndexer *indexer)
       list = g_list_next (list);
     }
 
-  string = g_string_append (string, " -indexesfolder ");
-  string = g_string_append (string, index_file_name);
   string = g_string_append (string, " -zipfile ");
   string = g_string_append (string, zip_file_name);
   string = g_string_append (string, " -tmpfolder ");
   string = g_string_append (string, tmp_file_name);
   string = g_string_append (string, " -suppressionsfile ");
   string = g_string_append (string, suppressions_file_name);
+  string = g_string_append (string, " -indexesfolder ");
+  string = g_string_append (string, index_file_name);
   string = g_string_append (string, " -type libs ");
 
   command = g_string_free (string, FALSE);
@@ -359,7 +361,7 @@ create_libs_indexes (JavaIndexer *indexer)
   if (file != NULL)
     pclose (file);
     
-  g_print ("The libs are indexed.");
+  g_print ("The libs are indexed.\n");
   
   g_free (command);
   g_free (group_folder_path);
