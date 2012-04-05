@@ -84,13 +84,17 @@ java_class_search_finalize (JavaClassSearch *search)
 {
   JavaClassSearchPrivate *priv;
   priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
-  gtk_widget_destroy (priv->dialog);
+  
+  if (priv->dialog != NULL)
+    gtk_widget_destroy (priv->dialog);
+  
   if (priv->indexes != NULL)
     {
       g_list_foreach (priv->indexes, (GFunc) g_object_unref, NULL);
       g_list_free (priv->indexes);
       priv->indexes = NULL;
     }
+  
   G_OBJECT_CLASS (java_class_search_parent_class)-> finalize (G_OBJECT (search));
 }
 

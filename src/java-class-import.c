@@ -86,7 +86,8 @@ java_class_import_finalize (JavaClassImport *import)
 {
   JavaClassImportPrivate *priv;
   priv = JAVA_CLASS_IMPORT_GET_PRIVATE (import);
-  gtk_widget_destroy (priv->dialog);
+  if (priv->dialog != NULL)
+    gtk_widget_destroy (priv->dialog);
   G_OBJECT_CLASS (java_class_import_parent_class)-> finalize (G_OBJECT (import));
 }
 
