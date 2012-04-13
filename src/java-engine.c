@@ -21,7 +21,7 @@
 #include "java-engine.h"
 #include "java-indexer.h"
 #include "java-debugger.h"
-#include "java-output.h"
+#include "java-build.h"
 #include "java-page.h"
 #include "java-project-properties.h"
 #include "java-configuration.h"
@@ -51,7 +51,7 @@ struct _JavaEnginePrivate
   CodeSlayer         *codeslayer;
   JavaCompletion     *completion;
   JavaConfigurations *configurations;
-  JavaOutput         *output;
+  JavaBuild          *build;
   JavaDebugger       *debugger;
   JavaIndexer        *indexer;
   JavaClassSearch    *search;
@@ -84,7 +84,7 @@ java_engine_finalize (JavaEngine *engine)
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
   g_signal_handler_disconnect (priv->codeslayer, priv->properties_opened_id);
   g_signal_handler_disconnect (priv->codeslayer, priv->properties_saved_id);
-  g_object_unref (priv->output);
+  g_object_unref (priv->build);
   g_object_unref (priv->debugger);
   g_object_unref (priv->configurations);
   g_object_unref (priv->indexer);
@@ -115,7 +115,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->projects_popup = projects_popup;
   priv->notebook = notebook;
   
-  priv->output = java_output_new (codeslayer, configurations, menu, projects_popup, notebook);
+  priv->build = java_build_new (codeslayer, configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
   priv->indexer = java_indexer_new (codeslayer, menu, configurations);
   priv->completion = java_completion_new  (codeslayer, priv->indexer);
