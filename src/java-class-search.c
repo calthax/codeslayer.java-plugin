@@ -147,11 +147,14 @@ run_dialog (JavaClassSearch *search)
 
       content_area = gtk_dialog_get_content_area (GTK_DIALOG (priv->dialog));
       
-      vbox = gtk_vbox_new (FALSE, 1);
+      vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
+      gtk_box_set_homogeneous (GTK_BOX (vbox), FALSE);
       
       /* the completion box */
       
-      hbox = gtk_hbox_new (FALSE, 2);
+      hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
+      gtk_box_set_homogeneous (GTK_BOX (hbox), FALSE);
+      
       label = gtk_label_new ("Class: ");
       priv->entry = gtk_entry_new ();
       gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 2);

@@ -210,7 +210,7 @@ find_matches (gchar *text,
   
   if (error != NULL)
     {
-      g_printerr ("search text for import error: %s\n", error->message);
+      g_printerr ("search text for completion word error: %s\n", error->message);
       g_error_free (error);
     }
     

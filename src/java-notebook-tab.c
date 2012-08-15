@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <codeslayer/codeslayer-utils.h>
 #include "java-notebook-tab.h"
 
 static void java_notebook_tab_class_init  (JavaNotebookTabClass *klass);
@@ -98,16 +99,7 @@ java_notebook_tab_new (GtkWidget   *notebook,
   gtk_button_set_focus_on_click (GTK_BUTTON (button), FALSE);
   image = gtk_image_new_from_stock (GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
   gtk_container_add (GTK_CONTAINER (button), image);
-
-  gtk_rc_parse_string ("style \"my-button-style\"\n"
-                       "{\n"
-                       "  GtkWidget::focus-padding = 0\n"
-                       "  GtkWidget::focus-line-width = 0\n"
-                       "  xthickness = 0\n"
-                       "  ythickness = 0\n"
-                       "}\n"
-                       "widget \"*.my-close-button\" style \"my-button-style\"");
-  gtk_widget_set_name (button, "my-close-button");
+  codeslayer_utils_style_close_button (button);
 
   g_signal_connect_swapped (G_OBJECT (button), "clicked",
                             G_CALLBACK (close_action), notebook_tab);
