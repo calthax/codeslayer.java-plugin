@@ -45,6 +45,7 @@ struct _JavaMenuClass
   void (*clean) (JavaMenu *menu);
   void (*test_file) (JavaMenu *menu);
   void (*debug_test_file) (JavaMenu *menu);
+  void (*connect_server) (JavaMenu *menu);
   void (*attach_debugger) (JavaMenu *menu);
   void (*find_symbol) (JavaMenu *menu);
   void (*class_search) (JavaMenu *menu);

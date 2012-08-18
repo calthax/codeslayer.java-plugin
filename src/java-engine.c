@@ -26,6 +26,7 @@
 #include "java-project-properties.h"
 #include "java-configuration.h"
 #include "java-completion.h"
+#include "java-client.h"
 #include "java-notebook.h"
 #include "java-class-search.h"
 #include "java-class-import.h"
@@ -49,6 +50,7 @@ typedef struct _JavaEnginePrivate JavaEnginePrivate;
 struct _JavaEnginePrivate
 {
   CodeSlayer         *codeslayer;
+  JavaClient         *client;
   JavaCompletion     *completion;
   JavaConfigurations *configurations;
   JavaBuild          *build;
@@ -115,6 +117,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->projects_popup = projects_popup;
   priv->notebook = notebook;
   
+  priv->client = java_client_new (codeslayer);
   priv->build = java_build_new (codeslayer, configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
   priv->indexer = java_indexer_new (codeslayer, menu, configurations);

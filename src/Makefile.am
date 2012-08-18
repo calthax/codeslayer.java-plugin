@@ -6,6 +6,8 @@ INCLUDES = \
 lib_LTLIBRARIES = libjavacodeslayerplugin.la
 
 libjavacodeslayerplugin_la_SOURCES = \
+    java-client.h \
+    java-client.c \
     java-engine.h \
     java-engine.c \
     java-page.h \
