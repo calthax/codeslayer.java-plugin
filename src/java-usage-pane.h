@@ -19,6 +19,7 @@
 #ifndef __JAVA_USAGE_PANE_H__
 #define	__JAVA_USAGE_PANE_H__
 
+#include <codeslayer/codeslayer.h>
 #include <gtk/gtk.h>
 #include "java-page.h"
 
@@ -45,9 +46,11 @@ struct _JavaUsagePaneClass
 
 GType java_usage_pane_get_type (void) G_GNUC_CONST;
 
-GtkWidget*    java_usage_pane_new            (JavaPageType    page_type);
+GtkWidget*  java_usage_pane_new         (CodeSlayer *codeslayer, 
+                                         JavaPageType   page_type);
 
-GtkTextView*  java_usage_pane_get_text_view  (JavaUsagePane *build_pane);
+void        java_usage_pane_set_usages  (JavaUsagePane *usage_pane, 
+                                         GList         *usages);
 
 G_END_DECLS
 

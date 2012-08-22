@@ -24,20 +24,20 @@
 #include "java-utils.h"
 #include "java-page.h"
 
-static void              java_usage_class_init          (JavaUsageClass  *klass);
-static void              java_usage_init                (JavaUsage       *usage);
-static void              java_usage_finalize            (JavaUsage       *usage);
+static void java_usage_class_init              (JavaUsageClass  *klass);
+static void java_usage_init                    (JavaUsage       *usage);
+static void java_usage_finalize                (JavaUsage       *usage);
 
-static void              method_usage_action            (JavaUsage       *usage);
-static gchar*            get_input                      (JavaUsage       *usage, 
-                                                         const gchar     *file_path, 
-                                                         gchar           *method_name, 
-                                                         gint             line_number);
+static void method_usage_action                (JavaUsage       *usage);
+static gchar* get_input                        (JavaUsage       *usage, 
+                                                const gchar     *file_path, 
+                                                gchar           *method_name, 
+                                                gint             line_number);
                                        
-static GList*            get_usage_methods_from_output  (gchar           *output);
-static gint              sort_usage_methods             (JavaUsageMethod *usage_method1, 
-                                                         JavaUsageMethod *usage_method2);
-static JavaUsageMethod*  get_java_usage_method          (gchar           *text);
+static GList* get_usage_methods_from_output    (gchar           *output);
+static gint sort_usage_methods                 (JavaUsageMethod *usage_method1, 
+                                                JavaUsageMethod *usage_method2);
+static JavaUsageMethod* get_java_usage_method  (gchar           *text);
 
 #define JAVA_USAGE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_USAGE_TYPE, JavaUsagePrivate))
@@ -153,8 +153,9 @@ method_usage_action (JavaUsage *usage)
     {
       GtkWidget *usage_pane;
       g_print ("have usage methods\n");
-      usage_pane = java_usage_pane_new (JAVA_PAGE_TYPE_USAGE);
+      usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
       java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Usages");
+      java_usage_pane_set_usages (JAVA_USAGE_PANE (usage_pane), usage_methods);
     }
   
   if (output != NULL)
