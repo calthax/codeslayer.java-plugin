@@ -21,7 +21,7 @@
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
-#include "java-configuration.h"
+#include "java-configurations.h"
 
 G_BEGIN_DECLS
 
@@ -29,7 +29,10 @@ gchar*  java_utils_get_class_name        (JavaConfiguration  *configuration,
                                           CodeSlayerDocument *document);                                    
 gchar*  java_utils_get_text_to_search    (GtkTextView        *text_view, 
                                           GtkTextIter         iter);                                    
-void    java_utils_move_iter_word_start  (GtkTextIter        *iter);                                    
+void    java_utils_move_iter_word_start  (GtkTextIter        *iter);  
+gchar*  get_source_indexes_folders       (CodeSlayer         *codeslayer, 
+                                          JavaConfigurations *configurations);
+                                  
 
 G_END_DECLS
 

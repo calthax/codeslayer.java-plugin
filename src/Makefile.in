@@ -123,6 +123,9 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-utils.lo \
 	libjavacodeslayerplugin_la-java-class-search.lo \
 	libjavacodeslayerplugin_la-java-class-import.lo \
+	libjavacodeslayerplugin_la-java-usage.lo \
+	libjavacodeslayerplugin_la-java-usage-method.lo \
+	libjavacodeslayerplugin_la-java-usage-pane.lo \
 	libjavacodeslayerplugin_la-java-plugin.lo
 libjavacodeslayerplugin_la_OBJECTS =  \
 	$(am_libjavacodeslayerplugin_la_OBJECTS)
@@ -360,6 +363,12 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-class-search.c \
     java-class-import.h \
     java-class-import.c \
+    java-usage.h \
+    java-usage.c \
+    java-usage-method.h \
+    java-usage-method.c \
+    java-usage-pane.h \
+    java-usage-pane.c \
     java-plugin.c
 
 libjavacodeslayerplugin_la_CPPFLAGS = -I$(top_srcdir)
@@ -469,6 +478,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-project-properties.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-projects-popup.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage-method.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage-pane.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-utils.Plo@am__quote@
 
 .c.o:
@@ -694,6 +706,27 @@ libjavacodeslayerplugin_la-java-class-import.lo: java-class-import.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-class-import.c' object='libjavacodeslayerplugin_la-java-class-import.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-class-import.lo `test -f 'java-class-import.c' || echo '$(srcdir)/'`java-class-import.c
+
+libjavacodeslayerplugin_la-java-usage.lo: java-usage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-usage.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-usage.Tpo -c -o libjavacodeslayerplugin_la-java-usage.lo `test -f 'java-usage.c' || echo '$(srcdir)/'`java-usage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-usage.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-usage.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-usage.c' object='libjavacodeslayerplugin_la-java-usage.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-usage.lo `test -f 'java-usage.c' || echo '$(srcdir)/'`java-usage.c
+
+libjavacodeslayerplugin_la-java-usage-method.lo: java-usage-method.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-usage-method.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-usage-method.Tpo -c -o libjavacodeslayerplugin_la-java-usage-method.lo `test -f 'java-usage-method.c' || echo '$(srcdir)/'`java-usage-method.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-usage-method.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-usage-method.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-usage-method.c' object='libjavacodeslayerplugin_la-java-usage-method.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-usage-method.lo `test -f 'java-usage-method.c' || echo '$(srcdir)/'`java-usage-method.c
+
+libjavacodeslayerplugin_la-java-usage-pane.lo: java-usage-pane.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-usage-pane.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-usage-pane.Tpo -c -o libjavacodeslayerplugin_la-java-usage-pane.lo `test -f 'java-usage-pane.c' || echo '$(srcdir)/'`java-usage-pane.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-usage-pane.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-usage-pane.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-usage-pane.c' object='libjavacodeslayerplugin_la-java-usage-pane.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-usage-pane.lo `test -f 'java-usage-pane.c' || echo '$(srcdir)/'`java-usage-pane.c
 
 libjavacodeslayerplugin_la-java-plugin.lo: java-plugin.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-plugin.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-plugin.Tpo -c -o libjavacodeslayerplugin_la-java-plugin.lo `test -f 'java-plugin.c' || echo '$(srcdir)/'`java-plugin.c

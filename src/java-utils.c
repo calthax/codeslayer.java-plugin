@@ -82,3 +82,47 @@ java_utils_move_iter_word_start (GtkTextIter *iter)
   while (!gtk_text_iter_starts_word (iter))
     gtk_text_iter_backward_char (iter);
 }
+
+gchar*
+get_source_indexes_folders (CodeSlayer         *codeslayer, 
+                            JavaConfigurations *configurations)
+{
+  gchar *group_folder_path;
+  gchar *index_file_name;
+  GList *list;
+  GString *string;
+
+  group_folder_path = codeslayer_get_active_group_folder_path (codeslayer);
+  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
+  
+  string = g_string_new (" -sourcefolder ");
+  
+  list = java_configurations_get_list (configurations);
+  while (list != NULL)
+    {
+      JavaConfiguration *configuration = list->data;
+      const gchar *source_folder;
+      const gchar *test_folder;
+      source_folder = java_configuration_get_source_folder (configuration);
+      test_folder = java_configuration_get_test_folder (configuration);
+      if (codeslayer_utils_has_text (source_folder))
+        {
+          string = g_string_append (string, source_folder);
+          string = g_string_append (string, ":");        
+        }
+      if (codeslayer_utils_has_text (test_folder))
+        {
+          string = g_string_append (string, test_folder);
+          string = g_string_append (string, ":");        
+        }
+      list = g_list_next (list);
+    }
+
+  string = g_string_append (string, " -indexesfolder ");
+  string = g_string_append (string, index_file_name);
+
+  g_free (group_folder_path);
+  g_free (index_file_name);
+  
+  return g_string_free (string, FALSE);
+}

@@ -34,18 +34,6 @@ static void editors_all_saved_action   (JavaIndexer      *indexer,
                                         GList            *editors);
 static void create_projects_indexes    (JavaIndexer      *indexer);
 static void create_libs_indexes        (JavaIndexer      *indexer);
-static void find_symbol_action         (JavaIndexer      *indexer);
-static void find_method                (JavaIndexer      *indexer, 
-                                        CodeSlayerEditor *editor,
-                                        GtkTextIter       iter, 
-                                        gchar            *text);
-static void find_class                 (JavaIndexer      *indexer, 
-                                        CodeSlayerEditor *editor,
-                                        GtkTextIter       iter, 
-                                        gchar            *class_name);
-static void select_editor              (CodeSlayer       *codeslayer, 
-                                        JavaIndexerIndex *index, 
-                                        gboolean          has_line_number);
 static void verify_dir_exists          (CodeSlayer       *codeslayer);
 static void index_projects_action      (JavaIndexer      *indexer);
 static void index_libs_action          (JavaIndexer      *indexer);
@@ -97,9 +85,6 @@ java_indexer_new (CodeSlayer         *codeslayer,
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
-
-  g_signal_connect_swapped (G_OBJECT (menu), "find-symbol",
-                            G_CALLBACK (find_symbol_action), indexer);
 
   priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
                                                      G_CALLBACK (editors_all_saved_action), indexer);
@@ -368,159 +353,6 @@ create_libs_indexes (JavaIndexer *indexer)
   g_free (index_file_name);
   g_free (zip_file_name);
   g_free (suppressions_file_name);
-}
-
-static void 
-find_symbol_action (JavaIndexer *indexer)
-{
-  JavaIndexerPrivate *priv;
-  CodeSlayerEditor *editor;
-  CodeSlayerDocument *document;
-  const gchar *file_path;
-  GtkTextBuffer *buffer;
-
-  GtkTextMark *insert_mark;
-  GtkTextMark *selection_mark;
-  gchar *text;
-
-  GtkTextIter start, end;
-
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-
-  editor = codeslayer_get_active_editor (priv->codeslayer);
-  
-  if (editor == NULL)
-    return;
-    
-  document = codeslayer_editor_get_document (editor);
-  file_path = codeslayer_document_get_file_path (document);
-  if (!g_str_has_suffix (file_path, ".java"))
-    return;
-  
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
-
-  insert_mark = gtk_text_buffer_get_insert (buffer);    
-  selection_mark = gtk_text_buffer_get_selection_bound (buffer);
-
-  gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
-  gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
-
-  text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
-  
-  if (text != NULL)
-    g_strstrip (text);
-  
-  g_print ("select %s\n", text);
-  
-  if (g_ascii_isupper (*text))
-    find_class (indexer, editor, start, text);
-  else
-    find_method (indexer, editor, start, text);
-  
-  if (text != NULL)
-    g_free (text);
-}
-
-static void
-find_class (JavaIndexer      *indexer, 
-            CodeSlayerEditor *editor,
-            GtkTextIter       iter, 
-            gchar            *class_name)
-{
-  JavaIndexerPrivate *priv;
-  gchar *text;
-  gchar *package_name;
-  gchar *group_folder_path;
-  GList *indexes;
-  GList *list = NULL;
-  
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  
-  text = java_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
-  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-  package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
-  
-  g_print ("package_name %s\n", package_name);
-  
-  indexes = java_indexer_utils_get_indexes (group_folder_path, package_name);
-  g_free (group_folder_path);
-  
-  list = indexes;
-  
-  if (indexes != NULL)
-    {
-      JavaIndexerIndex *index = indexes->data;
-      select_editor (priv->codeslayer, index, FALSE);
-    }
-
-  if (list != NULL)
-    {
-      g_list_foreach (list, (GFunc) g_object_unref, NULL);
-      g_list_free (list);
-    }
-}
-static void
-find_method (JavaIndexer      *indexer, 
-             CodeSlayerEditor *editor,
-             GtkTextIter       iter, 
-             gchar            *text)
-{
-  JavaIndexerPrivate *priv;
-  GList *indexes;
-  GList *list = NULL;
-  
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  
-  indexes = java_indexer_get_indexes (indexer, editor, iter);
-  
-  list = indexes;
-  
-  while (indexes != NULL)
-    {
-      JavaIndexerIndex *index = indexes->data;
-      const gchar *method_name;
-      method_name = java_indexer_index_get_method_name (index);
-
-      if (g_strcmp0 (method_name, text) == 0)
-        {
-          select_editor (priv->codeslayer, index, TRUE);
-          break;
-        }
-        
-      indexes = g_list_next (indexes);
-    }
-
-  if (list != NULL)
-    {
-      g_list_foreach (list, (GFunc) g_object_unref, NULL);
-      g_list_free (list);
-    }
-}
-
-static void
-select_editor (CodeSlayer       *codeslayer, 
-               JavaIndexerIndex *index, 
-               gboolean          has_line_number)
-{
-  const gchar *file_path;
-  gint line_number;
-  CodeSlayerDocument *document;
-  CodeSlayerProject *project;
-  
-  file_path = java_indexer_index_get_file_path (index);
-  line_number = java_indexer_index_get_line_number (index);
-
-  document = codeslayer_document_new ();
-  project = codeslayer_get_project_by_file_path (codeslayer, file_path);
-
-  codeslayer_document_set_file_path (document, file_path);
-  if (has_line_number)
-    codeslayer_document_set_line_number (document, line_number);
-  codeslayer_document_set_project (document, project);
-
-  codeslayer_select_editor (codeslayer, document);
-  
-  g_object_unref (document);
 }
 
 static void

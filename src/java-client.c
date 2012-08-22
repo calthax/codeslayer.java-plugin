@@ -106,6 +106,7 @@ java_client_send (JavaClient *client,
   gint received;
   gint position;
   GString *page;
+  gchar *text;
 
   priv = JAVA_CLIENT_GET_PRIVATE (client);
 
@@ -119,7 +120,11 @@ java_client_send (JavaClient *client,
         }
     }
 
-  g_socket_send_with_blocking (priv->socket, message, strlen(message), FALSE, NULL, &error);
+  text = g_strconcat (message, "\n", NULL);
+
+  g_socket_send_with_blocking (priv->socket, text, strlen(text), FALSE, NULL, &error);
+  
+  g_free (text);
 
   if (error != NULL)
     {
@@ -137,7 +142,6 @@ java_client_send (JavaClient *client,
         }
       break;
     }
-    g_print ("finished\n");
     
   return g_string_free (page, FALSE);
 }

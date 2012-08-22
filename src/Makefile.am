@@ -64,6 +64,12 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-class-search.c \
     java-class-import.h \
     java-class-import.c \
+    java-usage.h \
+    java-usage.c \
+    java-usage-method.h \
+    java-usage-method.c \
+    java-usage-pane.h \
+    java-usage-pane.c \
     java-plugin.c
 
 libjavacodeslayerplugin_la_CPPFLAGS = -I$(top_srcdir)

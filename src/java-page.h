@@ -29,7 +29,8 @@ typedef enum
 {
   JAVA_PAGE_TYPE_COMPILER,
   JAVA_PAGE_TYPE_TESTER, 
-  JAVA_PAGE_TYPE_DEBUGGER, 
+  JAVA_PAGE_TYPE_DEBUGGER,
+  JAVA_PAGE_TYPE_USAGE,
 } JavaPageType;
 
 #define JAVA_PAGE_TYPE                (java_page_get_type ())

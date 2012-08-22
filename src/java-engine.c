@@ -28,7 +28,7 @@
 #include "java-completion.h"
 #include "java-client.h"
 #include "java-notebook.h"
-#include "java-class-search.h"
+#include "java-usage.h"
 #include "java-class-import.h"
 
 static void java_engine_class_init                       (JavaEngineClass   *klass);
@@ -56,7 +56,7 @@ struct _JavaEnginePrivate
   JavaBuild          *build;
   JavaDebugger       *debugger;
   JavaIndexer        *indexer;
-  JavaClassSearch    *search;
+  JavaUsage          *usage;
   JavaClassImport    *import;
   GtkWidget          *menu;
   GtkWidget          *project_properties;
@@ -91,7 +91,7 @@ java_engine_finalize (JavaEngine *engine)
   g_object_unref (priv->configurations);
   g_object_unref (priv->indexer);
   g_object_unref (priv->completion);
-  g_object_unref (priv->search);
+  g_object_unref (priv->usage);
   g_object_unref (priv->import);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
@@ -122,7 +122,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
   priv->indexer = java_indexer_new (codeslayer, menu, configurations);
   priv->completion = java_completion_new  (codeslayer, priv->indexer);
-  priv->search = java_class_search_new (codeslayer, menu);
+  priv->usage = java_usage_new (codeslayer, menu, notebook, configurations, priv->client);
   priv->import = java_class_import_new (codeslayer, menu);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
