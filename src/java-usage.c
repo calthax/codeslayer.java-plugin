@@ -33,7 +33,8 @@ static gchar* get_input                        (JavaUsage       *usage,
                                                 const gchar     *file_path, 
                                                 gchar           *method_name, 
                                                 gint             line_number);
-                                       
+static void render_output                      (JavaUsage       *usage,
+                                                gchar           *output);
 static GList* get_usage_methods_from_output    (gchar           *output);
 static gint sort_usage_methods                 (JavaUsageMethod *usage_method1, 
                                                 JavaUsageMethod *usage_method2);
@@ -108,7 +109,6 @@ method_usage_action (JavaUsage *usage)
   gint line_number;
   gchar *input;
   gchar *output;
-  GList *usage_methods;
 
   GtkTextIter start, end;
 
@@ -145,25 +145,12 @@ method_usage_action (JavaUsage *usage)
   
   if (output != NULL)
     {
-      g_print ("output %s\n", output);
-      
-      usage_methods = get_usage_methods_from_output (output);
-      
-      if (usage_methods != NULL)
-        {
-          GtkWidget *usage_pane;
-          usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
-          java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Usages");
-          java_usage_pane_set_usages (JAVA_USAGE_PANE (usage_pane), usage_methods);
-          java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), JAVA_PAGE_TYPE_USAGE);
-        }
-      
+      render_output (usage, output);
       g_free (output);
-      
     }
 
   g_free (method_name);
-  g_free (input);    
+  g_free (input);
 }
 
 static gchar* 
@@ -195,6 +182,34 @@ get_input (JavaUsage   *usage,
   g_free (line_number_str);
 
   return result;
+}
+
+static void
+render_output (JavaUsage *usage,
+               gchar     *output)
+{
+  JavaUsagePrivate *priv;
+  GList *usage_methods;
+  
+  priv = JAVA_USAGE_GET_PRIVATE (usage);
+  
+  usage_methods = get_usage_methods_from_output (output);
+
+  if (usage_methods != NULL)
+    {
+      GtkWidget *usage_pane;
+      
+      usage_pane = java_notebook_get_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
+                                                   JAVA_PAGE_TYPE_USAGE);
+      if (usage_pane == NULL)
+        {
+          usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
+          java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Method Usage");
+        }
+      
+      java_usage_pane_set_usage_methods (JAVA_USAGE_PANE (usage_pane), usage_methods);
+      java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), JAVA_PAGE_TYPE_USAGE);
+    }
 }
 
 static GList*
@@ -259,30 +274,3 @@ get_java_usage_method (gchar *text)
 
   return usage_method;
 }
-
-/*static void
-select_editor (CodeSlayer       *codeslayer, 
-               JavaIndexerIndex *index, 
-               gboolean          has_line_number)
-{
-  const gchar *file_path;
-  gint line_number;
-  CodeSlayerDocument *document;
-  CodeSlayerProject *project;
-  
-  file_path = java_indexer_index_get_file_path (index);
-  line_number = java_indexer_index_get_line_number (index);
-
-  document = codeslayer_document_new ();
-  project = codeslayer_get_project_by_file_path (codeslayer, file_path);
-
-  codeslayer_document_set_file_path (document, file_path);
-  if (has_line_number)
-    codeslayer_document_set_line_number (document, line_number);
-  codeslayer_document_set_project (document, project);
-
-  codeslayer_select_editor (codeslayer, document);
-  
-  g_object_unref (document);
-}*/
-

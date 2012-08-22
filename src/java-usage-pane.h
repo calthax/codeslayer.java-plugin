@@ -46,11 +46,11 @@ struct _JavaUsagePaneClass
 
 GType java_usage_pane_get_type (void) G_GNUC_CONST;
 
-GtkWidget*  java_usage_pane_new         (CodeSlayer *codeslayer, 
-                                         JavaPageType   page_type);
+GtkWidget*  java_usage_pane_new                (CodeSlayer *codeslayer, 
+                                                JavaPageType   page_type);
 
-void        java_usage_pane_set_usages  (JavaUsagePane *usage_pane, 
-                                         GList         *usages);
+void        java_usage_pane_set_usage_methods  (JavaUsagePane *usage_pane, 
+                                                GList         *usages);
 
 G_END_DECLS
 

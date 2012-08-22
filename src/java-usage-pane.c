@@ -60,6 +60,7 @@ enum
   FILE_PATH = 0,
   LINE_NUMBER,
   TEXT,
+  USAGE_METHOD,
   COLUMNS
 };
 
@@ -105,7 +106,8 @@ java_usage_pane_init (JavaUsagePane *usage_pane)
   treeview = gtk_tree_view_new ();
   priv->treeview = treeview;
 
-  treestore = gtk_tree_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_INT, G_TYPE_POINTER);
+  treestore = gtk_tree_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_INT, 
+                                  G_TYPE_STRING, G_TYPE_POINTER);
   
   priv->treestore = treestore;
 
@@ -161,16 +163,19 @@ java_usage_pane_new (CodeSlayer   *codeslayer,
 }
 
 void
-java_usage_pane_set_usages (JavaUsagePane *usage_pane, 
-                            GList         *usages)
+java_usage_pane_set_usage_methods (JavaUsagePane *usage_pane, 
+                                   GList         *method_usages)
 {
   JavaUsagePanePrivate *priv;
   
   priv = JAVA_USAGE_PANE_GET_PRIVATE (usage_pane);
   
-  while (usages != NULL)
+  if (priv->treestore != NULL)
+    gtk_tree_store_clear (priv->treestore);
+  
+  while (method_usages != NULL)
     {
-      JavaUsageMethod *usage_method = usages->data;
+      JavaUsageMethod *usage_method = method_usages->data;
       GtkTreeIter iter;
       gchar *line_text;
       gchar *full_text;
@@ -189,12 +194,13 @@ java_usage_pane_set_usages (JavaUsagePane *usage_pane,
                           FILE_PATH, java_usage_method_get_file_path (usage_method), 
                           LINE_NUMBER, java_usage_method_get_line_number (usage_method), 
                           TEXT, full_text, 
+                          USAGE_METHOD, usage_method, 
                           -1);
                           
       g_free (line_text);
       g_free (full_text);
                           
-      usages = g_list_next (usages);
+      method_usages = g_list_next (method_usages);
     }
 }
 
@@ -215,12 +221,14 @@ select_usage (JavaUsagePane     *usage_pane,
     {
       gchar *file_path = NULL;
       gint line_number;
+      JavaUsageMethod *usage;
       CodeSlayerDocument *document;
       CodeSlayerProject *project;
 
       gtk_tree_model_get (GTK_TREE_MODEL (priv->treestore), &iter,
                           FILE_PATH, &file_path,
-                          LINE_NUMBER, &line_number, -1);
+                          LINE_NUMBER, &line_number, 
+                          USAGE_METHOD, &usage, -1);
 
       /*if (file_path == NULL)
         {
