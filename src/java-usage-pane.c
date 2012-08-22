@@ -60,7 +60,6 @@ enum
   FILE_PATH = 0,
   LINE_NUMBER,
   TEXT,
-  USAGE,
   COLUMNS
 };
 
@@ -106,8 +105,7 @@ java_usage_pane_init (JavaUsagePane *usage_pane)
   treeview = gtk_tree_view_new ();
   priv->treeview = treeview;
 
-  treestore = gtk_tree_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_INT, 
-                                  G_TYPE_STRING, G_TYPE_POINTER);
+  treestore = gtk_tree_store_new (COLUMNS, G_TYPE_STRING, G_TYPE_INT, G_TYPE_POINTER);
   
   priv->treestore = treestore;
 
@@ -185,15 +183,12 @@ java_usage_pane_set_usages (JavaUsagePane *usage_pane,
       line_text = g_strdup_printf ("%d", line_number);
       full_text = g_strconcat ("(", line_text, ") ", class_name, NULL);
       
-      g_print ("%s\n", full_text);
-      
       gtk_tree_store_append (priv->treestore, &iter, NULL);
 
       gtk_tree_store_set (priv->treestore, &iter, 
                           FILE_PATH, java_usage_method_get_file_path (usage_method), 
                           LINE_NUMBER, java_usage_method_get_line_number (usage_method), 
                           TEXT, full_text, 
-                          USAGE, usage_method, 
                           -1);
                           
       g_free (line_text);
@@ -220,14 +215,12 @@ select_usage (JavaUsagePane     *usage_pane,
     {
       gchar *file_path = NULL;
       gint line_number;
-      JavaUsageMethod *usage;
       CodeSlayerDocument *document;
       CodeSlayerProject *project;
 
       gtk_tree_model_get (GTK_TREE_MODEL (priv->treestore), &iter,
                           FILE_PATH, &file_path,
-                          LINE_NUMBER, &line_number, 
-                          USAGE, &usage, -1);
+                          LINE_NUMBER, &line_number, -1);
 
       /*if (file_path == NULL)
         {

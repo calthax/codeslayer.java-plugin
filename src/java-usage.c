@@ -137,33 +137,32 @@ method_usage_action (JavaUsage *usage)
   if (method_name != NULL)
     g_strstrip (method_name);
   
-  g_print ("select %s\n", method_name);
-  
   input = get_input (usage, file_path, method_name, line_number);
 
   g_print ("input %s\n", input);
   
   output = java_client_send (priv->client, input);
   
-  g_print ("output %s", output);
-  
-  usage_methods = get_usage_methods_from_output (output);
-  
-  if (usage_methods != NULL)
-    {
-      GtkWidget *usage_pane;
-      g_print ("have usage methods\n");
-      usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
-      java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Usages");
-      java_usage_pane_set_usages (JAVA_USAGE_PANE (usage_pane), usage_methods);
-    }
-  
   if (output != NULL)
-    g_free (output);
-  
-  if (method_name != NULL)
-    g_free (method_name);
-    
+    {
+      g_print ("output %s\n", output);
+      
+      usage_methods = get_usage_methods_from_output (output);
+      
+      if (usage_methods != NULL)
+        {
+          GtkWidget *usage_pane;
+          usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
+          java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Usages");
+          java_usage_pane_set_usages (JAVA_USAGE_PANE (usage_pane), usage_methods);
+          java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), JAVA_PAGE_TYPE_USAGE);
+        }
+      
+      g_free (output);
+      
+    }
+
+  g_free (method_name);
   g_free (input);    
 }
 
