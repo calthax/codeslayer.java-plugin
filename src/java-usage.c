@@ -207,8 +207,17 @@ render_output (JavaUsage *usage,
           java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Method Usage");
         }
       
+      codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
       java_usage_pane_set_usage_methods (JAVA_USAGE_PANE (usage_pane), usage_methods);
       java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), JAVA_PAGE_TYPE_USAGE);
+    }
+  else
+    {
+      GtkWidget *usage_pane;
+      usage_pane = java_notebook_get_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
+                                                   JAVA_PAGE_TYPE_USAGE);
+      if (usage_pane != NULL)
+        java_usage_pane_clear_usage_methods (JAVA_USAGE_PANE (usage_pane));
     }
 }
 
