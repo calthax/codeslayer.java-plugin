@@ -120,7 +120,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->client = java_client_new (codeslayer);
   priv->build = java_build_new (codeslayer, configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
-  priv->indexer = java_indexer_new (codeslayer, menu, configurations);
+  priv->indexer = java_indexer_new (codeslayer, menu, configurations, priv->client);
   priv->completion = java_completion_new  (codeslayer, priv->indexer);
   priv->usage = java_usage_new (codeslayer, menu, notebook, configurations, priv->client);
   priv->import = java_class_import_new (codeslayer, menu);

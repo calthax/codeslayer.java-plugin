@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
 #include "java-configurations.h"
+#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -48,7 +49,8 @@ GType java_indexer_get_type (void) G_GNUC_CONST;
 
 JavaIndexer*  java_indexer_new          (CodeSlayer         *codeslayer,
                                          GtkWidget          *menu,
-                                         JavaConfigurations *configurations);
+                                         JavaConfigurations *configurations, 
+                                         JavaClient         *client);
                                                  
 GList*        java_indexer_get_indexes  (JavaIndexer        *indexer, 
                                          CodeSlayerEditor   *editor,

@@ -47,6 +47,7 @@ struct _JavaIndexerPrivate
 {
   CodeSlayer         *codeslayer;
   JavaConfigurations *configurations;
+  JavaClient         *client;
   gulong              saved_handler_id;
   guint               event_source_id;
 };
@@ -76,7 +77,8 @@ java_indexer_finalize (JavaIndexer *indexer)
 JavaIndexer*
 java_indexer_new (CodeSlayer         *codeslayer,
                   GtkWidget          *menu,
-                  JavaConfigurations *configurations)
+                  JavaConfigurations *configurations, 
+                  JavaClient         *client)
 {
   JavaIndexerPrivate *priv;
   JavaIndexer *indexer;
@@ -85,6 +87,7 @@ java_indexer_new (CodeSlayer         *codeslayer,
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
+  priv->client = client;
 
   priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
                                                      G_CALLBACK (editors_all_saved_action), indexer);
@@ -233,59 +236,27 @@ static void
 create_projects_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
-  gchar *group_folder_path;
-  gchar *index_file_name;
-  FILE *file;
-  GList *list;
-  GString *string;
-  gchar *command;
 
+  gchar *source_indexes_folders;
+  gchar *input;
+  gchar *output;
+  
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
+  source_indexes_folders = get_source_indexes_folders (priv->codeslayer, priv->configurations);
   
-  string = g_string_new ("codeslayer-jindexer -sourcefolder ");
+  input = g_strconcat ("-program indexer -type projects", source_indexes_folders, NULL);
   
-  list = java_configurations_get_list (priv->configurations);
-  while (list != NULL)
+  output = java_client_send (priv->client, input);
+  
+  g_free (source_indexes_folders);
+  g_free (input);
+  
+  if (output != NULL)
     {
-      JavaConfiguration *configuration = list->data;
-      const gchar *source_folder;
-      const gchar *test_folder;
-      source_folder = java_configuration_get_source_folder (configuration);
-      test_folder = java_configuration_get_test_folder (configuration);
-      if (codeslayer_utils_has_text (source_folder))
-        {
-          string = g_string_append (string, source_folder);
-          string = g_string_append (string, ":");        
-        }
-      if (codeslayer_utils_has_text (test_folder))
-        {
-          string = g_string_append (string, test_folder);
-          string = g_string_append (string, ":");        
-        }
-      list = g_list_next (list);
+      g_print ("output %s\n", output);    
+      g_free (output);
     }
-
-  string = g_string_append (string, " -indexesfolder ");
-  string = g_string_append (string, index_file_name);
-  string = g_string_append (string, " -type projects ");
-
-  command = g_string_free (string, FALSE);
-  
-  g_print ("command: %s\n", command);
-  
-  file = popen (command, "r");
-  
-  if (file != NULL)
-    pclose (file);
-    
-  g_print ("The projects are indexed.\n");
-  
-  g_free (command);
-  g_free (group_folder_path);
-  g_free (index_file_name);
 }
 
 static void
