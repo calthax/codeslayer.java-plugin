@@ -29,6 +29,7 @@
 #include "java-client.h"
 #include "java-notebook.h"
 #include "java-usage.h"
+#include "java-navigate.h"
 #include "java-class-import.h"
 
 static void java_engine_class_init                       (JavaEngineClass   *klass);
@@ -57,6 +58,7 @@ struct _JavaEnginePrivate
   JavaDebugger       *debugger;
   JavaIndexer        *indexer;
   JavaUsage          *usage;
+  JavaNavigate       *navigate;
   JavaClassImport    *import;
   GtkWidget          *menu;
   GtkWidget          *project_properties;
@@ -123,6 +125,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->indexer = java_indexer_new (codeslayer, menu, configurations, priv->client);
   priv->completion = java_completion_new  (codeslayer, priv->indexer);
   priv->usage = java_usage_new (codeslayer, menu, notebook, configurations, priv->client);
+  priv->navigate = java_navigate_new (codeslayer, menu, configurations, priv->client);
   priv->import = java_class_import_new (codeslayer, menu);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",

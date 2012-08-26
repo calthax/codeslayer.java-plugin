@@ -70,6 +70,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-usage-method.c \
     java-usage-pane.h \
     java-usage-pane.c \
+    java-navigate.h \
+    java-navigate.c \
     java-plugin.c
 
 libjavacodeslayerplugin_la_CPPFLAGS = -I$(top_srcdir)

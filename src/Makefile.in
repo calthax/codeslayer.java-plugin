@@ -126,6 +126,7 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-usage.lo \
 	libjavacodeslayerplugin_la-java-usage-method.lo \
 	libjavacodeslayerplugin_la-java-usage-pane.lo \
+	libjavacodeslayerplugin_la-java-navigate.lo \
 	libjavacodeslayerplugin_la-java-plugin.lo
 libjavacodeslayerplugin_la_OBJECTS =  \
 	$(am_libjavacodeslayerplugin_la_OBJECTS)
@@ -369,6 +370,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-usage-method.c \
     java-usage-pane.h \
     java-usage-pane.c \
+    java-navigate.h \
+    java-navigate.c \
     java-plugin.c
 
 libjavacodeslayerplugin_la_CPPFLAGS = -I$(top_srcdir)
@@ -472,6 +475,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-menu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-navigate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-notebook-tab.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-notebook.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-page.Plo@am__quote@
@@ -727,6 +731,13 @@ libjavacodeslayerplugin_la-java-usage-pane.lo: java-usage-pane.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-usage-pane.c' object='libjavacodeslayerplugin_la-java-usage-pane.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-usage-pane.lo `test -f 'java-usage-pane.c' || echo '$(srcdir)/'`java-usage-pane.c
+
+libjavacodeslayerplugin_la-java-navigate.lo: java-navigate.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-navigate.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-navigate.Tpo -c -o libjavacodeslayerplugin_la-java-navigate.lo `test -f 'java-navigate.c' || echo '$(srcdir)/'`java-navigate.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-navigate.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-navigate.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-navigate.c' object='libjavacodeslayerplugin_la-java-navigate.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-navigate.lo `test -f 'java-navigate.c' || echo '$(srcdir)/'`java-navigate.c
 
 libjavacodeslayerplugin_la-java-plugin.lo: java-plugin.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-plugin.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-plugin.Tpo -c -o libjavacodeslayerplugin_la-java-plugin.lo `test -f 'java-plugin.c' || echo '$(srcdir)/'`java-plugin.c
