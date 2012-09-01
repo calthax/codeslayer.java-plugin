@@ -94,6 +94,7 @@ java_client_connect (JavaClient *client)
     }
   
   priv->socket = g_socket_connection_get_socket (socketConnection);
+  g_socket_set_blocking (priv->socket, FALSE);
 }
 
 gchar*
@@ -122,7 +123,7 @@ java_client_send (JavaClient *client,
 
   text = g_strconcat (message, "\n", NULL);
 
-  g_socket_send_with_blocking (priv->socket, text, strlen(text), FALSE, NULL, &error);
+  g_socket_send (priv->socket, text, strlen(text), NULL, &error);
   
   g_free (text);
 
@@ -133,14 +134,21 @@ java_client_send (JavaClient *client,
     }
     
   page = g_string_new ("");
-
-  while ((received = g_socket_receive_with_blocking (priv->socket, buffer, 1024, TRUE, NULL, NULL)))
+  
+  if (g_socket_condition_wait (priv->socket, G_IO_IN, NULL, NULL))
     {
-      for (position = 0; position < received; position++) 
+      received = g_socket_receive (priv->socket, buffer, 1024, NULL, NULL);
+      g_print ("received %d\n", received);
+    
+      while (received > 0)
         {
-          g_string_append_c (page, buffer[position]);
+          for (position = 0; position < received; position++) 
+            {
+              g_string_append_c (page, buffer[position]);
+            }
+          received = g_socket_receive (priv->socket, buffer, 1024, NULL, NULL);
+          g_print ("received %d\n", received);
         }
-      break;
     }
     
   return g_string_free (page, FALSE);

@@ -145,6 +145,7 @@ method_usage_action (JavaUsage *usage)
   
   if (output != NULL)
     {
+      g_print ("output %s\n", output);
       render_output (usage, output);
       g_free (output);
     }
@@ -172,7 +173,7 @@ get_input (JavaUsage   *usage,
   source_indexes_folders = get_source_indexes_folders (priv->codeslayer, priv->configurations);
   
   result = g_strconcat ("-program usage", 
-                        " -usagefile ", file_path,
+                        " -sourcefile ", file_path,
                         " -methodusage ", method_name,
                         " -linenumber ", line_number_str,
                         source_indexes_folders, 
