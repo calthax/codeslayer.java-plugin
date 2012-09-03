@@ -51,11 +51,7 @@ JavaIndexer*  java_indexer_new          (CodeSlayer         *codeslayer,
                                          GtkWidget          *menu,
                                          JavaConfigurations *configurations, 
                                          JavaClient         *client);
-                                                 
-GList*        java_indexer_get_indexes  (JavaIndexer        *indexer, 
-                                         CodeSlayerEditor   *editor,
-                                         GtkTextIter         iter);
-
+                                         
 G_END_DECLS
 
 #endif /* __JAVA_INDEXER_H__ */

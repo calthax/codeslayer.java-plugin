@@ -20,7 +20,6 @@
 #include "java-completion-method.h"
 #include "java-completion-class.h"
 #include "java-completion-word.h"
-#include "java-completion-variable.h"
 
 static void java_completion_class_init  (JavaCompletionClass *klass);
 static void java_completion_init        (JavaCompletion      *completion);
@@ -35,9 +34,11 @@ typedef struct _JavaCompletionPrivate JavaCompletionPrivate;
 
 struct _JavaCompletionPrivate
 {
-  CodeSlayer  *codeslayer;
-  JavaIndexer *indexer;
-  gulong       editor_added_id;
+  CodeSlayer         *codeslayer;
+  JavaIndexer        *indexer;
+  JavaConfigurations *configurations;
+  JavaClient         *client;
+  gulong              editor_added_id;
 };
 
 G_DEFINE_TYPE (JavaCompletion, java_completion, G_TYPE_OBJECT)
@@ -65,8 +66,10 @@ java_completion_finalize (JavaCompletion *completion)
 }
 
 JavaCompletion*
-java_completion_new (CodeSlayer  *codeslayer, 
-                     JavaIndexer *indexer)
+java_completion_new (CodeSlayer         *codeslayer, 
+                     JavaIndexer        *indexer, 
+                     JavaConfigurations *configurations,
+                     JavaClient         *client)
 {
   JavaCompletionPrivate *priv;
   JavaCompletion *completion;
@@ -75,6 +78,8 @@ java_completion_new (CodeSlayer  *codeslayer,
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
   priv->codeslayer = codeslayer;
   priv->indexer = indexer;
+  priv->configurations = configurations;
+  priv->client = client;
   
   priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
                                                     G_CALLBACK (editor_added_action), completion);
@@ -86,29 +91,30 @@ static void
 editor_added_action (JavaCompletion   *completion,
                      CodeSlayerEditor *editor)
 {
-  /*JavaCompletionPrivate *priv;
-  JavaCompletionKlass *class;
-  JavaCompletionMethod *method;
+  /*JavaCompletionKlass *class;
   JavaCompletionVariable *variable;*/
 
+  JavaCompletionPrivate *priv;
+  JavaCompletionMethod *method;
   JavaCompletionWord *word;
   
-  /*priv = JAVA_COMPLETION_GET_PRIVATE (completion);
-  class = java_completion_klass_new (priv->codeslayer, editor);
-  method = java_completion_method_new (editor, priv->indexer);
+  /*class = java_completion_klass_new (priv->codeslayer, editor);
   variable = java_completion_variable_new (editor);*/
+  
+  priv = JAVA_COMPLETION_GET_PRIVATE (completion);
 
   word = java_completion_word_new (editor);
+  method = java_completion_method_new (priv->codeslayer, editor, priv->indexer, priv->configurations, priv->client);
   
   /*codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (class));
-  
-  codeslayer_editor_add_completion_provider (editor, 
-                                             CODESLAYER_COMPLETION_PROVIDER (method));
   
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (variable));*/
   
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (word));
+                                             
+  codeslayer_editor_add_completion_provider (editor, 
+                                             CODESLAYER_COMPLETION_PROVIDER (method));
 }

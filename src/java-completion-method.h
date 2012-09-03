@@ -23,6 +23,8 @@
 #include <codeslayer/codeslayer.h>
 #include "java-debugger-breakpoint.h"
 #include "java-indexer.h"
+#include "java-configurations.h"
+#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -47,8 +49,11 @@ struct _JavaCompletionMethodClass
 
 GType java_completion_method_get_type (void) G_GNUC_CONST;
 
-JavaCompletionMethod*  java_completion_method_new  (CodeSlayerEditor *editor, 
-                                                    JavaIndexer      *indexer);
+JavaCompletionMethod*  java_completion_method_new  (CodeSlayer         *codeslayer, 
+                                                    CodeSlayerEditor   *editor, 
+                                                    JavaIndexer        *indexer, 
+                                                    JavaConfigurations *configurations,
+                                                    JavaClient         *client);
 
 G_END_DECLS
 

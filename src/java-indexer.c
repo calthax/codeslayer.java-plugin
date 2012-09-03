@@ -19,7 +19,6 @@
 #include <codeslayer/codeslayer-utils.h>
 #include "java-indexer.h"
 #include "java-indexer-index.h"
-#include "java-indexer-utils.h"
 #include "java-utils.h"
 #include "java-configuration.h"
 
@@ -27,9 +26,6 @@ static void java_indexer_class_init    (JavaIndexerClass *klass);
 static void java_indexer_init          (JavaIndexer      *indexer);
 static void java_indexer_finalize      (JavaIndexer      *indexer);
 
-static GList* get_indexes              (gchar            *group_folder_path,
-                                        gchar            *text,
-                                        gchar            *context_path);
 static void editors_all_saved_action   (JavaIndexer      *indexer,
                                         GList            *editors);
 static void create_projects_indexes    (JavaIndexer      *indexer);
@@ -101,98 +97,6 @@ java_indexer_new (CodeSlayer         *codeslayer,
                             G_CALLBACK (index_libs_action), indexer);
 
   return indexer;
-}
-
-GList* 
-java_indexer_get_indexes (JavaIndexer      *indexer, 
-                          CodeSlayerEditor *editor,
-                          GtkTextIter       iter)
-{
-  JavaIndexerPrivate *priv;
-  GList *indexes = NULL;
-  gchar *context_path;
-  gchar *text;   
-
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  
-  text = java_utils_get_text_to_search (GTK_TEXT_VIEW (editor), iter);
-  
-  if (text == NULL)
-    return NULL;
-  
-  context_path = java_indexer_utils_get_context_path (text);
-  if (context_path != NULL)
-    {
-      gchar *group_folder_path;
-      group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-
-      g_print ("context path: %s\n", context_path);
-
-      indexes = get_indexes (group_folder_path, text, context_path);
-
-      g_free (group_folder_path);
-      g_free (context_path);
-    }
-  
-  g_free (text);
-    
-  return indexes; 
-}
-
-/*
- * Take the context path, start at the beginning, and resolve the 
- * actual classes and methods types.
- *
- * For example after the title figure out that this starts as a Column 
- * object and that the title() method also returns a Column object.
- *
- * new Column().title().
- *
- */
-static GList*
-get_indexes (gchar *group_folder_path,
-             gchar *text,
-             gchar *context_path)
-{
-  gchar **split;
-  gchar **array;
-  GList *indexes = NULL;
-  
-  split = g_strsplit (context_path, ".", -1);
-  array = split;
-  
-  if (codeslayer_utils_has_text (*array))
-    {
-      gchar *class_name;
-      class_name = java_indexer_utils_get_class_name (text, *array);
-      if (class_name != NULL)
-        {
-          gchar *package_name;
-          
-          g_print ("class name: %s\n", class_name);
-          
-          package_name = java_indexer_utils_get_package_name (group_folder_path, text, class_name);
-          if (package_name != NULL)
-            {
-              indexes = java_indexer_utils_get_indexes (group_folder_path, package_name);
-              g_free (package_name);
-            }
-          
-          g_free (class_name);
-        }      
-      array++;
-    }
-
-  while (codeslayer_utils_has_text (*array))
-    {
-      g_print ("other %s\n", *array);
-      array++;
-    }
-  
-  if (split != NULL)
-    g_strfreev (split);
-  
-  return indexes;
 }
 
 static void 

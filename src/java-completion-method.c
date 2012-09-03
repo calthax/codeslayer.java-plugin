@@ -30,6 +30,16 @@ static void java_completion_method_finalize          (JavaCompletionMethod      
 static GList* java_completion_get_proposals          (JavaCompletionMethod       *method, 
                                                       GtkTextIter                 iter);
 static gboolean has_match                            (GtkTextIter                 start);
+static gchar* get_input                              (JavaCompletionMethod       *method, 
+                                                      const gchar                *file_path, 
+                                                      gint                        position, 
+                                                      gint                        line_number);                                                      
+static GList* render_output                          (JavaCompletionMethod       *method, 
+                                                      gchar                      *output, 
+                                                      GtkTextMark                *mark);
+static CodeSlayerCompletionProposal* render_line     (JavaCompletionMethod       *method, 
+                                                      gchar                      *line, 
+                                                      GtkTextMark                *mark);
 
 #define JAVA_COMPLETION_METHOD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_METHOD_TYPE, JavaCompletionMethodPrivate))
@@ -38,8 +48,11 @@ typedef struct _JavaCompletionMethodPrivate JavaCompletionMethodPrivate;
 
 struct _JavaCompletionMethodPrivate
 {
-  CodeSlayerEditor *editor;
-  JavaIndexer      *indexer;
+  CodeSlayer         *codeslayer;
+  CodeSlayerEditor   *editor;
+  JavaIndexer        *indexer;
+  JavaConfigurations *configurations;
+  JavaClient         *client;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaCompletionMethod,
@@ -77,16 +90,22 @@ java_completion_method_finalize (JavaCompletionMethod *method)
 }
 
 JavaCompletionMethod*
-java_completion_method_new (CodeSlayerEditor *editor, 
-                            JavaIndexer      *indexer)
+java_completion_method_new (CodeSlayer         *codeslayer, 
+                            CodeSlayerEditor   *editor, 
+                            JavaIndexer        *indexer, 
+                            JavaConfigurations *configurations,
+                            JavaClient         *client)
 {
   JavaCompletionMethodPrivate *priv;
   JavaCompletionMethod *method;
 
   method = JAVA_COMPLETION_METHOD (g_object_new (java_completion_method_get_type (), NULL));
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
+  priv->codeslayer = codeslayer;
   priv->editor = editor;
   priv->indexer = indexer;
+  priv->configurations = configurations;
+  priv->client = client;
 
   return method;
 }
@@ -97,12 +116,13 @@ java_completion_get_proposals (JavaCompletionMethod *method,
 {
   JavaCompletionMethodPrivate *priv;
   GList *proposals = NULL;
-  GtkTextBuffer *buffer;
+  const gchar *file_path;
   GtkTextIter start;
-  gchar *start_word;
-  GtkTextMark *mark;
-  GList *indexes; 
-  GList *list;
+  GtkTextBuffer *buffer;
+  gint position;
+  gint line_number;
+  gchar *input;
+  gchar *output;
 
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
   
@@ -111,62 +131,144 @@ java_completion_get_proposals (JavaCompletionMethod *method,
 
   if (!has_match (start))
     return NULL;
-  
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
-  mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
-  
-  start_word = gtk_text_iter_get_text (&start, &iter);
-  
-  indexes = java_indexer_get_indexes (priv->indexer, priv->editor, start);
-  list = indexes;
-  
-  while (indexes != NULL)
-    {
-      JavaIndexerIndex *index = indexes->data;
-      const gchar *name;
-      name = java_indexer_index_get_method_name (index);
-      
-      if (codeslayer_utils_has_text (start_word) && !g_str_has_prefix (name, start_word))
-        {
-          indexes = g_list_next (indexes);
-          continue;
-        }
 
-      if (g_strcmp0 (name, "<init>") != 0)
+  file_path = codeslayer_editor_get_file_path (priv->editor);
+  if (!g_str_has_suffix (file_path, ".java"))
+    return NULL;
+  
+  position = gtk_text_iter_get_offset (&iter);
+  line_number = gtk_text_iter_get_line (&iter);
+  
+  input = get_input (method, file_path, position, line_number);
+
+  g_print ("input %s\n", input);
+  
+  output = java_client_send (priv->client, input);
+  
+  if (output != NULL)
+    {
+      GtkTextMark *mark;
+      buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
+      mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
+      g_print ("output %s\n", output);
+      proposals = render_output (method, output, mark);
+      g_free (output);
+    }
+
+  g_free (input);
+  
+  return proposals;
+}
+
+static gchar* 
+get_input (JavaCompletionMethod *method, 
+           const gchar          *file_path, 
+           gint                  position, 
+           gint                  line_number)
+{
+  JavaCompletionMethodPrivate *priv;
+
+  gchar *source_indexes_folders;
+  gchar *position_str;
+  gchar *line_number_str;
+  gchar *result;
+  
+  priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
+  
+  position_str = g_strdup_printf ("%d", position);
+  
+  line_number_str = g_strdup_printf ("%d", (line_number + 1));
+  
+  source_indexes_folders = get_source_indexes_folders (priv->codeslayer, priv->configurations);
+  
+  result = g_strconcat ("-program completion", 
+                        " -sourcefile ", file_path,
+                        " -position ", position_str,
+                        " -linenumber ", line_number_str,
+                        source_indexes_folders, 
+                        NULL);
+  
+  g_free (source_indexes_folders);
+  g_free (position_str);
+  g_free (line_number_str);
+
+  return result;
+}
+
+static GList*
+render_output (JavaCompletionMethod *method, 
+               gchar                *output, 
+               GtkTextMark          *mark)
+{
+  GList *proposals = NULL;
+  gchar **split;
+  gchar **tmp;
+  
+  if (!codeslayer_utils_has_text (output))
+    return NULL;
+  
+  split = g_strsplit (output, "\n", -1);
+
+  if (split != NULL)
+    {
+      tmp = split;
+      while (*tmp != NULL)
         {
           CodeSlayerCompletionProposal *proposal;
-          gchar *method_parameters;
-          gchar *method_completion;
-          
-          method_parameters = g_strconcat (name, 
-                                           java_indexer_index_get_method_parameters (index),
-                                           " ",
-                                           java_indexer_index_get_method_return_type (index),
-                                           NULL);
-          method_completion = g_strconcat (name, 
-                                           java_indexer_index_get_method_completion (index), 
-                                           NULL);
-          
-          proposal = codeslayer_completion_proposal_new (method_parameters, method_completion, mark);
-          proposals = g_list_prepend (proposals, proposal);
-                                                                
-          g_free (method_parameters);	                                              
-          g_free (method_completion);	                                              
+          proposal = render_line (method, *tmp, mark);
+          if (proposal != NULL)
+            proposals = g_list_append (proposals, proposal);
+          tmp++;
         }
-      
-      indexes = g_list_next (indexes);
+      g_strfreev (split);
     }
     
-  if (list != NULL)
-    {
-      g_list_foreach (list, (GFunc) g_object_unref, NULL);
-      g_list_free (list);
-    }
-    
-  if (start_word != NULL)
-    g_free (start_word);
+   return proposals;   
+}
 
-  return proposals; 
+static CodeSlayerCompletionProposal*
+render_line (JavaCompletionMethod *method, 
+             gchar                *line, 
+             GtkTextMark          *mark)
+{
+  gchar **split;
+  gchar **tmp;
+  
+  if (!codeslayer_utils_has_text (line))
+    return NULL;
+  
+  split = g_strsplit (line, "\t", -1);
+  if (split != NULL)
+    {
+      CodeSlayerCompletionProposal *proposal;
+      gchar *method_name;  
+      gchar *method_parameters;  
+      gchar *method_parameter_variables;  
+      gchar *method_return_type;  
+      
+      gchar *match_label;
+      gchar *match_text;
+      
+      tmp = split;
+
+      method_name = *tmp;
+      method_parameters = *++tmp;
+      method_parameter_variables = *++tmp;
+      method_return_type = *++tmp;
+      
+      match_label = g_strdup_printf ("%s(%s) %s", method_name, method_parameters, method_return_type);
+      match_text = g_strdup_printf ("%s(%s)", method_name, method_parameter_variables);
+      
+      proposal = codeslayer_completion_proposal_new (match_label, g_strstrip (match_text), mark);
+      
+      g_free (match_label);
+      g_free (match_text);
+      g_strfreev (split);
+
+      return proposal;
+    }
+  
+  return NULL;
 }
 
 static gboolean
