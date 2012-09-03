@@ -247,6 +247,8 @@ create_projects_indexes (JavaIndexer *indexer)
   
   input = g_strconcat ("-program indexer -type projects", source_indexes_folders, NULL);
   
+  g_print ("input %s\n", input);
+
   output = java_client_send (priv->client, input);
   
   g_free (source_indexes_folders);
@@ -263,67 +265,29 @@ static void
 create_libs_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
-  gchar *group_folder_path;
-  gchar *index_file_name;
-  gchar *zip_file_name;
-  gchar *suppressions_file_name;
-  gchar *tmp_file_name;
-  FILE *file;
-  GList *list;
-  GString *string;
-  gchar *command;
 
+  gchar *lib_indexes_folders;
+  gchar *input;
+  gchar *output;
+  
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
-  tmp_file_name = g_build_filename (group_folder_path, "indexes", "tmp", NULL);
-  zip_file_name = g_build_filename (g_getenv ("JAVA_HOME"), "src.zip", NULL);
-  suppressions_file_name = g_build_filename (g_getenv ("CODESLAYER_JAVA_HOME"), 
-                                             "bin", "jindexer.suppressions", NULL);
+  lib_indexes_folders = get_lib_indexes_folders (priv->codeslayer, priv->configurations);
   
-  string = g_string_new ("codeslayer-jindexer -libfolder ");
+  input = g_strconcat ("-program indexer -type libs", lib_indexes_folders, NULL);
   
-  list = java_configurations_get_list (priv->configurations);
-  while (list != NULL)
+  g_print ("input %s\n", input);
+
+  output = java_client_send (priv->client, input);
+  
+  g_free (lib_indexes_folders);
+  g_free (input);
+  
+  if (output != NULL)
     {
-      JavaConfiguration *configuration = list->data;
-      const gchar *lib_folder;
-      lib_folder = java_configuration_get_lib_folder (configuration);
-      if (codeslayer_utils_has_text (lib_folder))
-        {
-          string = g_string_append (string, lib_folder);
-          string = g_string_append (string, ":");        
-        }
-      list = g_list_next (list);
+      g_print ("output %s\n", output);    
+      g_free (output);
     }
-
-  string = g_string_append (string, " -zipfile ");
-  string = g_string_append (string, zip_file_name);
-  string = g_string_append (string, " -tmpfolder ");
-  string = g_string_append (string, tmp_file_name);
-  string = g_string_append (string, " -suppressionsfile ");
-  string = g_string_append (string, suppressions_file_name);
-  string = g_string_append (string, " -indexesfolder ");
-  string = g_string_append (string, index_file_name);
-  string = g_string_append (string, " -type libs ");
-
-  command = g_string_free (string, FALSE);
-  
-  g_print ("command: %s\n", command);
-  
-  file = popen (command, "r");
-  
-  if (file != NULL)
-    pclose (file);
-    
-  g_print ("The libs are indexed.\n");
-  
-  g_free (command);
-  g_free (group_folder_path);
-  g_free (index_file_name);
-  g_free (zip_file_name);
-  g_free (suppressions_file_name);
 }
 
 static void

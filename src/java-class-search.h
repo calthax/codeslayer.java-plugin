@@ -21,6 +21,7 @@
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
+#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -45,8 +46,9 @@ struct _JavaClassSearchClass
 
 GType java_class_search_get_type (void) G_GNUC_CONST;
      
-JavaClassSearch*  java_class_search_new  (CodeSlayer *codeslayer, 
-                                          GtkWidget  *menu);
+JavaClassSearch*  java_class_search_new  (CodeSlayer *codeslayer,                                          
+                                          GtkWidget  *menu, 
+                                          JavaClient *client);
                                      
 G_END_DECLS
 

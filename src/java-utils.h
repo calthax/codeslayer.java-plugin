@@ -32,7 +32,9 @@ gchar*  java_utils_get_text_to_search    (GtkTextView        *text_view,
 void    java_utils_move_iter_word_start  (GtkTextIter        *iter);  
 gchar*  get_source_indexes_folders       (CodeSlayer         *codeslayer, 
                                           JavaConfigurations *configurations);
-                                  
+gchar*  get_lib_indexes_folders          (CodeSlayer         *codeslayer, 
+                                          JavaConfigurations *configurations);
+gchar*  java_utils_get_indexes_folder    (CodeSlayer         *codeslayer);                                  
 
 G_END_DECLS
 

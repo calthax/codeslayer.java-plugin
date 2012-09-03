@@ -126,3 +126,60 @@ get_source_indexes_folders (CodeSlayer         *codeslayer,
   
   return g_string_free (string, FALSE);
 }
+
+gchar*
+get_lib_indexes_folders (CodeSlayer         *codeslayer, 
+                         JavaConfigurations *configurations)
+{
+  gchar *group_folder_path;
+  gchar *index_file_name;
+  GList *list;
+  GString *string;
+
+  group_folder_path = codeslayer_get_active_group_folder_path (codeslayer);
+  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
+  
+  string = g_string_new (" -libfolder ");
+  
+  list = java_configurations_get_list (configurations);
+  while (list != NULL)
+    {
+      JavaConfiguration *configuration = list->data;
+      const gchar *lib_folder;
+      lib_folder = java_configuration_get_lib_folder (configuration);
+      if (codeslayer_utils_has_text (lib_folder))
+        {
+          string = g_string_append (string, lib_folder);
+          string = g_string_append (string, ":");        
+        }
+      list = g_list_next (list);
+    }
+
+  string = g_string_append (string, " -indexesfolder ");
+  string = g_string_append (string, index_file_name);
+
+  g_free (group_folder_path);
+  g_free (index_file_name);
+  
+  return g_string_free (string, FALSE);
+}
+
+gchar*
+java_utils_get_indexes_folder (CodeSlayer *codeslayer)
+{
+  gchar *group_folder_path;
+  gchar *index_file_name;
+  GString *string;
+
+  group_folder_path = codeslayer_get_active_group_folder_path (codeslayer);
+  index_file_name = g_build_filename (group_folder_path, "indexes", NULL);
+  
+  string = g_string_new ("");
+  string = g_string_append (string, " -indexesfolder ");
+  string = g_string_append (string, index_file_name);
+
+  g_free (group_folder_path);
+  g_free (index_file_name);
+  
+  return g_string_free (string, FALSE);
+}
