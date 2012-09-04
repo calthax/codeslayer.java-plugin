@@ -315,12 +315,15 @@ render_line (JavaClassSearch *search,
       class_name = *++tmp;
       file_path = *++tmp;
       
-      gtk_list_store_append (priv->store, &iter);
-      gtk_list_store_set (priv->store, &iter, 
-                          SIMPLE_CLASS_NAME, simple_class_name, 
-                          CLASS_NAME, class_name, 
-                          FILE_PATH, file_path, 
-                          -1);
+      if (simple_class_name != NULL && class_name != NULL && file_path != NULL)
+        {
+          gtk_list_store_append (priv->store, &iter);
+          gtk_list_store_set (priv->store, &iter, 
+                              SIMPLE_CLASS_NAME, simple_class_name, 
+                              CLASS_NAME, class_name, 
+                              FILE_PATH, file_path, 
+                              -1);
+        }
 
       g_strfreev (split);
     }

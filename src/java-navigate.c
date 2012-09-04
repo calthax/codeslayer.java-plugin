@@ -189,26 +189,32 @@ render_output (JavaNavigate *navigate,
   split = g_strsplit (output, "\t", -1);
   if (split != NULL)
     {
-      CodeSlayerDocument *document;
-      CodeSlayerProject *project;
       gchar *file_path;
-      gint line_number;
+      gchar *line_number;
 
       tmp = split;
 
       file_path = *tmp;
-      line_number = atoi(*++tmp);
+      line_number = *++tmp;
       
-      document = codeslayer_document_new ();
-      codeslayer_document_set_file_path (document, file_path);
-      codeslayer_document_set_line_number (document, line_number);
-      
-      project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
-      codeslayer_document_set_project (document, project);
-      
-      codeslayer_select_editor (priv->codeslayer, document);
+      if (line_number != NULL && file_path != NULL)
+        {
+          CodeSlayerDocument *document;
+          CodeSlayerProject *project;
+          
+          document = codeslayer_document_new ();
+          codeslayer_document_set_file_path (document, file_path);
+          codeslayer_document_set_line_number (document, atoi(line_number));
+          
+          project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
+          codeslayer_document_set_project (document, project);
+          
+          codeslayer_select_editor (priv->codeslayer, document);
 
-      g_object_unref (document);
+          g_object_unref (document);
+        
+        }
+        
       g_strfreev (split);
     }
 }
