@@ -174,6 +174,13 @@ run_dialog (JavaClassSearch *search)
       gtk_tree_view_column_add_attribute (column, renderer, "text", SIMPLE_CLASS_NAME);
       gtk_tree_view_append_column (GTK_TREE_VIEW (priv->tree), column);
       
+      column = gtk_tree_view_column_new ();
+      gtk_tree_view_column_set_sizing (column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+      renderer = gtk_cell_renderer_text_new ();
+      gtk_tree_view_column_pack_start (column, renderer, FALSE);
+      gtk_tree_view_column_add_attribute (column, renderer, "text", CLASS_NAME);
+      gtk_tree_view_append_column (GTK_TREE_VIEW (priv->tree), column);
+      
       scrolled_window = gtk_scrolled_window_new (NULL, NULL);
       gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                       GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
