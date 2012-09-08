@@ -29,7 +29,7 @@ static void java_navigate_finalize    (JavaNavigate      *navigate);
 static void navigate_action           (JavaNavigate      *navigate);
 static gchar* get_input               (JavaNavigate      *navigate, 
                                        const gchar       *file_path, 
-                                       gint position, 
+                                       gchar             *symbol, 
                                        gint               line_number);
 static void render_output             (JavaNavigate      *navigate, 
                                        gchar             *output);
@@ -95,12 +95,13 @@ navigate_action (JavaNavigate *navigate)
   GtkTextBuffer *buffer;
 
   GtkTextMark *insert_mark;
-  gint position;
+  GtkTextMark *selection_mark;
+  gchar *symbol;
   gint line_number;
   gchar *input;
   gchar *output;
 
-  GtkTextIter iter;
+  GtkTextIter start, end;
 
   priv = JAVA_NAVIGATE_GET_PRIVATE (navigate);
 
@@ -116,13 +117,18 @@ navigate_action (JavaNavigate *navigate)
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
 
   insert_mark = gtk_text_buffer_get_insert (buffer);    
+  selection_mark = gtk_text_buffer_get_selection_bound (buffer);
 
-  gtk_text_buffer_get_iter_at_mark (buffer, &iter, insert_mark);
+  gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
+  gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
 
-  position = gtk_text_iter_get_offset (&iter);
-  line_number = gtk_text_iter_get_line (&iter);
+  symbol = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  line_number = gtk_text_iter_get_line (&start);
   
-  input = get_input (navigate, file_path, position, line_number);
+  if (symbol != NULL)
+    g_strstrip (symbol);
+  
+  input = get_input (navigate, file_path, symbol, line_number);
 
   g_print ("input: %s\n", input);
   
@@ -141,19 +147,16 @@ navigate_action (JavaNavigate *navigate)
 static gchar* 
 get_input (JavaNavigate *navigate, 
            const gchar  *file_path, 
-           gint          position, 
+           gchar        *symbol, 
            gint          line_number)
 {
   JavaNavigatePrivate *priv;
 
   gchar *source_indexes_folders;
-  gchar *position_str;
   gchar *line_number_str;
   gchar *result;
   
   priv = JAVA_NAVIGATE_GET_PRIVATE (navigate);
-  
-  position_str = g_strdup_printf ("%d", position);
   
   line_number_str = g_strdup_printf ("%d", (line_number + 1));
   
@@ -161,13 +164,12 @@ get_input (JavaNavigate *navigate,
   
   result = g_strconcat ("-program navigate", 
                         " -sourcefile ", file_path,
-                        " -position ", position_str,
+                        " -symbol ", symbol,
                         " -linenumber ", line_number_str,
                         source_indexes_folders, 
                         NULL);
   
   g_free (source_indexes_folders);
-  g_free (position_str);
   g_free (line_number_str);
 
   return result;
@@ -208,9 +210,12 @@ render_output (JavaNavigate *navigate,
           codeslayer_document_set_line_number (document, atoi(line_number));
           
           project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
-          codeslayer_document_set_project (document, project);
           
-          codeslayer_select_editor (priv->codeslayer, document);
+          if (project != NULL)
+            {
+              codeslayer_document_set_project (document, project);
+              codeslayer_select_editor (priv->codeslayer, document);
+            }
 
           g_object_unref (document);
         
