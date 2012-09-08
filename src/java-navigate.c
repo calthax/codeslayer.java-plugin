@@ -124,13 +124,13 @@ navigate_action (JavaNavigate *navigate)
   
   input = get_input (navigate, file_path, position, line_number);
 
-  g_print ("input %s\n", input);
+  g_print ("input: %s\n", input);
   
   output = java_client_send (priv->client, input);
   
   if (output != NULL)
     {
-      g_print ("output %s\n", output);
+      g_print ("output: %s\n", output);
       render_output (navigate, output);
       g_free (output);
     }
@@ -197,7 +197,8 @@ render_output (JavaNavigate *navigate,
       file_path = *tmp;
       line_number = *++tmp;
       
-      if (line_number != NULL && file_path != NULL)
+      if (file_path != NULL && 
+          line_number != NULL)
         {
           CodeSlayerDocument *document;
           CodeSlayerProject *project;

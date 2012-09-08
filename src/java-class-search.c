@@ -232,13 +232,13 @@ key_release_action (JavaClassSearch *search,
   
   input = get_input (search, text);
   
-  g_print ("input %s\n", input);
+  g_print ("input: %s\n", input);
   
   output = java_client_send (priv->client, input);
   
   if (output != NULL)
     {
-      g_print ("output %s\n", output);
+      g_print ("output: %s\n", output);
       render_output (search, output);
       g_free (output);
     }
@@ -322,7 +322,9 @@ render_line (JavaClassSearch *search,
       class_name = *++tmp;
       file_path = *++tmp;
       
-      if (simple_class_name != NULL && class_name != NULL && file_path != NULL)
+      if (simple_class_name != NULL && 
+          class_name != NULL && 
+          file_path != NULL)
         {
           gtk_list_store_append (priv->store, &iter);
           gtk_list_store_set (priv->store, &iter, 

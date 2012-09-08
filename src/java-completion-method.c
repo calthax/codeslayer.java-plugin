@@ -141,7 +141,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   
   input = get_input (method, file_path, position, line_number);
 
-  g_print ("input %s\n", input);
+  g_print ("input: %s\n", input);
   
   output = java_client_send (priv->client, input);
   
@@ -150,7 +150,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
       GtkTextMark *mark;
       buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
       mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
-      g_print ("output %s\n", output);
+      g_print ("output: %s\n", output);
       proposals = render_output (method, output, mark);
       g_free (output);
     }
@@ -240,7 +240,7 @@ render_line (JavaCompletionMethod *method,
   split = g_strsplit (line, "\t", -1);
   if (split != NULL)
     {
-      CodeSlayerCompletionProposal *proposal;
+      CodeSlayerCompletionProposal *proposal = NULL;
       gchar *method_name;  
       gchar *method_parameters;  
       gchar *method_parameter_variables;  
@@ -256,13 +256,21 @@ render_line (JavaCompletionMethod *method,
       method_parameter_variables = *++tmp;
       method_return_type = *++tmp;
       
-      match_label = g_strdup_printf ("%s(%s) %s", method_name, method_parameters, method_return_type);
-      match_text = g_strdup_printf ("%s(%s)", method_name, method_parameter_variables);
-      
-      proposal = codeslayer_completion_proposal_new (match_label, g_strstrip (match_text), mark);
-      
-      g_free (match_label);
-      g_free (match_text);
+      if (method_name != NULL && 
+          method_parameters != NULL && 
+          method_parameter_variables != NULL && 
+          method_return_type != NULL)
+        {
+          match_label = g_strdup_printf ("%s(%s) %s", method_name, method_parameters, method_return_type);
+          match_text = g_strdup_printf ("%s(%s)", method_name, method_parameter_variables);
+          
+          proposal = codeslayer_completion_proposal_new (match_label, g_strstrip (match_text), mark);
+          
+          g_free (match_label);
+          g_free (match_text);
+
+        }      
+
       g_strfreev (split);
 
       return proposal;

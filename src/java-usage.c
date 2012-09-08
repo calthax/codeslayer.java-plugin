@@ -264,7 +264,7 @@ sort_usage_methods (JavaUsageMethod *usage_method1,
 static JavaUsageMethod*
 get_java_usage_method (gchar *text)
 {
-  JavaUsageMethod *usage_method;
+  JavaUsageMethod *usage_method = NULL;
   gchar **split;
   gchar **tmp;
   
@@ -274,11 +274,26 @@ get_java_usage_method (gchar *text)
   split = g_strsplit (text, "\t", -1);
   if (split != NULL)
     {
+      gchar *class_name;
+      gchar *file_path;
+      gchar *line_number;
+    
       tmp = split;
-      usage_method = java_usage_method_new ();
-      java_usage_method_set_class_name (usage_method, *tmp);
-      java_usage_method_set_file_path (usage_method, *++tmp);
-      java_usage_method_set_line_number (usage_method, atoi(*++tmp));
+      
+      class_name = *tmp;
+      file_path = *++tmp;
+      line_number = *++tmp;
+
+      if (class_name != NULL && 
+          file_path != NULL &&
+          line_number != NULL)
+        {
+          usage_method = java_usage_method_new ();
+          java_usage_method_set_class_name (usage_method, class_name);
+          java_usage_method_set_file_path (usage_method, file_path);
+          java_usage_method_set_line_number (usage_method, atoi(line_number));
+        }
+              
       g_strfreev (split);
     }
 
