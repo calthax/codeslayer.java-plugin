@@ -19,6 +19,7 @@
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-method.h"
 #include "java-indexer-index.h"
+#include "java-indexer-utils.h"
 #include "java-utils.h"
 
 static void java_completion_provider_interface_init  (gpointer                    page, 
@@ -32,7 +33,7 @@ static GList* java_completion_get_proposals          (JavaCompletionMethod      
 static gboolean has_match                            (GtkTextIter                 start);
 static gchar* get_input                              (JavaCompletionMethod       *method, 
                                                       const gchar                *file_path, 
-                                                      gint                        position, 
+                                                      gchar                      *expression, 
                                                       gint                        line_number);                                                      
 static GList* render_output                          (JavaCompletionMethod       *method, 
                                                       gchar                      *output, 
@@ -40,6 +41,9 @@ static GList* render_output                          (JavaCompletionMethod      
 static CodeSlayerCompletionProposal* render_line     (JavaCompletionMethod       *method, 
                                                       gchar                      *line, 
                                                       GtkTextMark                *mark);
+                                                      
+static gchar* get_text                               (GtkTextBuffer              *buffer, 
+                                                      GtkTextIter                 iter);
 
 #define JAVA_COMPLETION_METHOD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_METHOD_TYPE, JavaCompletionMethodPrivate))
@@ -117,9 +121,10 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   JavaCompletionMethodPrivate *priv;
   GList *proposals = NULL;
   const gchar *file_path;
+  gchar *text;
+  gchar *expression;
   GtkTextIter start;
   GtkTextBuffer *buffer;
-  gint position;
   gint line_number;
   gchar *input;
   gchar *output;
@@ -136,10 +141,16 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   if (!g_str_has_suffix (file_path, ".java"))
     return NULL;
   
-  position = gtk_text_iter_get_offset (&iter);
   line_number = gtk_text_iter_get_line (&iter);
   
-  input = get_input (method, file_path, position, line_number);
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
+  
+  text = get_text (buffer, start);
+  expression = java_indexer_utils_get_expression (text);
+  
+  g_print ("text %s \n", java_indexer_utils_get_expression (text));
+  
+  input = get_input (method, file_path, expression, line_number);
 
   g_print ("input: %s\n", input);
   
@@ -148,7 +159,6 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   if (output != NULL)
     {
       GtkTextMark *mark;
-      buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
       mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
       g_print ("output: %s\n", output);
       proposals = render_output (method, output, mark);
@@ -156,26 +166,39 @@ java_completion_get_proposals (JavaCompletionMethod *method,
     }
 
   g_free (input);
+  g_free (text);
+  g_free (expression);
   
   return proposals;
+}
+
+static gchar*
+get_text (GtkTextBuffer *buffer, 
+          GtkTextIter    iter)
+{
+  GtkTextIter start;
+  gchar *text;
+  
+  gtk_text_buffer_get_start_iter (buffer, &start);
+  
+  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
+
+  return text;
 }
 
 static gchar* 
 get_input (JavaCompletionMethod *method, 
            const gchar          *file_path, 
-           gint                  position, 
+           gchar                *expression, 
            gint                  line_number)
 {
   JavaCompletionMethodPrivate *priv;
 
   gchar *source_indexes_folders;
-  gchar *position_str;
   gchar *line_number_str;
   gchar *result;
   
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
-  
-  position_str = g_strdup_printf ("%d", position);
   
   line_number_str = g_strdup_printf ("%d", (line_number + 1));
   
@@ -183,13 +206,12 @@ get_input (JavaCompletionMethod *method,
   
   result = g_strconcat ("-program completion", 
                         " -sourcefile ", file_path,
-                        " -position ", position_str,
+                        " -expression ", expression,
                         " -linenumber ", line_number_str,
                         source_indexes_folders, 
                         NULL);
   
   g_free (source_indexes_folders);
-  g_free (position_str);
   g_free (line_number_str);
 
   return result;

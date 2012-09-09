@@ -31,7 +31,7 @@ static void java_usage_finalize                (JavaUsage       *usage);
 static void method_usage_action                (JavaUsage       *usage);
 static gchar* get_input                        (JavaUsage       *usage, 
                                                 const gchar     *file_path, 
-                                                gchar           *method_name, 
+                                                gchar           *symbol, 
                                                 gint             line_number);
 static void render_output                      (JavaUsage       *usage,
                                                 gchar           *output);
@@ -105,7 +105,7 @@ method_usage_action (JavaUsage *usage)
 
   GtkTextMark *insert_mark;
   GtkTextMark *selection_mark;
-  gchar *method_name;
+  gchar *symbol;
   gint line_number;
   gchar *input;
   gchar *output;
@@ -131,13 +131,13 @@ method_usage_action (JavaUsage *usage)
   gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
   gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
 
-  method_name = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  symbol = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
   line_number = gtk_text_iter_get_line (&start);
   
-  if (method_name != NULL)
-    g_strstrip (method_name);
+  if (symbol != NULL)
+    g_strstrip (symbol);
   
-  input = get_input (usage, file_path, method_name, line_number);
+  input = get_input (usage, file_path, symbol, line_number);
 
   g_print ("input %s\n", input);
   
@@ -150,14 +150,14 @@ method_usage_action (JavaUsage *usage)
       g_free (output);
     }
 
-  g_free (method_name);
+  g_free (symbol);
   g_free (input);
 }
 
 static gchar* 
 get_input (JavaUsage   *usage, 
            const gchar *file_path, 
-           gchar       *method_name, 
+           gchar       *symbol, 
            gint         line_number)
 {
   JavaUsagePrivate *priv;
@@ -174,7 +174,7 @@ get_input (JavaUsage   *usage,
   
   result = g_strconcat ("-program usage", 
                         " -sourcefile ", file_path,
-                        " -methodusage ", method_name,
+                        " -symbol ", symbol,
                         " -linenumber ", line_number_str,
                         source_indexes_folders, 
                         NULL);
