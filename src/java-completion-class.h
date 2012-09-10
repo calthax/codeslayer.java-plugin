@@ -21,7 +21,7 @@
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
-#include "java-indexer.h"
+#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -47,7 +47,8 @@ struct _JavaCompletionKlassClass
 GType java_completion_klass_get_type (void) G_GNUC_CONST;
 
 JavaCompletionKlass*  java_completion_klass_new  (CodeSlayer       *codeslayer, 
-                                                  CodeSlayerEditor *editor);
+                                                  CodeSlayerEditor *editor,
+                                                  JavaClient       *client);
 
 G_END_DECLS
 

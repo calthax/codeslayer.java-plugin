@@ -18,7 +18,6 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-method.h"
-#include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 #include "java-utils.h"
 
@@ -54,8 +53,6 @@ struct _JavaCompletionMethodPrivate
 {
   CodeSlayer         *codeslayer;
   CodeSlayerEditor   *editor;
-  JavaIndexer        *indexer;
-  JavaConfigurations *configurations;
   JavaClient         *client;
 };
 
@@ -94,11 +91,9 @@ java_completion_method_finalize (JavaCompletionMethod *method)
 }
 
 JavaCompletionMethod*
-java_completion_method_new (CodeSlayer         *codeslayer, 
-                            CodeSlayerEditor   *editor, 
-                            JavaIndexer        *indexer, 
-                            JavaConfigurations *configurations,
-                            JavaClient         *client)
+java_completion_method_new (CodeSlayer       *codeslayer, 
+                            CodeSlayerEditor *editor, 
+                            JavaClient       *client)
 {
   JavaCompletionMethodPrivate *priv;
   JavaCompletionMethod *method;
@@ -107,8 +102,6 @@ java_completion_method_new (CodeSlayer         *codeslayer,
   priv = JAVA_COMPLETION_METHOD_GET_PRIVATE (method);
   priv->codeslayer = codeslayer;
   priv->editor = editor;
-  priv->indexer = indexer;
-  priv->configurations = configurations;
   priv->client = client;
 
   return method;
@@ -147,8 +140,6 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   
   text = get_text (buffer, start);
   expression = java_indexer_utils_get_expression (text);
-  
-  g_print ("text %s \n", java_indexer_utils_get_expression (text));
   
   input = get_input (method, file_path, expression, line_number);
 
@@ -194,7 +185,7 @@ get_input (JavaCompletionMethod *method,
 {
   JavaCompletionMethodPrivate *priv;
 
-  gchar *source_indexes_folders;
+  gchar *indexes_folders;
   gchar *line_number_str;
   gchar *result;
   
@@ -202,16 +193,17 @@ get_input (JavaCompletionMethod *method,
   
   line_number_str = g_strdup_printf ("%d", (line_number + 1));
   
-  source_indexes_folders = get_source_indexes_folders (priv->codeslayer, priv->configurations);
+  indexes_folders = java_utils_get_indexes_folder (priv->codeslayer);
   
   result = g_strconcat ("-program completion", 
+                        " -type ", "method",
                         " -sourcefile ", file_path,
                         " -expression ", expression,
                         " -linenumber ", line_number_str,
-                        source_indexes_folders, 
+                        indexes_folders, 
                         NULL);
   
-  g_free (source_indexes_folders);
+  g_free (indexes_folders);
   g_free (line_number_str);
 
   return result;

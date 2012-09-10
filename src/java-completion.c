@@ -91,30 +91,23 @@ static void
 editor_added_action (JavaCompletion   *completion,
                      CodeSlayerEditor *editor)
 {
-  /*JavaCompletionKlass *class;
-  JavaCompletionVariable *variable;*/
-
   JavaCompletionPrivate *priv;
-  JavaCompletionMethod *method;
   JavaCompletionWord *word;
-  
-  /*class = java_completion_klass_new (priv->codeslayer, editor);
-  variable = java_completion_variable_new (editor);*/
+  JavaCompletionMethod *method;
+  JavaCompletionKlass *class;
   
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
 
   word = java_completion_word_new (editor);
-  method = java_completion_method_new (priv->codeslayer, editor, priv->indexer, priv->configurations, priv->client);
-  
-  /*codeslayer_editor_add_completion_provider (editor, 
-                                             CODESLAYER_COMPLETION_PROVIDER (class));
-  
-  codeslayer_editor_add_completion_provider (editor, 
-                                             CODESLAYER_COMPLETION_PROVIDER (variable));*/
+  method = java_completion_method_new (priv->codeslayer, editor, priv->client);
+  class = java_completion_klass_new (priv->codeslayer, editor, priv->client);
   
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (word));
                                              
   codeslayer_editor_add_completion_provider (editor, 
                                              CODESLAYER_COMPLETION_PROVIDER (method));
+
+  codeslayer_editor_add_completion_provider (editor, 
+                                             CODESLAYER_COMPLETION_PROVIDER (class));  
 }

@@ -21,6 +21,7 @@
 #include "java-navigate.h"
 #include "java-utils.h"
 #include "java-page.h"
+#include "java-indexer-utils.h"
 
 static void java_navigate_class_init  (JavaNavigateClass *klass);
 static void java_navigate_init        (JavaNavigate      *navigate);
@@ -29,10 +30,13 @@ static void java_navigate_finalize    (JavaNavigate      *navigate);
 static void navigate_action           (JavaNavigate      *navigate);
 static gchar* get_input               (JavaNavigate      *navigate, 
                                        const gchar       *file_path, 
-                                       gchar             *symbol, 
+                                       gchar             *expression, 
                                        gint               line_number);
 static void render_output             (JavaNavigate      *navigate, 
                                        gchar             *output);
+                                       
+static gchar* get_text                (GtkTextBuffer     *buffer, 
+                                       GtkTextIter        iter);
 
 #define JAVA_NAVIGATE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_NAVIGATE_TYPE, JavaNavigatePrivate))
@@ -94,9 +98,10 @@ navigate_action (JavaNavigate *navigate)
   const gchar *file_path;
   GtkTextBuffer *buffer;
 
+  gchar *text;
+  gchar *expression;
   GtkTextMark *insert_mark;
   GtkTextMark *selection_mark;
-  gchar *symbol;
   gint line_number;
   gchar *input;
   gchar *output;
@@ -122,13 +127,12 @@ navigate_action (JavaNavigate *navigate)
   gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
   gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
 
-  symbol = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
   line_number = gtk_text_iter_get_line (&start);
   
-  if (symbol != NULL)
-    g_strstrip (symbol);
+  text = get_text (buffer, end);
+  expression = java_indexer_utils_get_expression (text);
   
-  input = get_input (navigate, file_path, symbol, line_number);
+  input = get_input (navigate, file_path, expression, line_number);
 
   g_print ("input: %s\n", input);
   
@@ -144,10 +148,24 @@ navigate_action (JavaNavigate *navigate)
   g_free (input);
 }
 
+static gchar*
+get_text (GtkTextBuffer *buffer, 
+          GtkTextIter    iter)
+{
+  GtkTextIter start;
+  gchar *text;
+  
+  gtk_text_buffer_get_start_iter (buffer, &start);
+  
+  text = gtk_text_buffer_get_text (buffer, &start, &iter, FALSE);
+
+  return text;
+}
+
 static gchar* 
 get_input (JavaNavigate *navigate, 
            const gchar  *file_path, 
-           gchar        *symbol, 
+           gchar        *expression, 
            gint          line_number)
 {
   JavaNavigatePrivate *priv;
@@ -164,7 +182,7 @@ get_input (JavaNavigate *navigate,
   
   result = g_strconcat ("-program navigate", 
                         " -sourcefile ", file_path,
-                        " -symbol ", symbol,
+                        " -expression ", expression,
                         " -linenumber ", line_number_str,
                         source_indexes_folders, 
                         NULL);

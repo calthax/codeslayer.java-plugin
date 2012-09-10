@@ -18,7 +18,6 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-class.h"
-#include "java-indexer-index.h"
 #include "java-utils.h"
 
 static void java_completion_provider_interface_init  (gpointer                    page, 
@@ -29,12 +28,18 @@ static void java_completion_klass_finalize           (JavaCompletionKlass       
 
 static GList* java_completion_get_proposals          (JavaCompletionKlass       *klass, 
                                                       GtkTextIter                 iter);                                                      
-static GList* get_class_indexes                      (JavaCompletionKlass       *klass, 
-                                                      const gchar               *class_name);
-static GList* get_class_indexes_by_file_name         (gchar                     *group_folder_path,
-                                                      const gchar               *index_file_name,
-                                                      const gchar               *class_name);
 static gboolean has_match                            (GtkTextIter                 start);
+
+static gchar* get_input                              (JavaCompletionKlass       *klass, 
+                                                      const gchar               *file_path, 
+                                                      gchar                     *expression, 
+                                                      gint                       line_number);                                                      
+static GList* render_output                          (JavaCompletionKlass       *klass, 
+                                                      gchar                     *output, 
+                                                      GtkTextMark               *mark);
+static CodeSlayerCompletionProposal*  render_line    (JavaCompletionKlass       *klass, 
+                                                      gchar                     *line, 
+                                                      GtkTextMark               *mark);
 
 #define JAVA_COMPLETION_KLASS_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_COMPLETION_KLASS_TYPE, JavaCompletionKlassPrivate))
@@ -45,6 +50,7 @@ struct _JavaCompletionKlassPrivate
 {
   CodeSlayer       *codeslayer;
   CodeSlayerEditor *editor;
+  JavaClient       *client;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaCompletionKlass,
@@ -83,7 +89,8 @@ java_completion_klass_finalize (JavaCompletionKlass *klass)
 
 JavaCompletionKlass*
 java_completion_klass_new (CodeSlayer       *codeslayer, 
-                           CodeSlayerEditor *editor)
+                           CodeSlayerEditor *editor, 
+                           JavaClient       *client)
 {
   JavaCompletionKlassPrivate *priv;
   JavaCompletionKlass *klass;
@@ -92,6 +99,7 @@ java_completion_klass_new (CodeSlayer       *codeslayer,
   priv = JAVA_COMPLETION_KLASS_GET_PRIVATE (klass);
   priv->codeslayer = codeslayer;
   priv->editor = editor;
+  priv->client = client;
 
   return klass;
 }
@@ -102,12 +110,13 @@ java_completion_get_proposals (JavaCompletionKlass *klass,
 {
   JavaCompletionKlassPrivate *priv;
   GList *proposals = NULL;
-  GtkTextBuffer *buffer;
-  GtkTextIter start;
-  GtkTextMark *mark;
-  GList *indexes;
-  GList *list; 
+  const gchar *file_path;
   gchar *text;
+  GtkTextIter start;
+  GtkTextBuffer *buffer;
+  gint line_number;
+  gchar *input;
+  gchar *output;
   
   priv = JAVA_COMPLETION_KLASS_GET_PRIVATE (klass);
   
@@ -116,34 +125,143 @@ java_completion_get_proposals (JavaCompletionKlass *klass,
   
   if (!has_match (start))
     return NULL;
+    
+  file_path = codeslayer_editor_get_file_path (priv->editor);
+  if (!g_str_has_suffix (file_path, ".java"))
+    return NULL;
+  
+  line_number = gtk_text_iter_get_line (&iter);
+  
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
 
   text = gtk_text_iter_get_text (&start, &iter);
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
-  mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
-  indexes = get_class_indexes (klass, text);
   
-  list = indexes;
+  input = get_input (klass, file_path, text, line_number);
+
+  g_print ("input: %s\n", input);
+
+  output = java_client_send (priv->client, input);
   
-  while (indexes != NULL)
+  if (output != NULL)
     {
-      JavaIndexerIndex *index = indexes->data;
-      CodeSlayerCompletionProposal *proposal;
-      const gchar *name;
-      name = java_indexer_index_get_class_name (index);
-      proposal = codeslayer_completion_proposal_new (name, name, mark);
-      proposals = g_list_prepend (proposals, proposal);
-      indexes = g_list_next (indexes);
-    }
-    
-  if (list != NULL)
-    {
-      g_list_foreach (list, (GFunc) g_object_unref, NULL);
-      g_list_free (list);
+      GtkTextMark *mark;
+      mark = gtk_text_buffer_create_mark (buffer, NULL, &start, TRUE);
+      g_print ("output: %s\n", output);
+      proposals = render_output (klass, output, mark);
+      g_free (output);
     }
 
-  g_free (text);  
+  g_free (input);
+  g_free (text);
 
   return proposals; 
+}
+
+static gchar* 
+get_input (JavaCompletionKlass *klass, 
+           const gchar         *file_path, 
+           gchar               *expression, 
+           gint                 line_number)
+{
+  JavaCompletionKlassPrivate *priv;
+
+  gchar *indexes_folders;
+  gchar *line_number_str;
+  gchar *result;
+  
+  priv = JAVA_COMPLETION_KLASS_GET_PRIVATE (klass);
+  
+  line_number_str = g_strdup_printf ("%d", (line_number + 1));
+  
+  indexes_folders = java_utils_get_indexes_folder (priv->codeslayer);
+  
+  result = g_strconcat ("-program completion", 
+                        " -type ", "class",
+                        " -sourcefile ", file_path,
+                        " -expression ", expression,
+                        " -linenumber ", line_number_str,
+                        indexes_folders, 
+                        NULL);
+  
+  g_free (indexes_folders);
+  g_free (line_number_str);
+
+  return result;
+}
+
+static GList*
+render_output (JavaCompletionKlass *klass, 
+               gchar               *output, 
+               GtkTextMark         *mark)
+{
+  GList *proposals = NULL;
+  gchar **split;
+  gchar **tmp;
+  
+  if (!codeslayer_utils_has_text (output))
+    return NULL;
+  
+  split = g_strsplit (output, "\n", -1);
+
+  if (split != NULL)
+    {
+      tmp = split;
+      while (*tmp != NULL)
+        {
+          CodeSlayerCompletionProposal *proposal;
+          proposal = render_line (klass, *tmp, mark);
+          if (proposal != NULL)
+            proposals = g_list_append (proposals, proposal);
+          tmp++;
+        }
+      g_strfreev (split);
+    }
+    
+   return proposals;   
+}
+
+static CodeSlayerCompletionProposal*
+render_line (JavaCompletionKlass *klass, 
+             gchar               *line, 
+             GtkTextMark         *mark)
+{
+  gchar **split;
+  gchar **tmp;
+  
+  if (!codeslayer_utils_has_text (line))
+    return NULL;
+  
+  split = g_strsplit (line, "\t", -1);
+  if (split != NULL)
+    {
+      CodeSlayerCompletionProposal *proposal = NULL;
+      gchar *simple_class_name;  
+      
+      gchar *match_label;
+      gchar *match_text;
+      
+      tmp = split;
+
+      simple_class_name = *tmp;
+      
+      if (simple_class_name != NULL)
+        {
+          match_label = g_strdup_printf ("%s", simple_class_name);
+          match_text = g_strdup_printf ("%s", simple_class_name);
+          
+          proposal = codeslayer_completion_proposal_new (match_label, g_strstrip (match_text), mark);
+          
+          g_free (match_label);
+          g_free (match_text);
+
+        }      
+
+      g_strfreev (split);
+
+      return proposal;
+    }
+  
+  return NULL;
 }
 
 static gboolean
@@ -164,79 +282,4 @@ has_match (GtkTextIter start)
   g_free (text);
   
   return result;
-}
-
-static GList*
-get_class_indexes (JavaCompletionKlass *klass, 
-                   const gchar         *class_name)
-{
-  JavaCompletionKlassPrivate *priv;
-  GList *indexes = NULL;
-  GList *projects_indexes = NULL;
-  GList *libs_indexes = NULL;
-  gchar *group_folder_path;
-  
-  priv = JAVA_COMPLETION_KLASS_GET_PRIVATE (klass);
-
-  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
-  
-  projects_indexes = get_class_indexes_by_file_name (group_folder_path, "projects.classes", class_name);
-  libs_indexes = get_class_indexes_by_file_name (group_folder_path, "libs.classes", class_name);
-  
-  indexes = g_list_concat (projects_indexes, libs_indexes);
-    
-  g_free (group_folder_path);
-
-  return indexes;
-}
-
-static GList*
-get_class_indexes_by_file_name (gchar       *group_folder_path,
-                                const gchar *index_file_name,
-                                const gchar *class_name)
-{
-  GList *indexes = NULL;  
-  gchar *file_name;
-  GIOChannel *channel;
-  gchar *text;
-  GError *error = NULL;
-  
-  file_name = g_build_filename (group_folder_path, "indexes", index_file_name, NULL);
-
-  if (!g_file_test (file_name, G_FILE_TEST_EXISTS))
-    {
-      g_warning ("There is no %s file.", index_file_name);
-      g_free (file_name);
-      return indexes;
-    }
-  
-  channel = g_io_channel_new_file (file_name, "r", &error);
-  
-  while (g_io_channel_read_line (channel, &text, NULL, NULL, NULL) == G_IO_STATUS_NORMAL)
-    {
-      gchar **split;
-      gchar **array;
-    
-      split = g_strsplit (text, "\t", -1);
-      array = split;
-      
-      if (g_str_has_prefix (*array, class_name))
-        {
-          JavaIndexerIndex *index;
-          index = java_indexer_index_new ();
-          java_indexer_index_set_class_name (index, *array);
-          java_indexer_index_set_package_name (index, *++array);
-          java_indexer_index_set_file_path (index, g_strstrip(*++array));
-          indexes = g_list_prepend (indexes, index);
-        }
-        
-      g_strfreev (split);
-      g_free (text);
-    }
-    
-  g_io_channel_shutdown(channel, FALSE, NULL);
-  g_io_channel_unref (channel);  
-  g_free (file_name);
-
-  return indexes;
 }
