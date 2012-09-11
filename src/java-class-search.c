@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <codeslayer/codeslayer-utils.h>
-#include "java-indexer-index.h"
 #include "java-class-search.h"
 #include "java-utils.h"
 

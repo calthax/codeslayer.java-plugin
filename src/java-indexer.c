@@ -18,7 +18,6 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-indexer.h"
-#include "java-indexer-index.h"
 #include "java-utils.h"
 #include "java-configuration.h"
 

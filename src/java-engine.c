@@ -30,7 +30,6 @@
 #include "java-notebook.h"
 #include "java-usage.h"
 #include "java-navigate.h"
-#include "java-class-import.h"
 #include "java-class-search.h"
 
 static void java_engine_class_init                       (JavaEngineClass   *klass);
@@ -60,7 +59,6 @@ struct _JavaEnginePrivate
   JavaIndexer        *indexer;
   JavaUsage          *usage;
   JavaNavigate       *navigate;
-  JavaClassImport    *import;
   JavaClassSearch    *search;
   GtkWidget          *menu;
   GtkWidget          *project_properties;
@@ -96,7 +94,6 @@ java_engine_finalize (JavaEngine *engine)
   g_object_unref (priv->indexer);
   g_object_unref (priv->completion);
   g_object_unref (priv->usage);
-  g_object_unref (priv->import);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
 
@@ -125,10 +122,9 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->build = java_build_new (codeslayer, configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
   priv->indexer = java_indexer_new (codeslayer, menu, configurations, priv->client);
-  priv->completion = java_completion_new  (codeslayer, priv->indexer, configurations, priv->client);
+  priv->completion = java_completion_new  (codeslayer, priv->client);
   priv->usage = java_usage_new (codeslayer, menu, notebook, configurations, priv->client);
   priv->navigate = java_navigate_new (codeslayer, menu, configurations, priv->client);
-  priv->import = java_class_import_new (codeslayer, menu);
   priv->search = java_class_search_new (codeslayer, menu, priv->client);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",

@@ -35,8 +35,6 @@ typedef struct _JavaCompletionPrivate JavaCompletionPrivate;
 struct _JavaCompletionPrivate
 {
   CodeSlayer         *codeslayer;
-  JavaIndexer        *indexer;
-  JavaConfigurations *configurations;
   JavaClient         *client;
   gulong              editor_added_id;
 };
@@ -67,8 +65,6 @@ java_completion_finalize (JavaCompletion *completion)
 
 JavaCompletion*
 java_completion_new (CodeSlayer         *codeslayer, 
-                     JavaIndexer        *indexer, 
-                     JavaConfigurations *configurations,
                      JavaClient         *client)
 {
   JavaCompletionPrivate *priv;
@@ -77,8 +73,6 @@ java_completion_new (CodeSlayer         *codeslayer,
   completion = JAVA_COMPLETION (g_object_new (java_completion_get_type (), NULL));
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
   priv->codeslayer = codeslayer;
-  priv->indexer = indexer;
-  priv->configurations = configurations;
   priv->client = client;
   
   priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",

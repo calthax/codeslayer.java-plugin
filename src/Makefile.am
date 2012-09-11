@@ -30,8 +30,6 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook.c \
     java-notebook-tab.h \
     java-notebook-tab.c \
-    java-indexer.h \
-    java-indexer.c \
     java-indexer-utils.h \
     java-indexer-utils.c \
     java-indexer-index.h \
@@ -60,8 +58,6 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-utils.c \
     java-class-search.h \
     java-class-search.c \
-    java-class-import.h \
-    java-class-import.c \
     java-usage.h \
     java-usage.c \
     java-usage-method.h \

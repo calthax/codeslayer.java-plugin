@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <codeslayer/codeslayer-utils.h>
-#include "java-indexer-index.h"
 #include "java-indexer-utils.h"
 
 static gchar* find_path               (gchar       *text);
