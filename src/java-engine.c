@@ -30,7 +30,7 @@
 #include "java-notebook.h"
 #include "java-usage.h"
 #include "java-navigate.h"
-#include "java-class-search.h"
+#include "java-search.h"
 
 static void java_engine_class_init                       (JavaEngineClass   *klass);
 static void java_engine_init                             (JavaEngine        *engine);
@@ -59,7 +59,7 @@ struct _JavaEnginePrivate
   JavaIndexer        *indexer;
   JavaUsage          *usage;
   JavaNavigate       *navigate;
-  JavaClassSearch    *search;
+  JavaSearch         *search;
   GtkWidget          *menu;
   GtkWidget          *project_properties;
   GtkWidget          *projects_popup;
@@ -125,7 +125,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->completion = java_completion_new  (codeslayer, priv->client);
   priv->usage = java_usage_new (codeslayer, menu, notebook, configurations, priv->client);
   priv->navigate = java_navigate_new (codeslayer, menu, configurations, priv->client);
-  priv->search = java_class_search_new (codeslayer, menu, priv->client);
+  priv->search = java_search_new (codeslayer, menu, priv->client);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);

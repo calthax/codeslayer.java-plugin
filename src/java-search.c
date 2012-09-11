@@ -20,33 +20,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <codeslayer/codeslayer-utils.h>
-#include "java-class-search.h"
+#include "java-search.h"
 #include "java-utils.h"
 
-static void java_class_search_class_init    (JavaClassSearchClass *klass);
-static void java_class_search_init          (JavaClassSearch      *search);
-static void java_class_search_finalize      (JavaClassSearch      *search);
+static void java_search_class_init  (JavaSearchClass   *klass);
+static void java_search_init        (JavaSearch        *search);
+static void java_search_finalize    (JavaSearch        *search);
 
-static void class_search_action             (JavaClassSearch      *search);
-static void run_dialog                      (JavaClassSearch      *search);
-static gboolean key_release_action          (JavaClassSearch      *search,
-                                             GdkEventKey          *event);
-static void row_activated_action            (JavaClassSearch      *search,
-                                             GtkTreePath          *path,
-                                             GtkTreeViewColumn    *column);
-static gchar* get_input                     (JavaClassSearch      *search, 
-                                             const gchar          *text);
-static void render_output                   (JavaClassSearch      *search, 
-                                             gchar                *output);
-static void render_line                     (JavaClassSearch      *search, 
-                                             gchar                *line);
+static void search_action           (JavaSearch        *search);
+static void run_dialog              (JavaSearch        *search);
+static gboolean key_release_action  (JavaSearch        *search,
+                                     GdkEventKey       *event);
+static void row_activated_action    (JavaSearch        *search,
+                                     GtkTreePath       *path,
+                                     GtkTreeViewColumn *column);
+static gchar* get_input             (JavaSearch        *search, 
+                                     const gchar       *text);
+static void render_output           (JavaSearch        *search, 
+                                     gchar             *output);
+static void render_line             (JavaSearch        *search, 
+                                     gchar             *line);
 
-#define JAVA_CLASS_SEARCH_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_CLASS_SEARCH_TYPE, JavaClassSearchPrivate))
+#define JAVA_SEARCH_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_SEARCH_TYPE, JavaSearchPrivate))
 
-typedef struct _JavaClassSearchPrivate JavaClassSearchPrivate;
+typedef struct _JavaSearchPrivate JavaSearchPrivate;
 
-struct _JavaClassSearchPrivate
+struct _JavaSearchPrivate
 {
   CodeSlayer   *codeslayer;
   JavaClient   *client;
@@ -64,65 +64,65 @@ enum
   COLUMNS
 };
 
-G_DEFINE_TYPE (JavaClassSearch, java_class_search, G_TYPE_OBJECT)
+G_DEFINE_TYPE (JavaSearch, java_search, G_TYPE_OBJECT)
 
 static void 
-java_class_search_class_init (JavaClassSearchClass *klass)
+java_search_class_init (JavaSearchClass *klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_class_search_finalize;
-  g_type_class_add_private (klass, sizeof (JavaClassSearchPrivate));
+  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) java_search_finalize;
+  g_type_class_add_private (klass, sizeof (JavaSearchPrivate));
 }
 
 static void
-java_class_search_init (JavaClassSearch *search)
+java_search_init (JavaSearch *search)
 {
-  JavaClassSearchPrivate *priv;
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  JavaSearchPrivate *priv;
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   priv->dialog = NULL;
 }
 
 static void
-java_class_search_finalize (JavaClassSearch *search)
+java_search_finalize (JavaSearch *search)
 {
-  JavaClassSearchPrivate *priv;
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  JavaSearchPrivate *priv;
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   
   if (priv->dialog != NULL)
     gtk_widget_destroy (priv->dialog);
   
-  G_OBJECT_CLASS (java_class_search_parent_class)-> finalize (G_OBJECT (search));
+  G_OBJECT_CLASS (java_search_parent_class)-> finalize (G_OBJECT (search));
 }
 
-JavaClassSearch*
-java_class_search_new (CodeSlayer *codeslayer,
-                       GtkWidget  *menu, 
-                       JavaClient *client)
+JavaSearch*
+java_search_new (CodeSlayer *codeslayer,
+                 GtkWidget  *menu, 
+                 JavaClient *client)
 {
-  JavaClassSearchPrivate *priv;
-  JavaClassSearch *search;
+  JavaSearchPrivate *priv;
+  JavaSearch *search;
 
-  search = JAVA_CLASS_SEARCH (g_object_new (java_class_search_get_type (), NULL));
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  search = JAVA_SEARCH (g_object_new (java_search_get_type (), NULL));
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   priv->codeslayer = codeslayer;
   priv->client = client;
 
-  g_signal_connect_swapped (G_OBJECT (menu), "class-search",
-                            G_CALLBACK (class_search_action), search);
+  g_signal_connect_swapped (G_OBJECT (menu), "search",
+                            G_CALLBACK (search_action), search);
 
   return search;
 }
 
 static void
-class_search_action (JavaClassSearch *search)
+search_action (JavaSearch *search)
 {
   run_dialog (search);
 }
 
 static void
-run_dialog (JavaClassSearch *search)
+run_dialog (JavaSearch *search)
 {
-  JavaClassSearchPrivate *priv;
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  JavaSearchPrivate *priv;
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   
   if (priv->dialog == NULL)
     {
@@ -211,15 +211,15 @@ run_dialog (JavaClassSearch *search)
 }
 
 static gboolean
-key_release_action (JavaClassSearch *search,
+key_release_action (JavaSearch *search,
                     GdkEventKey     *event)
 {
-  JavaClassSearchPrivate *priv;
+  JavaSearchPrivate *priv;
   const gchar *text;
   gchar *input;
   gchar *output;
   
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   
   text = gtk_entry_get_text (GTK_ENTRY (priv->entry));
   
@@ -248,15 +248,15 @@ key_release_action (JavaClassSearch *search,
 }
 
 static gchar* 
-get_input (JavaClassSearch *search, 
-           const gchar     *text)
+get_input (JavaSearch  *search, 
+           const gchar *text)
 {
-  JavaClassSearchPrivate *priv;
+  JavaSearchPrivate *priv;
 
   gchar *indexes_folder;
   gchar *result;
   
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   
   indexes_folder = java_utils_get_indexes_folder (priv->codeslayer);
   
@@ -271,8 +271,8 @@ get_input (JavaClassSearch *search,
 }
 
 static void
-render_output (JavaClassSearch *search, 
-               gchar           *output)
+render_output (JavaSearch *search, 
+               gchar      *output)
 {
   gchar **split;
   gchar **tmp;
@@ -295,15 +295,15 @@ render_output (JavaClassSearch *search,
 }
 
 static void
-render_line (JavaClassSearch *search, 
-             gchar           *line)
+render_line (JavaSearch *search, 
+             gchar      *line)
 {
-  JavaClassSearchPrivate *priv;
+  JavaSearchPrivate *priv;
   GtkTreeIter iter;
   gchar **split;
   gchar **tmp;
   
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
   
   if (!codeslayer_utils_has_text (line))
     return;
@@ -338,17 +338,17 @@ render_line (JavaClassSearch *search,
 }
 
 static void
-row_activated_action (JavaClassSearch   *search,
+row_activated_action (JavaSearch   *search,
                       GtkTreePath       *path,
                       GtkTreeViewColumn *column)
 {
-  JavaClassSearchPrivate *priv;
+  JavaSearchPrivate *priv;
   GtkTreeSelection *tree_selection;
   GtkTreeModel *tree_model;
   GList *selected_rows = NULL;
   GList *tmp = NULL;  
   
-  priv = JAVA_CLASS_SEARCH_GET_PRIVATE (search);
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
 
   tree_selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (priv->tree));
   tree_model = gtk_tree_view_get_model (GTK_TREE_VIEW (priv->tree));

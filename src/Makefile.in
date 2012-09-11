@@ -119,7 +119,7 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-completion-word.lo \
 	libjavacodeslayerplugin_la-java-completion-class.lo \
 	libjavacodeslayerplugin_la-java-utils.lo \
-	libjavacodeslayerplugin_la-java-class-search.lo \
+	libjavacodeslayerplugin_la-java-search.lo \
 	libjavacodeslayerplugin_la-java-usage.lo \
 	libjavacodeslayerplugin_la-java-usage-method.lo \
 	libjavacodeslayerplugin_la-java-usage-pane.lo \
@@ -353,8 +353,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-completion-class.c \
     java-utils.h \
     java-utils.c \
-    java-class-search.h \
-    java-class-search.c \
+    java-search.h \
+    java-search.c \
     java-usage.h \
     java-usage.c \
     java-usage-method.h \
@@ -445,7 +445,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-build-pane.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-build.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-class-search.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-class.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-completion-method.Plo@am__quote@
@@ -470,6 +469,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-project-properties.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-projects-popup.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-search.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage-method.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage-pane.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage.Plo@am__quote@
@@ -671,12 +671,12 @@ libjavacodeslayerplugin_la-java-utils.lo: java-utils.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-utils.lo `test -f 'java-utils.c' || echo '$(srcdir)/'`java-utils.c
 
-libjavacodeslayerplugin_la-java-class-search.lo: java-class-search.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-class-search.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-class-search.Tpo -c -o libjavacodeslayerplugin_la-java-class-search.lo `test -f 'java-class-search.c' || echo '$(srcdir)/'`java-class-search.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-class-search.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-class-search.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-class-search.c' object='libjavacodeslayerplugin_la-java-class-search.lo' libtool=yes @AMDEPBACKSLASH@
+libjavacodeslayerplugin_la-java-search.lo: java-search.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-search.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-search.Tpo -c -o libjavacodeslayerplugin_la-java-search.lo `test -f 'java-search.c' || echo '$(srcdir)/'`java-search.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-search.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-search.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-search.c' object='libjavacodeslayerplugin_la-java-search.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-class-search.lo `test -f 'java-class-search.c' || echo '$(srcdir)/'`java-class-search.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-search.lo `test -f 'java-search.c' || echo '$(srcdir)/'`java-search.c
 
 libjavacodeslayerplugin_la-java-usage.lo: java-usage.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-usage.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-usage.Tpo -c -o libjavacodeslayerplugin_la-java-usage.lo `test -f 'java-usage.c' || echo '$(srcdir)/'`java-usage.c

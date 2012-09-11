@@ -56,8 +56,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-completion-class.c \
     java-utils.h \
     java-utils.c \
-    java-class-search.h \
-    java-class-search.c \
+    java-search.h \
+    java-search.c \
     java-usage.h \
     java-usage.c \
     java-usage-method.h \
