@@ -32,9 +32,8 @@ static void clean_action            (JavaMenu      *menu);
 static void test_file_action        (JavaMenu      *menu);
 static void debug_test_file_action  (JavaMenu      *menu);
 static void attach_debugger_action  (JavaMenu      *menu);
-static void find_symbol_action      (JavaMenu      *menu);
+static void navigate_action      (JavaMenu      *menu);
 static void class_search_action     (JavaMenu      *menu);
-static void class_import_action     (JavaMenu      *menu);
 static void index_projects_action   (JavaMenu      *menu);
 static void index_libs_action       (JavaMenu      *menu);
 static void method_usage_action     (JavaMenu      *menu);
@@ -46,9 +45,8 @@ enum
   TEST_FILE,
   DEBUG_TEST_FILE,
   ATTACH_DEBUGGER,
-  FIND_SYMBOL,
+  NAVIGATE,
   CLASS_SEARCH,
-  CLASS_IMPORT,
   INDEX_PRODUCTS,
   INDEX_LIBS,
   METHOD_USAGE,
@@ -102,8 +100,8 @@ java_menu_class_init (JavaMenuClass *klass)
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  java_menu_signals[FIND_SYMBOL] =
-    g_signal_new ("find-symbol", 
+  java_menu_signals[NAVIGATE] =
+    g_signal_new ("navigate", 
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (JavaMenuClass, find_symbol),
@@ -115,14 +113,6 @@ java_menu_class_init (JavaMenuClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (JavaMenuClass, class_search),
-                  NULL, NULL, 
-                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  java_menu_signals[CLASS_IMPORT] =
-    g_signal_new ("class-import", 
-                  G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
-                  G_STRUCT_OFFSET (JavaMenuClass, class_import),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
@@ -191,9 +181,8 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *test_file_item;
   GtkWidget *debug_test_file_item;
   GtkWidget *attach_debugger_item;
-  GtkWidget *find_symbol_item;
+  GtkWidget *navigate_item;
   GtkWidget *class_search_item;
-  GtkWidget *class_import_item;
   GtkWidget *index_projects_item;
   GtkWidget *index_libs_item;
   GtkWidget *method_usage_item;
@@ -229,21 +218,16 @@ add_menu_items (JavaMenu      *menu,
   separator_item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
 
-  find_symbol_item = codeslayer_menu_item_new_with_label ("Find Symbol");
-  gtk_widget_add_accelerator (find_symbol_item, "activate", 
+  navigate_item = codeslayer_menu_item_new_with_label ("Navigate");
+  gtk_widget_add_accelerator (navigate_item, "activate", 
                               accel_group, GDK_KEY_F4, 0, GTK_ACCEL_VISIBLE);  
-  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), find_symbol_item);
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), navigate_item);
 
   class_search_item = codeslayer_menu_item_new_with_label ("Class Search");
   gtk_widget_add_accelerator (class_search_item, "activate", 
                               accel_group, GDK_KEY_E, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), class_search_item);
 
-  class_import_item = codeslayer_menu_item_new_with_label ("Class Import");
-  gtk_widget_add_accelerator (class_import_item, "activate", 
-                              accel_group, GDK_KEY_I, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
-  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), class_import_item);
-  
   separator_item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
   
@@ -274,14 +258,11 @@ add_menu_items (JavaMenu      *menu,
   g_signal_connect_swapped (G_OBJECT (attach_debugger_item), "activate", 
                             G_CALLBACK (attach_debugger_action), menu);
    
-  g_signal_connect_swapped (G_OBJECT (find_symbol_item), "activate", 
-                            G_CALLBACK (find_symbol_action), menu);
+  g_signal_connect_swapped (G_OBJECT (navigate_item), "activate", 
+                            G_CALLBACK (navigate_action), menu);
    
   g_signal_connect_swapped (G_OBJECT (class_search_item), "activate", 
                             G_CALLBACK (class_search_action), menu);
-   
-  g_signal_connect_swapped (G_OBJECT (class_import_item), "activate", 
-                            G_CALLBACK (class_import_action), menu);
    
   g_signal_connect_swapped (G_OBJECT (index_projects_item), "activate", 
                             G_CALLBACK (index_projects_action), menu);
@@ -324,21 +305,15 @@ attach_debugger_action (JavaMenu *menu)
 }
 
 static void 
-find_symbol_action (JavaMenu *menu) 
+navigate_action (JavaMenu *menu) 
 {
-  g_signal_emit_by_name ((gpointer) menu, "find-symbol");
+  g_signal_emit_by_name ((gpointer) menu, "navigate");
 }
 
 static void 
 class_search_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "class-search");
-}
-
-static void 
-class_import_action (JavaMenu *menu) 
-{
-  g_signal_emit_by_name ((gpointer) menu, "class-import");
 }
 
 static void 

@@ -84,7 +84,7 @@ java_navigate_new (CodeSlayer         *codeslayer,
   priv->configurations = configurations;
   priv->client = client;
 
-  g_signal_connect_swapped (G_OBJECT (menu), "find-symbol",
+  g_signal_connect_swapped (G_OBJECT (menu), "navigate",
                             G_CALLBACK (navigate_action), navigate);
 
   return navigate;
