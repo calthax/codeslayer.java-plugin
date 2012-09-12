@@ -21,7 +21,6 @@
 #include "java-navigate.h"
 #include "java-utils.h"
 #include "java-page.h"
-#include "java-indexer-utils.h"
 
 static void java_navigate_class_init  (JavaNavigateClass *klass);
 static void java_navigate_init        (JavaNavigate      *navigate);
@@ -130,7 +129,7 @@ navigate_action (JavaNavigate *navigate)
   line_number = gtk_text_iter_get_line (&start);
   
   text = get_text (buffer, end);
-  expression = java_indexer_utils_get_expression (text);
+  expression = java_utils_get_expression (text);
   
   input = get_input (navigate, file_path, expression, line_number);
 

@@ -18,7 +18,6 @@
 
 #include <codeslayer/codeslayer-utils.h>
 #include "java-completion-method.h"
-#include "java-indexer-utils.h"
 #include "java-utils.h"
 
 static void java_completion_provider_interface_init  (gpointer                    page, 
@@ -139,7 +138,7 @@ java_completion_get_proposals (JavaCompletionMethod *method,
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor));
   
   text = get_text (buffer, start);
-  expression = java_indexer_utils_get_expression (text);
+  expression = java_utils_get_expression (text);
   
   input = get_input (method, file_path, expression, line_number);
 

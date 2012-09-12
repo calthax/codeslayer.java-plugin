@@ -30,8 +30,6 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook.c \
     java-notebook-tab.h \
     java-notebook-tab.c \
-    java-indexer-utils.h \
-    java-indexer-utils.c \
     java-indexer.h \
     java-indexer.c \
     java-debugger.h \

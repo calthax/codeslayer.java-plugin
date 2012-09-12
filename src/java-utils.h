@@ -34,8 +34,9 @@ gchar*  get_source_indexes_folders       (CodeSlayer         *codeslayer,
                                           JavaConfigurations *configurations);
 gchar*  get_lib_indexes_folders          (CodeSlayer         *codeslayer, 
                                           JavaConfigurations *configurations);
-gchar*  java_utils_get_indexes_folder    (CodeSlayer         *codeslayer);                                  
-
+gchar*  java_utils_get_indexes_folder    (CodeSlayer         *codeslayer);
+gchar*  java_utils_get_expression        (gchar              *text);
+                               
 G_END_DECLS
 
 #endif /* __JAVA_UTILS_H__ */
