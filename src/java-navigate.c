@@ -119,12 +119,15 @@ navigate_action (JavaNavigate *navigate)
     return;
   
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
+  
+  if (!gtk_text_buffer_get_selection_bounds (buffer, &start, &end))
+    {
+      insert_mark = gtk_text_buffer_get_insert (buffer);    
+      selection_mark = gtk_text_buffer_get_selection_bound (buffer);
 
-  insert_mark = gtk_text_buffer_get_insert (buffer);    
-  selection_mark = gtk_text_buffer_get_selection_bound (buffer);
-
-  gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
-  gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
+      gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
+      gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
+    }
 
   line_number = gtk_text_iter_get_line (&start);
   

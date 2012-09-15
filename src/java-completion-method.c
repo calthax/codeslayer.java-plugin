@@ -251,6 +251,10 @@ render_line (JavaCompletionMethod *method,
     return NULL;
   
   split = g_strsplit (line, "\t", -1);
+  
+  if (g_strcmp0 (*split, "NO_RESULTS_FOUND") == 0)
+    return NULL;
+  
   if (split != NULL)
     {
       CodeSlayerCompletionProposal *proposal = NULL;
@@ -269,11 +273,8 @@ render_line (JavaCompletionMethod *method,
       method_parameter_variables = *++tmp;
       method_return_type = *++tmp;
       
-      if (method_name != NULL && 
-          method_parameters != NULL && 
-          method_parameter_variables != NULL && 
-          method_return_type != NULL)
-        {
+      if (method_name != NULL)
+        {        
           match_label = g_strdup_printf ("%s(%s) %s", method_name, method_parameters, method_return_type);
           match_text = g_strdup_printf ("%s(%s)", method_name, method_parameter_variables);
           
