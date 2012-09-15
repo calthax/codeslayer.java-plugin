@@ -31,15 +31,18 @@ static void search_action           (JavaSearch        *search);
 static void run_dialog              (JavaSearch        *search);
 static gboolean key_release_action  (JavaSearch        *search,
                                      GdkEventKey       *event);
-static void row_activated_action    (JavaSearch        *search,
-                                     GtkTreePath       *path,
-                                     GtkTreeViewColumn *column);
 static gchar* get_input             (JavaSearch        *search, 
                                      const gchar       *text);
 static void render_output           (JavaSearch        *search, 
                                      gchar             *output);
 static void render_line             (JavaSearch        *search, 
                                      gchar             *line);
+static void row_activated_action    (JavaSearch        *search,
+                                     GtkTreePath       *path,
+                                     GtkTreeViewColumn *column);
+static gboolean filter_callback     (GtkTreeModel      *model,
+                                     GtkTreeIter       *iter,
+                                     JavaSearch        *search);                                     
 
 #define JAVA_SEARCH_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_SEARCH_TYPE, JavaSearchPrivate))
@@ -54,6 +57,7 @@ struct _JavaSearchPrivate
   GtkWidget    *entry;
   GtkWidget    *tree;
   GtkListStore *store;
+  GtkTreeModel *filter;  
 };
 
 enum
@@ -79,6 +83,7 @@ java_search_init (JavaSearch *search)
   JavaSearchPrivate *priv;
   priv = JAVA_SEARCH_GET_PRIVATE (search);
   priv->dialog = NULL;
+  priv->filter = NULL;
 }
 
 static void
@@ -163,9 +168,16 @@ run_dialog (JavaSearch *search)
       priv->tree =  gtk_tree_view_new ();
       gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (priv->tree), FALSE);
       gtk_tree_view_set_enable_search (GTK_TREE_VIEW (priv->tree), FALSE);
-      gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->store));
+      
+      priv->filter = gtk_tree_model_filter_new (GTK_TREE_MODEL (priv->store), NULL);
+      gtk_tree_model_filter_set_visible_func (GTK_TREE_MODEL_FILTER (priv->filter),
+                                              (GtkTreeModelFilterVisibleFunc) filter_callback,
+                                               search, NULL);
+      
+      gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->filter));
       g_object_unref (priv->store);
       
+
       column = gtk_tree_view_column_new ();
       gtk_tree_view_column_set_sizing (column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
       renderer = gtk_cell_renderer_text_new ();
@@ -211,39 +223,50 @@ run_dialog (JavaSearch *search)
 }
 
 static gboolean
-key_release_action (JavaSearch *search,
-                    GdkEventKey     *event)
+key_release_action (JavaSearch  *search,
+                    GdkEventKey *event)
 {
   JavaSearchPrivate *priv;
-  const gchar *text;
-  gchar *input;
-  gchar *output;
+  gint text_length;
   
   priv = JAVA_SEARCH_GET_PRIVATE (search);
   
-  text = gtk_entry_get_text (GTK_ENTRY (priv->entry));
+  text_length = gtk_entry_get_text_length (GTK_ENTRY (priv->entry));
   
-  if (priv->store != NULL)
-    gtk_list_store_clear (priv->store);
-    
-  if (!codeslayer_utils_has_text (text))
-    return FALSE;
-  
-  input = get_input (search, text);
-  
-  g_print ("input: %s\n", input);
-  
-  output = java_client_send (priv->client, input);
-  
-  if (output != NULL)
+  if (text_length == 0)
     {
-      g_print ("output: %s\n", output);
-      render_output (search, output);
-      g_free (output);
+      gtk_list_store_clear (priv->store);
     }
+  else if (text_length > 1 && 
+           gtk_tree_model_iter_n_children (GTK_TREE_MODEL (priv->filter), NULL))
+    {
+      gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (priv->filter));
+    }
+  else
+    {
+      gchar *input;
+      gchar *output;
+      const gchar *text;
+      
+      gtk_list_store_clear (priv->store);
 
-  g_free (input);
+      text = gtk_entry_get_text (GTK_ENTRY (priv->entry));  
+      input = get_input (search, text);
+      
+      g_print ("input: %s\n", input);
+      
+      output = java_client_send (priv->client, input);
+      
+      if (output != NULL)
+        {
+          g_print ("output: %s\n", output);
+          render_output (search, output);
+          g_free (output);
+        }
 
+      g_free (input);    
+    }
+  
   return FALSE;
 }
 
@@ -337,8 +360,31 @@ render_line (JavaSearch *search,
     }
 }
 
+static gboolean
+filter_callback (GtkTreeModel *model,
+                 GtkTreeIter  *iter,
+                 JavaSearch   *search)
+{  
+  JavaSearchPrivate *priv;
+  const gchar *text = NULL;
+  gchar *value = NULL;
+
+  priv = JAVA_SEARCH_GET_PRIVATE (search);
+  
+  text = gtk_entry_get_text (GTK_ENTRY (priv->entry));
+  gtk_tree_model_get (model, iter, SIMPLE_CLASS_NAME, &value, -1);
+  
+  if (text == NULL || value == NULL)
+    return FALSE;
+
+  if (g_str_has_prefix (value, text))
+    return TRUE;
+
+  return FALSE;
+}                 
+
 static void
-row_activated_action (JavaSearch   *search,
+row_activated_action (JavaSearch        *search,
                       GtkTreePath       *path,
                       GtkTreeViewColumn *column)
 {
@@ -365,7 +411,7 @@ row_activated_action (JavaSearch   *search,
       GtkTreePath *tree_path = tmp->data;
       
       gtk_tree_model_get_iter (tree_model, &treeiter, tree_path);
-      gtk_tree_model_get (GTK_TREE_MODEL (priv->store), &treeiter, FILE_PATH, &file_path, -1);
+      gtk_tree_model_get (GTK_TREE_MODEL (priv->filter), &treeiter, FILE_PATH, &file_path, -1);
       
       document = codeslayer_document_new ();
       project = codeslayer_get_project_by_file_path (priv->codeslayer, file_path);
