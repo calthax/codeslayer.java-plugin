@@ -125,11 +125,14 @@ method_usage_action (JavaUsage *usage)
   
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
 
-  insert_mark = gtk_text_buffer_get_insert (buffer);    
-  selection_mark = gtk_text_buffer_get_selection_bound (buffer);
+  if (!gtk_text_buffer_get_selection_bounds (buffer, &start, &end))
+    {
+      insert_mark = gtk_text_buffer_get_insert (buffer);    
+      selection_mark = gtk_text_buffer_get_selection_bound (buffer);
 
-  gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
-  gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
+      gtk_text_buffer_get_iter_at_mark (buffer, &start, insert_mark);
+      gtk_text_buffer_get_iter_at_mark (buffer, &end, selection_mark);
+    }
 
   symbol = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
   line_number = gtk_text_iter_get_line (&start);
@@ -272,6 +275,10 @@ get_java_usage_method (gchar *text)
     return NULL;
   
   split = g_strsplit (text, "\t", -1);
+
+  if (g_strcmp0 (*split, "NO_RESULTS_FOUND") == 0)
+    return NULL;
+  
   if (split != NULL)
     {
       gchar *class_name;

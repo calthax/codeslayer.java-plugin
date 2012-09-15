@@ -211,7 +211,7 @@ render_output (JavaNavigate *navigate,
   split = g_strsplit (output, "\t", -1);
   
   if (g_strcmp0 (*split, "NO_RESULTS_FOUND") == 0)
-    return NULL;
+    return;
   
   if (split != NULL)
     {
