@@ -305,6 +305,9 @@ render_output (JavaSearch *search,
   
   split = g_strsplit (output, "\n", -1);
 
+  if (g_strcmp0 (*split, "NO_RESULTS_FOUND") == 0)
+    return;
+
   if (split != NULL)
     {
       tmp = split;

@@ -34,6 +34,7 @@ static void debug_test_file_action  (JavaMenu      *menu);
 static void attach_debugger_action  (JavaMenu      *menu);
 static void navigate_action      (JavaMenu      *menu);
 static void search_action     (JavaMenu      *menu);
+static void import_action     (JavaMenu      *menu);
 static void index_projects_action   (JavaMenu      *menu);
 static void index_libs_action       (JavaMenu      *menu);
 static void method_usage_action     (JavaMenu      *menu);
@@ -46,6 +47,7 @@ enum
   DEBUG_TEST_FILE,
   ATTACH_DEBUGGER,
   NAVIGATE,
+  IMPORT,
   SEARCH,
   INDEX_PRODUCTS,
   INDEX_LIBS,
@@ -112,7 +114,15 @@ java_menu_class_init (JavaMenuClass *klass)
     g_signal_new ("search", 
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
-                  G_STRUCT_OFFSET (JavaMenuClass, class_search),
+                  G_STRUCT_OFFSET (JavaMenuClass, search),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  java_menu_signals[IMPORT] =
+    g_signal_new ("import", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaMenuClass, import),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
@@ -183,6 +193,7 @@ add_menu_items (JavaMenu      *menu,
   GtkWidget *attach_debugger_item;
   GtkWidget *navigate_item;
   GtkWidget *search_item;
+  GtkWidget *import_item;
   GtkWidget *index_projects_item;
   GtkWidget *index_libs_item;
   GtkWidget *method_usage_item;
@@ -228,6 +239,11 @@ add_menu_items (JavaMenu      *menu,
                               accel_group, GDK_KEY_E, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), search_item);
 
+  import_item = codeslayer_menu_item_new_with_label ("Import");
+  gtk_widget_add_accelerator (import_item, "activate", 
+                              accel_group, GDK_KEY_I, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);  
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), import_item);
+
   separator_item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
   
@@ -263,6 +279,9 @@ add_menu_items (JavaMenu      *menu,
    
   g_signal_connect_swapped (G_OBJECT (search_item), "activate", 
                             G_CALLBACK (search_action), menu);
+   
+  g_signal_connect_swapped (G_OBJECT (import_item), "activate", 
+                            G_CALLBACK (import_action), menu);
    
   g_signal_connect_swapped (G_OBJECT (index_projects_item), "activate", 
                             G_CALLBACK (index_projects_action), menu);
@@ -314,6 +333,12 @@ static void
 search_action (JavaMenu *menu) 
 {
   g_signal_emit_by_name ((gpointer) menu, "search");
+}
+
+static void 
+import_action (JavaMenu *menu) 
+{
+  g_signal_emit_by_name ((gpointer) menu, "import");
 }
 
 static void 

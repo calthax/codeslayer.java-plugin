@@ -49,8 +49,8 @@ struct _JavaMenuClass
   void (*attach_debugger) (JavaMenu *menu);
   void (*find_symbol) (JavaMenu *menu);
   void (*method_usage) (JavaMenu *menu);
-  void (*class_search) (JavaMenu *menu);
-  void (*class_import) (JavaMenu *menu);
+  void (*search) (JavaMenu *menu);
+  void (*import) (JavaMenu *menu);
   void (*index_projects) (JavaMenu *menu);
   void (*index_libs) (JavaMenu *menu);
 };

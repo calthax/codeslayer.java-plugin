@@ -106,6 +106,7 @@ am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-project-properties.lo \
 	libjavacodeslayerplugin_la-java-notebook.lo \
 	libjavacodeslayerplugin_la-java-notebook-tab.lo \
+	libjavacodeslayerplugin_la-java-import.lo \
 	libjavacodeslayerplugin_la-java-indexer.lo \
 	libjavacodeslayerplugin_la-java-debugger.lo \
 	libjavacodeslayerplugin_la-java-debugger-column.lo \
@@ -326,6 +327,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-notebook.c \
     java-notebook-tab.h \
     java-notebook-tab.c \
+    java-import.h \
+    java-import.c \
     java-indexer.h \
     java-indexer.c \
     java-debugger.h \
@@ -456,6 +459,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger-service.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-debugger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-engine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-import.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-indexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-menu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-navigate.Plo@am__quote@
@@ -575,6 +579,13 @@ libjavacodeslayerplugin_la-java-notebook-tab.lo: java-notebook-tab.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-notebook-tab.c' object='libjavacodeslayerplugin_la-java-notebook-tab.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-notebook-tab.lo `test -f 'java-notebook-tab.c' || echo '$(srcdir)/'`java-notebook-tab.c
+
+libjavacodeslayerplugin_la-java-import.lo: java-import.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-import.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-import.Tpo -c -o libjavacodeslayerplugin_la-java-import.lo `test -f 'java-import.c' || echo '$(srcdir)/'`java-import.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-import.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-import.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-import.c' object='libjavacodeslayerplugin_la-java-import.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-import.lo `test -f 'java-import.c' || echo '$(srcdir)/'`java-import.c
 
 libjavacodeslayerplugin_la-java-indexer.lo: java-indexer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-indexer.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-indexer.Tpo -c -o libjavacodeslayerplugin_la-java-indexer.lo `test -f 'java-indexer.c' || echo '$(srcdir)/'`java-indexer.c
