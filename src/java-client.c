@@ -26,13 +26,17 @@ static void java_client_finalize   (JavaClient      *client);
                           
 #define JAVA_CLIENT_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_CLIENT_TYPE, JavaClientPrivate))
+  
+#define LOCALHOST "localhost"  
 
 typedef struct _JavaClientPrivate JavaClientPrivate;
 
 struct _JavaClientPrivate
 {
-  CodeSlayer *codeslayer;
-  GSocket    *socket;
+  CodeSlayer        *codeslayer;
+  GSocket           *socket;
+  GSocketClient     *socket_client;
+  GSocketConnection *socket_connection;
 };
 
 G_DEFINE_TYPE (JavaClient, java_client, G_TYPE_OBJECT)
@@ -53,10 +57,13 @@ java_client_finalize (JavaClient *client)
 {
   JavaClientPrivate *priv;
   priv = JAVA_CLIENT_GET_PRIVATE (client);
+
+  if  (priv->socket_client)
+    g_object_unref (priv->socket_client);
+
   if  (priv->socket)
-    {
-      g_object_unref (priv->socket);    
-    }
+    g_object_unref (priv->socket);    
+    
   G_OBJECT_CLASS (java_client_parent_class)->finalize (G_OBJECT(client));
 }
 
@@ -78,22 +85,21 @@ void
 java_client_connect (JavaClient *client)
 {
   JavaClientPrivate *priv;
-  GSocketClient *socketClient;
-  GSocketConnection *socketConnection;
   GError *error = NULL;
 
   priv = JAVA_CLIENT_GET_PRIVATE (client);
   
-  socketClient = g_socket_client_new ();  
-  socketConnection = g_socket_client_connect_to_host (socketClient, "localhost", 4444, NULL, &error);
+  priv->socket_client = g_socket_client_new ();  
+  priv->socket_connection = g_socket_client_connect_to_host (priv->socket_client, LOCALHOST, 4444, NULL, &error);
   
   if (error != NULL)
     {
       g_print ("%s\n", error->message);
+      g_error_free (error);
       return;
     }
   
-  priv->socket = g_socket_connection_get_socket (socketConnection);
+  priv->socket = g_socket_connection_get_socket (priv->socket_connection);
   g_socket_set_blocking (priv->socket, FALSE);
 }
 

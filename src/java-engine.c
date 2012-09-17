@@ -96,6 +96,10 @@ java_engine_finalize (JavaEngine *engine)
   g_object_unref (priv->indexer);
   g_object_unref (priv->completion);
   g_object_unref (priv->usage);
+  g_object_unref (priv->navigate);
+  g_object_unref (priv->search);
+  g_object_unref (priv->import);
+  g_object_unref (priv->client);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
 

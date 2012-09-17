@@ -35,14 +35,14 @@ static gint sort_iter_compare_func                           (GtkTreeModel      
                                                               GtkTreeIter        *a,
                                                               GtkTreeIter        *b, 
                                                               gpointer            userdata);
-static GHashTable* get_method_usages_by_project              (JavaUsagePane      *usage_pane, 
-                                                              GList              *method_usages);
+static GHashTable* get_usage_methods_by_project              (JavaUsagePane      *usage_pane, 
+                                                              GList              *usage_methods);
 static void render_usage_methods                             (CodeSlayerProject  *project, 
-                                                              GList              *method_usages, 
+                                                              GList              *usage_methods, 
                                                               JavaUsagePane      *usage_pane);                                                              
 static gboolean select_usage                                 (JavaUsagePane      *usage_pane,
                                                               GtkTreeIter        *treeiter,
-                                                              GtkTreeViewColumn  *column);
+                                                              GtkTreeViewColumn  *column);                                                              
 
 #define JAVA_USAGE_PANE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_USAGE_PANE_TYPE, JavaUsagePanePrivate))
@@ -148,6 +148,10 @@ java_usage_pane_init (JavaUsagePane *usage_pane)
 static void
 java_usage_pane_finalize (JavaUsagePane *usage_pane)
 {
+  /*JavaUsagePanePrivate *priv;
+  priv = JAVA_USAGE_PANE_GET_PRIVATE (usage_pane);
+  if (priv->treestore != NULL)
+    gtk_tree_store_clear (priv->treestore);*/
   G_OBJECT_CLASS (java_usage_pane_parent_class)->finalize (G_OBJECT (usage_pane));
 }
 
@@ -168,7 +172,7 @@ java_usage_pane_new (CodeSlayer   *codeslayer,
 
 void
 java_usage_pane_set_usage_methods (JavaUsagePane *usage_pane, 
-                                   GList         *method_usages)
+                                   GList         *usage_methods)
 {
   JavaUsagePanePrivate *priv;
   GHashTable *hash_table;
@@ -178,10 +182,12 @@ java_usage_pane_set_usage_methods (JavaUsagePane *usage_pane,
   if (priv->treestore != NULL)
     gtk_tree_store_clear (priv->treestore);
     
-  hash_table = get_method_usages_by_project (usage_pane, method_usages);
+  hash_table = get_usage_methods_by_project (usage_pane, usage_methods);
     
   g_hash_table_foreach (hash_table, (GHFunc) render_usage_methods, usage_pane);
-  
+
+  g_list_foreach (usage_methods, (GFunc) g_object_unref, NULL);
+  g_list_free (usage_methods);
   g_hash_table_destroy (hash_table);
 }
 
@@ -189,16 +195,14 @@ void
 java_usage_pane_clear_usage_methods (JavaUsagePane *usage_pane)
 {
   JavaUsagePanePrivate *priv;
-
   priv = JAVA_USAGE_PANE_GET_PRIVATE (usage_pane);
-
   if (priv->treestore != NULL)
     gtk_tree_store_clear (priv->treestore);
 }
 
 static GHashTable* 
-get_method_usages_by_project (JavaUsagePane *usage_pane, 
-                              GList         *method_usages)
+get_usage_methods_by_project (JavaUsagePane *usage_pane, 
+                              GList         *usage_methods)
 {
   JavaUsagePanePrivate *priv;
   GHashTable *hash_table;
@@ -207,9 +211,9 @@ get_method_usages_by_project (JavaUsagePane *usage_pane,
 
   priv = JAVA_USAGE_PANE_GET_PRIVATE (usage_pane);
   
-  while (method_usages != NULL)
+  while (usage_methods != NULL)
     {
-      JavaUsageMethod *usage_method = method_usages->data;
+      JavaUsageMethod *usage_method = usage_methods->data;
       CodeSlayerProject *project;
       const gchar *file_path;
       GList *values = NULL;
@@ -221,7 +225,7 @@ get_method_usages_by_project (JavaUsagePane *usage_pane,
       values = g_list_append (values, usage_method);
       g_hash_table_insert (hash_table, project, values);
 
-      method_usages = g_list_next (method_usages);
+      usage_methods = g_list_next (usage_methods);
     }  
 
   return hash_table;
@@ -229,11 +233,12 @@ get_method_usages_by_project (JavaUsagePane *usage_pane,
 
 static void 
 render_usage_methods (CodeSlayerProject *project, 
-                      GList             *method_usages, 
+                      GList             *usage_methods, 
                       JavaUsagePane     *usage_pane)
 {
   JavaUsagePanePrivate *priv;
   GtkTreeIter parent;
+  GList *tmp;
   priv = JAVA_USAGE_PANE_GET_PRIVATE (usage_pane);
   
   gtk_tree_store_append (priv->treestore, &parent, NULL);
@@ -243,10 +248,11 @@ render_usage_methods (CodeSlayerProject *project,
                       TEXT, codeslayer_project_get_name (project), 
                       -1);
   
+  tmp = usage_methods;
   
-  while (method_usages != NULL)
+  while (tmp != NULL)
     {
-      JavaUsageMethod *usage_method = method_usages->data;
+      JavaUsageMethod *usage_method = tmp->data;
       GtkTreeIter iter;
       gchar *line_text;
       gchar *full_text;
@@ -255,6 +261,8 @@ render_usage_methods (CodeSlayerProject *project,
       
       class_name = java_usage_method_get_class_name (usage_method);
       line_number = java_usage_method_get_line_number (usage_method);
+      
+      g_print ("class_name %s\n", class_name);
       
       line_text = g_strdup_printf ("%d", line_number);
       full_text = g_strconcat ("(", line_text, ") ", class_name, NULL);
@@ -270,8 +278,10 @@ render_usage_methods (CodeSlayerProject *project,
       g_free (line_text);
       g_free (full_text);
                           
-      method_usages = g_list_next (method_usages);
+      tmp = g_list_next (tmp);
     }
+    
+  g_list_free (usage_methods);    
 }
 
 static gboolean 

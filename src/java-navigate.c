@@ -148,6 +148,8 @@ navigate_action (JavaNavigate *navigate)
     }
 
   g_free (input);
+  g_free (text);
+  g_free (expression);
 }
 
 static gchar*

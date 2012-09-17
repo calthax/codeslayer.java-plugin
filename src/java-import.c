@@ -161,6 +161,7 @@ import_action (JavaImport *import)
   gtk_widget_hide (priv->dialog);
   
   g_free (input);
+  g_free (text);
 }
 
 static void
@@ -337,19 +338,19 @@ row_activated_action (JavaImport        *import,
   if (tmp != NULL)
     {
       GtkTreeIter treeiter;
-      const gchar *class_name; 
+      gchar *class_name; 
       GtkTreePath *tree_path = tmp->data;
       
       gtk_tree_model_get_iter (tree_model, &treeiter, tree_path);
       gtk_tree_model_get (GTK_TREE_MODEL (priv->store), &treeiter, CLASS_NAME, &class_name, -1);
       
-      g_print ("class_name %s\n", class_name);
-      
       insert_import (import, class_name);
       
       gtk_widget_hide (priv->dialog);
-      
       gtk_tree_path_free (tree_path);
+      
+      if (class_name != NULL)
+        g_free (class_name);
     }
 
   g_list_free (selected_rows);

@@ -410,7 +410,7 @@ row_activated_action (JavaSearch        *search,
       GtkTreeIter treeiter;
       CodeSlayerProject *project;
       CodeSlayerDocument *document;
-      const gchar *file_path; 
+      gchar *file_path; 
       GtkTreePath *tree_path = tmp->data;
       
       gtk_tree_model_get_iter (tree_model, &treeiter, tree_path);
@@ -425,6 +425,7 @@ row_activated_action (JavaSearch        *search,
       gtk_widget_hide (priv->dialog);
       
       g_object_unref (document);
+      g_free (file_path);
       gtk_tree_path_free (tree_path);
     }
 
