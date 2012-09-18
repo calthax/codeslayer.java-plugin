@@ -96,6 +96,7 @@ libjavacodeslayerplugin_la_LIBADD =
 am_libjavacodeslayerplugin_la_OBJECTS =  \
 	libjavacodeslayerplugin_la-java-client.lo \
 	libjavacodeslayerplugin_la-java-engine.lo \
+	libjavacodeslayerplugin_la-java-properties.lo \
 	libjavacodeslayerplugin_la-java-page.lo \
 	libjavacodeslayerplugin_la-java-build.lo \
 	libjavacodeslayerplugin_la-java-build-pane.lo \
@@ -307,6 +308,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-client.c \
     java-engine.h \
     java-engine.c \
+    java-properties.h \
+    java-properties.c \
     java-page.h \
     java-page.c \
     java-build.h \
@@ -469,6 +472,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-project-properties.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-projects-popup.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-properties.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-search.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage-method.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjavacodeslayerplugin_la-java-usage-pane.Plo@am__quote@
@@ -509,6 +513,13 @@ libjavacodeslayerplugin_la-java-engine.lo: java-engine.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-engine.c' object='libjavacodeslayerplugin_la-java-engine.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-engine.lo `test -f 'java-engine.c' || echo '$(srcdir)/'`java-engine.c
+
+libjavacodeslayerplugin_la-java-properties.lo: java-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-properties.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-properties.Tpo -c -o libjavacodeslayerplugin_la-java-properties.lo `test -f 'java-properties.c' || echo '$(srcdir)/'`java-properties.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjavacodeslayerplugin_la-java-properties.Tpo $(DEPDIR)/libjavacodeslayerplugin_la-java-properties.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='java-properties.c' object='libjavacodeslayerplugin_la-java-properties.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libjavacodeslayerplugin_la-java-properties.lo `test -f 'java-properties.c' || echo '$(srcdir)/'`java-properties.c
 
 libjavacodeslayerplugin_la-java-page.lo: java-page.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libjavacodeslayerplugin_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libjavacodeslayerplugin_la-java-page.lo -MD -MP -MF $(DEPDIR)/libjavacodeslayerplugin_la-java-page.Tpo -c -o libjavacodeslayerplugin_la-java-page.lo `test -f 'java-page.c' || echo '$(srcdir)/'`java-page.c

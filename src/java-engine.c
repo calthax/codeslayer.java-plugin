@@ -32,6 +32,7 @@
 #include "java-navigate.h"
 #include "java-search.h"
 #include "java-import.h"
+#include "java-properties.h"
 
 static void java_engine_class_init                       (JavaEngineClass   *klass);
 static void java_engine_init                             (JavaEngine        *engine);
@@ -62,6 +63,7 @@ struct _JavaEnginePrivate
   JavaNavigate       *navigate;
   JavaSearch         *search;
   JavaImport         *import;
+  JavaProperties     *properties;
   GtkWidget          *menu;
   GtkWidget          *project_properties;
   GtkWidget          *projects_popup;
@@ -100,6 +102,7 @@ java_engine_finalize (JavaEngine *engine)
   g_object_unref (priv->search);
   g_object_unref (priv->import);
   g_object_unref (priv->client);
+  g_object_unref (priv->properties);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
 
@@ -133,6 +136,7 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->navigate = java_navigate_new (codeslayer, menu, configurations, priv->client);
   priv->search = java_search_new (codeslayer, menu, priv->client);
   priv->import = java_import_new (codeslayer, menu, priv->client);
+  priv->properties = java_properties_new (codeslayer, menu);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);

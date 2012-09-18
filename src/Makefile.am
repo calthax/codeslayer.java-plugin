@@ -10,6 +10,8 @@ libjavacodeslayerplugin_la_SOURCES = \
     java-client.c \
     java-engine.h \
     java-engine.c \
+    java-properties.h \
+    java-properties.c \
     java-page.h \
     java-page.c \
     java-build.h \
