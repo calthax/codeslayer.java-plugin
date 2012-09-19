@@ -31,6 +31,8 @@ static void suppressions_file_icon_action     (GtkEntry                 *suppres
                                                GtkEntryIconPosition      icon_pos,
                                                GdkEvent                 *event,
                                                JavaToolsProperties      *tools_properties);
+static void load_tools_properties             (JavaToolsProperties      *tools_properties);                                               
+static void save_tools_properties             (JavaToolsProperties      *tools_properties);                                               
 
 #define JAVA_TOOLS_PROPERTIES_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_TOOLS_PROPERTIES_TYPE, JavaToolsPropertiesPrivate))
@@ -97,6 +99,7 @@ static void
 properties_action (JavaToolsProperties *tools_properties)
 {
   JavaToolsPropertiesPrivate *priv;
+  gint response;
   
   priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
 
@@ -160,8 +163,27 @@ properties_action (JavaToolsProperties *tools_properties)
                         G_CALLBACK (suppressions_file_icon_action), tools_properties);
     }
 
-  gtk_dialog_run (GTK_DIALOG (priv->dialog));
+  load_tools_properties (tools_properties);
+
+  response = gtk_dialog_run (GTK_DIALOG (priv->dialog));
+  if (response == GTK_RESPONSE_OK)
+    {
+      save_tools_properties (tools_properties);
+    }
+    
   gtk_widget_hide (priv->dialog);
+}
+
+static void
+load_tools_properties (JavaToolsProperties *tools_properties)
+{
+
+}
+
+static void
+save_tools_properties (JavaToolsProperties *tools_properties)
+{
+
 }
 
 static void 
