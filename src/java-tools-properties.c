@@ -157,7 +157,7 @@ properties_action (JavaToolsProperties *tools_properties)
       GtkWidget *suppressions_file_label;
       
       priv->dialog = gtk_dialog_new_with_buttons ("Properties", 
-                                                  NULL,
+                                                  codeslayer_get_toplevel_window (priv->codeslayer),
                                                   GTK_DIALOG_MODAL,
                                                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                   GTK_STOCK_OK, GTK_RESPONSE_OK,
