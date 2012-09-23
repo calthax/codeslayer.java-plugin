@@ -40,11 +40,12 @@ typedef struct _JavaIndexerPrivate JavaIndexerPrivate;
 
 struct _JavaIndexerPrivate
 {
-  CodeSlayer         *codeslayer;
-  JavaConfigurations *configurations;
-  JavaClient         *client;
-  gulong              saved_handler_id;
-  guint               event_source_id;
+  CodeSlayer          *codeslayer;
+  JavaToolsProperties *tools_properties;
+  JavaConfigurations  *configurations;
+  JavaClient          *client;
+  gulong               saved_handler_id;
+  guint                event_source_id;
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -70,10 +71,11 @@ java_indexer_finalize (JavaIndexer *indexer)
 }
 
 JavaIndexer*
-java_indexer_new (CodeSlayer         *codeslayer,
-                  GtkWidget          *menu,
-                  JavaConfigurations *configurations, 
-                  JavaClient         *client)
+java_indexer_new (CodeSlayer          *codeslayer,
+                  GtkWidget           *menu,
+                  JavaToolsProperties *tools_properties,
+                  JavaConfigurations  *configurations,
+                  JavaClient          *client)
 {
   JavaIndexerPrivate *priv;
   JavaIndexer *indexer;
@@ -81,6 +83,7 @@ java_indexer_new (CodeSlayer         *codeslayer,
   indexer = JAVA_INDEXER (g_object_new (java_indexer_get_type (), NULL));
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   priv->codeslayer = codeslayer;
+  priv->tools_properties = tools_properties;
   priv->configurations = configurations;
   priv->client = client;
 
@@ -169,15 +172,48 @@ create_libs_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
 
+  GString *string;
+
   gchar *lib_indexes_folders;
+
+  gchar *group_folder_path;
+  gchar *tmp_folder_path;
+  const gchar *jdk_folder;
+  const gchar *suppressions_file;
+
   gchar *input;
   gchar *output;
   
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
   lib_indexes_folders = get_lib_indexes_folders (priv->codeslayer, priv->configurations);
+  jdk_folder = java_tools_properties_get_jdk_folder (priv->tools_properties);
+  suppressions_file = java_tools_properties_get_suppressions_file (priv->tools_properties);
   
-  input = g_strconcat ("-program indexer -type libs", lib_indexes_folders, NULL);
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);
+  tmp_folder_path = g_build_filename (group_folder_path, "indexes", "tmp", NULL);
+  
+  string = g_string_new ("");
+  string = g_string_append (string, "-program indexer -type libs");
+  string = g_string_append (string, lib_indexes_folders);
+  
+  if (codeslayer_utils_has_text (suppressions_file))
+    {
+      string = g_string_append (string, " -suppressionsfile ");
+      string = g_string_append (string, suppressions_file);
+    }
+
+  if (codeslayer_utils_has_text (jdk_folder))
+    {
+      string = g_string_append (string, " -zipfile ");
+      string = g_string_append (string, jdk_folder);
+      string = g_string_append (string, G_DIR_SEPARATOR_S);
+      string = g_string_append (string, "src.zip");
+      string = g_string_append (string, " -tmpfolder ");
+      string = g_string_append (string, tmp_folder_path);
+    }
+    
+  input = g_string_free (string, FALSE);    
   
   g_print ("input %s\n", input);
 

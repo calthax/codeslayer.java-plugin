@@ -24,6 +24,7 @@
 #include "java-build.h"
 #include "java-page.h"
 #include "java-project-properties.h"
+#include "java-configurations.h"
 #include "java-configuration.h"
 #include "java-completion.h"
 #include "java-client.h"
@@ -108,7 +109,6 @@ java_engine_finalize (JavaEngine *engine)
 
 JavaEngine*
 java_engine_new (CodeSlayer         *codeslayer,
-                 JavaConfigurations *configurations,
                  GtkWidget          *menu, 
                  GtkWidget          *project_properties,
                  GtkWidget          *projects_popup,
@@ -121,22 +121,26 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv = JAVA_ENGINE_GET_PRIVATE (engine);
 
   priv->codeslayer = codeslayer;
-  priv->configurations = configurations;
   priv->menu = menu;
   priv->project_properties = project_properties;
   priv->projects_popup = projects_popup;
   priv->notebook = notebook;
   
+  priv->configurations = java_configurations_new (codeslayer);
+  java_configurations_load (priv->configurations);
+
+  priv->tools_properties = java_tools_properties_new (codeslayer, menu);
+  java_tools_properties_load (priv->tools_properties);
+  
   priv->client = java_client_new (codeslayer);
-  priv->build = java_build_new (codeslayer, configurations, menu, projects_popup, notebook);
-  priv->debugger = java_debugger_new (codeslayer, configurations, menu, notebook);
-  priv->indexer = java_indexer_new (codeslayer, menu, configurations, priv->client);
+  priv->build = java_build_new (codeslayer, priv->configurations, menu, projects_popup, notebook);
+  priv->debugger = java_debugger_new (codeslayer, priv->configurations, menu, notebook);
+  priv->indexer = java_indexer_new (codeslayer, menu, priv->tools_properties, priv->configurations, priv->client);
   priv->completion = java_completion_new  (codeslayer, priv->client);
-  priv->usage = java_usage_new (codeslayer, menu, notebook, configurations, priv->client);
-  priv->navigate = java_navigate_new (codeslayer, menu, configurations, priv->client);
+  priv->usage = java_usage_new (codeslayer, menu, notebook, priv->configurations, priv->client);
+  priv->navigate = java_navigate_new (codeslayer, menu, priv->configurations, priv->client);
   priv->search = java_search_new (codeslayer, menu, priv->client);
   priv->import = java_import_new (codeslayer, menu, priv->client);
-  priv->tools_properties = java_tools_properties_new (codeslayer, menu);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);

@@ -45,9 +45,13 @@ struct _JavaToolsPropertiesClass
 
 GType java_tools_properties_get_type (void) G_GNUC_CONST;
 
-JavaToolsProperties*  java_tools_properties_new  (CodeSlayer *codeslayer,
-                                                  GtkWidget  *menu);
-
+JavaToolsProperties*  java_tools_properties_new                    (CodeSlayer *codeslayer,
+                                                                    GtkWidget  *menu);
+                                
+void                  java_tools_properties_load                   (JavaToolsProperties *tools_properties);
+const gchar*          java_tools_properties_get_jdk_folder         (JavaToolsProperties *tools_properties);
+const gchar*          java_tools_properties_get_suppressions_file  (JavaToolsProperties *tools_properties);
+                                                  
 G_END_DECLS
 
 #endif /* _JAVA_TOOLS_PROPERTIES_H */

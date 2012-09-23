@@ -31,8 +31,14 @@ static void suppressions_file_icon_action     (GtkEntry                 *suppres
                                                GtkEntryIconPosition      icon_pos,
                                                GdkEvent                 *event,
                                                JavaToolsProperties      *tools_properties);
-static void load_tools_properties             (JavaToolsProperties      *tools_properties);                                               
-static void save_tools_properties             (JavaToolsProperties      *tools_properties);                                               
+static void save_tools_properties             (JavaToolsProperties      *tools_properties);
+static gchar* get_conf_path                   (JavaToolsProperties       *tools_properties);
+static gboolean verify_conf_exists            (JavaToolsProperties       *tools_properties);
+
+#define JAVA_TOOLS_PROPERTIES_FILE "java-tools.properties"
+#define JDK_FOLDER "jdk_folder"
+#define SUPPRESSIONS_FILE "suppressions_file"                                           
+#define MAIN "main"                                           
 
 #define JAVA_TOOLS_PROPERTIES_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_TOOLS_PROPERTIES_TYPE, JavaToolsPropertiesPrivate))
@@ -46,6 +52,7 @@ struct _JavaToolsPropertiesPrivate
   GtkWidget  *dialog;
   GtkWidget  *jdk_folder_entry;
   GtkWidget  *suppressions_file_entry;  
+  GKeyFile   *keyfile;  
 };
 
 G_DEFINE_TYPE (JavaToolsProperties, java_tools_properties, G_TYPE_OBJECT)
@@ -64,6 +71,7 @@ java_tools_properties_init (JavaToolsProperties *tools_properties)
   JavaToolsPropertiesPrivate *priv;
   priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
   priv->dialog = NULL;
+  priv->keyfile = NULL;
 }
 
 static void
@@ -71,14 +79,22 @@ java_tools_properties_finalize (JavaToolsProperties *tools_properties)
 {
   JavaToolsPropertiesPrivate *priv;
   priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
+
   if (priv->dialog != NULL)
     gtk_widget_destroy (priv->dialog);
+
+  if (priv->keyfile)
+    {
+      g_key_file_free (priv->keyfile);
+      priv->keyfile = NULL;
+    }
+
   G_OBJECT_CLASS (java_tools_properties_parent_class)->finalize (G_OBJECT(tools_properties));
 }
 
 JavaToolsProperties*
 java_tools_properties_new (CodeSlayer *codeslayer,
-                     GtkWidget  *menu)
+                           GtkWidget  *menu)
 {
   JavaToolsPropertiesPrivate *priv;
   JavaToolsProperties *tools_properties;
@@ -93,6 +109,34 @@ java_tools_properties_new (CodeSlayer *codeslayer,
                             G_CALLBACK (properties_action), tools_properties);
                             
   return tools_properties;
+}
+
+const gchar*          
+java_tools_properties_get_jdk_folder (JavaToolsProperties *tools_properties)
+{
+  JavaToolsPropertiesPrivate *priv;
+  priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
+
+  if (g_key_file_has_key (priv->keyfile, MAIN, JDK_FOLDER, NULL))
+    {
+      return g_key_file_get_string (priv->keyfile, MAIN, JDK_FOLDER, NULL);
+    }
+    
+  return NULL;    
+}
+
+const gchar*
+java_tools_properties_get_suppressions_file (JavaToolsProperties *tools_properties)
+{
+  JavaToolsPropertiesPrivate *priv;
+  priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
+  
+  if (g_key_file_has_key (priv->keyfile, MAIN, SUPPRESSIONS_FILE, NULL))
+    {
+      return g_key_file_get_string (priv->keyfile, MAIN, SUPPRESSIONS_FILE, NULL);
+    }
+    
+  return NULL;    
 }
 
 static void
@@ -163,7 +207,17 @@ properties_action (JavaToolsProperties *tools_properties)
                         G_CALLBACK (suppressions_file_icon_action), tools_properties);
     }
 
-  load_tools_properties (tools_properties);
+  if (g_key_file_has_key (priv->keyfile, MAIN, JDK_FOLDER, NULL))
+    {
+      gtk_entry_set_text (GTK_ENTRY (priv->jdk_folder_entry), 
+                        g_key_file_get_string (priv->keyfile, MAIN, JDK_FOLDER, NULL));
+    }
+  
+  if (g_key_file_has_key (priv->keyfile, MAIN, SUPPRESSIONS_FILE, NULL))
+    {
+      gtk_entry_set_text (GTK_ENTRY (priv->suppressions_file_entry), 
+                        g_key_file_get_string (priv->keyfile, MAIN, SUPPRESSIONS_FILE, NULL));
+    }
 
   response = gtk_dialog_run (GTK_DIALOG (priv->dialog));
   if (response == GTK_RESPONSE_OK)
@@ -172,18 +226,6 @@ properties_action (JavaToolsProperties *tools_properties)
     }
     
   gtk_widget_hide (priv->dialog);
-}
-
-static void
-load_tools_properties (JavaToolsProperties *tools_properties)
-{
-
-}
-
-static void
-save_tools_properties (JavaToolsProperties *tools_properties)
-{
-
 }
 
 static void 
@@ -255,3 +297,88 @@ suppressions_file_icon_action (GtkEntry             *suppressions_file_entry,
 
   gtk_widget_destroy (GTK_WIDGET (dialog));  
 }                        
+
+void
+java_tools_properties_load (JavaToolsProperties *tools_properties)
+{
+  JavaToolsPropertiesPrivate *priv;
+  GKeyFile *keyfile;
+  gchar *conf;
+  
+  priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
+  
+  if (priv->keyfile)
+    {
+      g_key_file_free (priv->keyfile);
+      priv->keyfile = NULL;
+    }
+  
+  verify_conf_exists (tools_properties);
+  keyfile = g_key_file_new ();
+
+  conf = get_conf_path (tools_properties);
+  g_key_file_load_from_file (keyfile, conf, G_KEY_FILE_NONE, NULL);
+    
+  priv->keyfile = keyfile;
+  g_free (conf);
+}
+
+static void
+save_tools_properties (JavaToolsProperties *tools_properties)
+{
+  JavaToolsPropertiesPrivate *priv;
+  gchar *data;
+  gchar *conf_path;
+  gsize size;
+  
+  priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
+  
+  g_key_file_set_string (priv->keyfile, MAIN, JDK_FOLDER, 
+                         gtk_entry_get_text (GTK_ENTRY (priv->jdk_folder_entry)));  
+  
+  g_key_file_set_string (priv->keyfile, MAIN, SUPPRESSIONS_FILE, 
+                         gtk_entry_get_text (GTK_ENTRY (priv->suppressions_file_entry)));
+
+  data = g_key_file_to_data (priv->keyfile, &size, NULL);
+
+  conf_path = get_conf_path (tools_properties);
+
+  g_file_set_contents (conf_path, data, size, NULL);
+
+  g_free (conf_path);
+  g_free (data);
+}
+
+static gboolean
+verify_conf_exists (JavaToolsProperties *tools_properties)
+{
+  gboolean result = TRUE;
+  gchar *conf_path;
+  GFile *conf_file;
+
+  conf_path = get_conf_path (tools_properties);
+  conf_file = g_file_new_for_path (conf_path);
+  if (!g_file_query_exists (conf_file, NULL))
+    {
+      GFileIOStream *stream;
+      stream = g_file_create_readwrite (conf_file, G_FILE_CREATE_NONE, 
+                                        NULL, NULL);
+      g_io_stream_close (G_IO_STREAM (stream), NULL, NULL);
+      g_object_unref (stream);
+      result = FALSE;
+    }
+
+  g_free (conf_path);
+  g_object_unref (conf_file);
+
+  return result;
+}
+
+static gchar*
+get_conf_path (JavaToolsProperties *tools_properties)
+{
+  JavaToolsPropertiesPrivate *priv;
+  priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
+  return g_build_filename (codeslayer_get_active_group_folder_path (priv->codeslayer),
+                           JAVA_TOOLS_PROPERTIES_FILE, NULL);
+}

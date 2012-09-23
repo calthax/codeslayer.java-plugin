@@ -21,7 +21,6 @@
 #include <gmodule.h>
 #include <glib.h>
 #include "java-engine.h"
-#include "java-configurations.h"
 #include "java-menu.h"
 #include "java-notebook.h"
 #include "java-project-properties.h"
@@ -40,18 +39,13 @@ G_MODULE_EXPORT void
 activate (CodeSlayer *codeslayer)
 {
   GtkAccelGroup *accel_group;
-  JavaConfigurations *configurations;
   accel_group = codeslayer_get_menubar_accel_group (codeslayer);
   menu = java_menu_new (accel_group);
-  
-  configurations = java_configurations_new (codeslayer);
-  java_configurations_load (configurations);
   
   project_properties = java_project_properties_new ();
   projects_popup = java_projects_popup_new ();
   notebook = java_notebook_new ();
-  engine = java_engine_new (codeslayer, configurations, menu, 
-                            project_properties, projects_popup, notebook);
+  engine = java_engine_new (codeslayer, menu, project_properties, projects_popup, notebook);
   
   codeslayer_add_to_menubar (codeslayer, GTK_MENU_ITEM (menu));
   codeslayer_add_to_projects_popup (codeslayer, GTK_MENU_ITEM (projects_popup));

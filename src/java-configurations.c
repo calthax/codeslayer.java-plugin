@@ -94,7 +94,7 @@ java_configurations_load (JavaConfigurations *configurations)
   list = codeslayer_utils_get_gobjects (JAVA_CONFIGURATION_TYPE,
                                         FALSE,
                                         file_path, 
-                                        "java",
+                                        "java-configuration",
                                         "project_key", G_TYPE_STRING,
                                         "ant_file", G_TYPE_STRING, 
                                         "build_folder", G_TYPE_STRING, 
@@ -177,7 +177,7 @@ java_configurations_save (JavaConfigurations *configurations,
   file_path = get_configuration_file_path (configurations);  
   codeslayer_utils_save_gobjects (priv->list,
                                   file_path, 
-                                  "java",
+                                  "java-configuration",
                                   "project_key", G_TYPE_STRING,
                                   "ant_file", G_TYPE_STRING, 
                                   "build_folder", G_TYPE_STRING, 
@@ -198,7 +198,7 @@ get_configuration_file_path (JavaConfigurations *configurations)
   priv = JAVA_CONFIGURATIONS_GET_PRIVATE (configurations);
 
   folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);  
-  file_path = g_build_filename (folder_path, "java.xml", NULL);
+  file_path = g_build_filename (folder_path, "java-configurations.xml", NULL);
   g_free (folder_path);
   
   return file_path;

@@ -21,7 +21,6 @@
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
-#include "java-configurations.h"
 
 G_BEGIN_DECLS
 
@@ -47,13 +46,10 @@ struct _JavaEngineClass
 GType java_engine_get_type (void) G_GNUC_CONST;
 
 JavaEngine*  java_engine_new (CodeSlayer         *codeslayer,
-                              JavaConfigurations *configurations,
                               GtkWidget          *menu,
                               GtkWidget          *project_properties,
                               GtkWidget          *projects_popup,
                               GtkWidget          *notebook);
-                                        
-void java_engine_load_configurations (JavaEngine *engine);
 
 G_END_DECLS
 
