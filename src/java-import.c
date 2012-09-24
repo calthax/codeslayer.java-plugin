@@ -22,6 +22,7 @@
 #include <codeslayer/codeslayer-utils.h>
 #include "java-import.h"
 #include "java-utils.h"
+#include "java-client.h"
 
 static void java_import_class_init  (JavaImportClass   *klass);
 static void java_import_init        (JavaImport        *import);
@@ -88,13 +89,15 @@ java_import_finalize (JavaImport *import)
   if (priv->dialog != NULL)
     gtk_widget_destroy (priv->dialog);
   
+  if (priv->client)
+    g_object_unref (priv->client);
+  
   G_OBJECT_CLASS (java_import_parent_class)-> finalize (G_OBJECT (import));
 }
 
 JavaImport*
 java_import_new (CodeSlayer *codeslayer,
-                 GtkWidget  *menu, 
-                 JavaClient *client)
+                 GtkWidget  *menu)
 {
   JavaImportPrivate *priv;
   JavaImport *import;
@@ -102,7 +105,8 @@ java_import_new (CodeSlayer *codeslayer,
   import = JAVA_IMPORT (g_object_new (java_import_get_type (), NULL));
   priv = JAVA_IMPORT_GET_PRIVATE (import);
   priv->codeslayer = codeslayer;
-  priv->client = client;
+  
+  priv->client = java_client_new (codeslayer);
 
   g_signal_connect_swapped (G_OBJECT (menu), "import",
                             G_CALLBACK (import_action), import);

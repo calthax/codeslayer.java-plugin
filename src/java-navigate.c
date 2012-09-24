@@ -21,6 +21,7 @@
 #include "java-navigate.h"
 #include "java-utils.h"
 #include "java-page.h"
+#include "java-client.h"
 
 static void java_navigate_class_init  (JavaNavigateClass *klass);
 static void java_navigate_init        (JavaNavigate      *navigate);
@@ -65,14 +66,19 @@ java_navigate_init (JavaNavigate *navigate){}
 static void
 java_navigate_finalize (JavaNavigate *navigate)
 {
+  JavaNavigatePrivate *priv;
+  priv = JAVA_NAVIGATE_GET_PRIVATE (navigate);
+
+  if (priv->client)
+    g_object_unref (priv->client);
+
   G_OBJECT_CLASS (java_navigate_parent_class)->finalize (G_OBJECT (navigate));
 }
 
 JavaNavigate*
 java_navigate_new (CodeSlayer         *codeslayer,
                    GtkWidget          *menu,
-                   JavaConfigurations *configurations,
-                   JavaClient         *client)
+                   JavaConfigurations *configurations)
 {
   JavaNavigatePrivate *priv;
   JavaNavigate *navigate;
@@ -81,7 +87,8 @@ java_navigate_new (CodeSlayer         *codeslayer,
   priv = JAVA_NAVIGATE_GET_PRIVATE (navigate);
   priv->codeslayer = codeslayer;
   priv->configurations = configurations;
-  priv->client = client;
+
+  priv->client = java_client_new (codeslayer);
 
   g_signal_connect_swapped (G_OBJECT (menu), "navigate",
                             G_CALLBACK (navigate_action), navigate);

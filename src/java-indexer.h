@@ -23,7 +23,6 @@
 #include <codeslayer/codeslayer.h>
 #include "java-tools-properties.h"
 #include "java-configurations.h"
-#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -48,11 +47,10 @@ struct _JavaIndexerClass
 
 GType java_indexer_get_type (void) G_GNUC_CONST;
 
-JavaIndexer*  java_indexer_new          (CodeSlayer          *codeslayer,
-                                         GtkWidget           *menu,
-                                         JavaToolsProperties *tools_properties,
-                                         JavaConfigurations  *configurations, 
-                                         JavaClient          *client);
+JavaIndexer*  java_indexer_new  (CodeSlayer          *codeslayer,
+                                 GtkWidget           *menu,
+                                 JavaToolsProperties *tools_properties,
+                                 JavaConfigurations  *configurations);
                                          
 G_END_DECLS
 

@@ -54,7 +54,6 @@ typedef struct _JavaEnginePrivate JavaEnginePrivate;
 struct _JavaEnginePrivate
 {
   CodeSlayer         *codeslayer;
-  JavaClient         *client;
   JavaCompletion     *completion;
   JavaConfigurations *configurations;
   JavaBuild          *build;
@@ -102,7 +101,6 @@ java_engine_finalize (JavaEngine *engine)
   g_object_unref (priv->navigate);
   g_object_unref (priv->search);
   g_object_unref (priv->import);
-  g_object_unref (priv->client);
   g_object_unref (priv->tools_properties);
   G_OBJECT_CLASS (java_engine_parent_class)->finalize (G_OBJECT(engine));
 }
@@ -132,15 +130,14 @@ java_engine_new (CodeSlayer         *codeslayer,
   priv->tools_properties = java_tools_properties_new (codeslayer, menu);
   java_tools_properties_load (priv->tools_properties);
   
-  priv->client = java_client_new (codeslayer);
   priv->build = java_build_new (codeslayer, priv->configurations, menu, projects_popup, notebook);
   priv->debugger = java_debugger_new (codeslayer, priv->configurations, menu, notebook);
-  priv->indexer = java_indexer_new (codeslayer, menu, priv->tools_properties, priv->configurations, priv->client);
-  priv->completion = java_completion_new  (codeslayer, priv->client);
-  priv->usage = java_usage_new (codeslayer, menu, notebook, priv->configurations, priv->client);
-  priv->navigate = java_navigate_new (codeslayer, menu, priv->configurations, priv->client);
-  priv->search = java_search_new (codeslayer, menu, priv->client);
-  priv->import = java_import_new (codeslayer, menu, priv->client);
+  priv->indexer = java_indexer_new (codeslayer, menu, priv->tools_properties, priv->configurations);
+  priv->completion = java_completion_new  (codeslayer);
+  priv->usage = java_usage_new (codeslayer, menu, notebook, priv->configurations);
+  priv->navigate = java_navigate_new (codeslayer, menu, priv->configurations);
+  priv->search = java_search_new (codeslayer, menu);
+  priv->import = java_import_new (codeslayer, menu);
   
   priv->properties_opened_id =  g_signal_connect_swapped (G_OBJECT (codeslayer), "project-properties-opened",
                                                           G_CALLBACK (project_properties_opened_action), engine);

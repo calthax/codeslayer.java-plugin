@@ -58,10 +58,10 @@ java_client_finalize (JavaClient *client)
   JavaClientPrivate *priv;
   priv = JAVA_CLIENT_GET_PRIVATE (client);
 
-  if  (priv->socket_client)
+  if (priv->socket_client)
     g_object_unref (priv->socket_client);
 
-  if  (priv->socket)
+  if (priv->socket)
     g_object_unref (priv->socket);    
     
   G_OBJECT_CLASS (java_client_parent_class)->finalize (G_OBJECT(client));

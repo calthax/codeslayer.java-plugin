@@ -34,9 +34,9 @@ typedef struct _JavaCompletionPrivate JavaCompletionPrivate;
 
 struct _JavaCompletionPrivate
 {
-  CodeSlayer         *codeslayer;
-  JavaClient         *client;
-  gulong              editor_added_id;
+  CodeSlayer *codeslayer;
+  JavaClient *client;
+  gulong      editor_added_id;
 };
 
 G_DEFINE_TYPE (JavaCompletion, java_completion, G_TYPE_OBJECT)
@@ -58,14 +58,17 @@ static void
 java_completion_finalize (JavaCompletion *completion)
 {
   JavaCompletionPrivate *priv;
-  priv = JAVA_COMPLETION_GET_PRIVATE (completion);  
+  priv = JAVA_COMPLETION_GET_PRIVATE (completion);
+    
+  if (priv->client)
+    g_object_unref (priv->client);  
+  
   g_signal_handler_disconnect (priv->codeslayer, priv->editor_added_id);
   G_OBJECT_CLASS (java_completion_parent_class)->finalize (G_OBJECT (completion));
 }
 
 JavaCompletion*
-java_completion_new (CodeSlayer         *codeslayer, 
-                     JavaClient         *client)
+java_completion_new (CodeSlayer *codeslayer)
 {
   JavaCompletionPrivate *priv;
   JavaCompletion *completion;
@@ -73,7 +76,8 @@ java_completion_new (CodeSlayer         *codeslayer,
   completion = JAVA_COMPLETION (g_object_new (java_completion_get_type (), NULL));
   priv = JAVA_COMPLETION_GET_PRIVATE (completion);
   priv->codeslayer = codeslayer;
-  priv->client = client;
+  
+  priv->client = java_client_new (codeslayer);
   
   priv->editor_added_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editor-added",
                                                     G_CALLBACK (editor_added_action), completion);

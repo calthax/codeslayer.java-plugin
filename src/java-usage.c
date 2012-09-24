@@ -23,6 +23,7 @@
 #include "java-usage-pane.h"
 #include "java-utils.h"
 #include "java-page.h"
+#include "java-client.h"
 
 static void java_usage_class_init              (JavaUsageClass  *klass);
 static void java_usage_init                    (JavaUsage       *usage);
@@ -39,6 +40,7 @@ static GList* get_usage_methods_from_output    (gchar           *output);
 static gint sort_usage_methods                 (JavaUsageMethod *usage_method1, 
                                                 JavaUsageMethod *usage_method2);
 static JavaUsageMethod* get_java_usage_method  (gchar           *text);
+static void execute                            (JavaUsage       *usage);
 
 #define JAVA_USAGE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_USAGE_TYPE, JavaUsagePrivate))
@@ -69,6 +71,12 @@ java_usage_init (JavaUsage *usage){}
 static void
 java_usage_finalize (JavaUsage *usage)
 {
+  JavaUsagePrivate *priv;
+  priv = JAVA_USAGE_GET_PRIVATE (usage);
+
+  if (priv->client)
+    g_object_unref (priv->client);
+
   G_OBJECT_CLASS (java_usage_parent_class)->finalize (G_OBJECT (usage));
 }
 
@@ -76,8 +84,7 @@ JavaUsage*
 java_usage_new (CodeSlayer         *codeslayer,
                 GtkWidget          *menu,
                 GtkWidget          *notebook,
-                JavaConfigurations *configurations,
-                JavaClient         *client)
+                JavaConfigurations *configurations)
 {
   JavaUsagePrivate *priv;
   JavaUsage *usage;
@@ -87,7 +94,8 @@ java_usage_new (CodeSlayer         *codeslayer,
   priv->codeslayer = codeslayer;
   priv->notebook = notebook;
   priv->configurations = configurations;
-  priv->client = client;
+
+  priv->client = java_client_new (codeslayer);
 
   g_signal_connect_swapped (G_OBJECT (menu), "method-usage",
                             G_CALLBACK (method_usage_action), usage);
@@ -97,6 +105,12 @@ java_usage_new (CodeSlayer         *codeslayer,
 
 static void 
 method_usage_action (JavaUsage *usage)
+{
+  g_thread_create ((GThreadFunc) execute, usage, FALSE, NULL);
+}
+
+static void 
+execute (JavaUsage *usage)
 {
   JavaUsagePrivate *priv;
   CodeSlayerEditor *editor;
@@ -114,7 +128,9 @@ method_usage_action (JavaUsage *usage)
 
   priv = JAVA_USAGE_GET_PRIVATE (usage);
 
+  gdk_threads_enter ();  
   editor = codeslayer_get_active_editor (priv->codeslayer);
+  gdk_threads_leave ();
   
   if (editor == NULL)
     return;
@@ -123,6 +139,7 @@ method_usage_action (JavaUsage *usage)
   if (!g_str_has_suffix (file_path, ".java"))
     return;
   
+  gdk_threads_enter ();  
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
 
   if (!gtk_text_buffer_get_selection_bounds (buffer, &start, &end))
@@ -136,6 +153,7 @@ method_usage_action (JavaUsage *usage)
 
   symbol = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
   line_number = gtk_text_iter_get_line (&start);
+  gdk_threads_leave ();
   
   if (symbol != NULL)
     g_strstrip (symbol);
@@ -208,20 +226,27 @@ render_output (JavaUsage *usage,
       if (usage_pane == NULL)
         {
           usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
+          gdk_threads_enter ();
           java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Method Usage");
+          gdk_threads_leave ();
         }
       
+      gdk_threads_enter ();
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
       java_usage_pane_set_usage_methods (JAVA_USAGE_PANE (usage_pane), usage_methods);
       java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), JAVA_PAGE_TYPE_USAGE);
+      gdk_threads_leave ();
     }
   else
     {
       GtkWidget *usage_pane;
+
+      gdk_threads_enter ();
       usage_pane = java_notebook_get_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
                                                    JAVA_PAGE_TYPE_USAGE);
       if (usage_pane != NULL)
         java_usage_pane_clear_usage_methods (JAVA_USAGE_PANE (usage_pane));
+      gdk_threads_leave ();
     }
 }
 

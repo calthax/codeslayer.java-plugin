@@ -22,6 +22,7 @@
 #include <codeslayer/codeslayer-utils.h>
 #include "java-search.h"
 #include "java-utils.h"
+#include "java-client.h"
 
 static void java_search_class_init  (JavaSearchClass   *klass);
 static void java_search_init        (JavaSearch        *search);
@@ -94,14 +95,16 @@ java_search_finalize (JavaSearch *search)
   
   if (priv->dialog != NULL)
     gtk_widget_destroy (priv->dialog);
-  
+    
+  if (priv->client)
+    g_object_unref (priv->client);
+
   G_OBJECT_CLASS (java_search_parent_class)-> finalize (G_OBJECT (search));
 }
 
 JavaSearch*
 java_search_new (CodeSlayer *codeslayer,
-                 GtkWidget  *menu, 
-                 JavaClient *client)
+                 GtkWidget  *menu)
 {
   JavaSearchPrivate *priv;
   JavaSearch *search;
@@ -109,7 +112,8 @@ java_search_new (CodeSlayer *codeslayer,
   search = JAVA_SEARCH (g_object_new (java_search_get_type (), NULL));
   priv = JAVA_SEARCH_GET_PRIVATE (search);
   priv->codeslayer = codeslayer;
-  priv->client = client;
+  
+  priv->client = java_client_new (codeslayer);
 
   g_signal_connect_swapped (G_OBJECT (menu), "search",
                             G_CALLBACK (search_action), search);

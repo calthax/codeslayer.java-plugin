@@ -21,7 +21,6 @@
 
 #include <gtk/gtk.h>
 #include <codeslayer/codeslayer.h>
-#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -47,8 +46,7 @@ struct _JavaImportClass
 GType java_import_get_type (void) G_GNUC_CONST;
      
 JavaImport*  java_import_new  (CodeSlayer *codeslayer,                                          
-                               GtkWidget  *menu, 
-                               JavaClient *client);
+                               GtkWidget  *menu);
                                      
 G_END_DECLS
 

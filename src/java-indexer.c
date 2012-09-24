@@ -20,6 +20,7 @@
 #include "java-indexer.h"
 #include "java-utils.h"
 #include "java-configuration.h"
+#include "java-client.h"
 
 static void java_indexer_class_init    (JavaIndexerClass *klass);
 static void java_indexer_init          (JavaIndexer      *indexer);
@@ -41,9 +42,9 @@ typedef struct _JavaIndexerPrivate JavaIndexerPrivate;
 struct _JavaIndexerPrivate
 {
   CodeSlayer          *codeslayer;
+  JavaClient          *client;
   JavaToolsProperties *tools_properties;
   JavaConfigurations  *configurations;
-  JavaClient          *client;
   gulong               saved_handler_id;
   guint                event_source_id;
 };
@@ -66,6 +67,10 @@ java_indexer_finalize (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  if (priv->client)
+    g_object_unref (priv->client);
+  
   g_signal_handler_disconnect (priv->codeslayer, priv->saved_handler_id);
   G_OBJECT_CLASS (java_indexer_parent_class)->finalize (G_OBJECT (indexer));
 }
@@ -74,8 +79,7 @@ JavaIndexer*
 java_indexer_new (CodeSlayer          *codeslayer,
                   GtkWidget           *menu,
                   JavaToolsProperties *tools_properties,
-                  JavaConfigurations  *configurations,
-                  JavaClient          *client)
+                  JavaConfigurations  *configurations)
 {
   JavaIndexerPrivate *priv;
   JavaIndexer *indexer;
@@ -85,7 +89,8 @@ java_indexer_new (CodeSlayer          *codeslayer,
   priv->codeslayer = codeslayer;
   priv->tools_properties = tools_properties;
   priv->configurations = configurations;
-  priv->client = client;
+  
+  priv->client = java_client_new (codeslayer);
 
   priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
                                                      G_CALLBACK (editors_all_saved_action), indexer);

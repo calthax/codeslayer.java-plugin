@@ -23,7 +23,6 @@
 #include <codeslayer/codeslayer.h>
 #include "java-notebook.h"
 #include "java-configurations.h"
-#include "java-client.h"
 
 G_BEGIN_DECLS
 
@@ -51,8 +50,7 @@ GType java_usage_get_type (void) G_GNUC_CONST;
 JavaUsage*  java_usage_new  (CodeSlayer         *codeslayer,
                              GtkWidget          *menu,
                              GtkWidget          *notebook,
-                             JavaConfigurations *configurations,
-                             JavaClient         *client);
+                             JavaConfigurations *configurations);
 
 G_END_DECLS
 
