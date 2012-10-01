@@ -134,7 +134,10 @@ editors_all_saved_action (JavaIndexer *indexer,
 static void
 index_projects_action (JavaIndexer *indexer)
 {
-  g_thread_create ((GThreadFunc) create_projects_indexes, indexer, FALSE, NULL);
+  JavaIndexerPrivate *priv;
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  codeslayer_add_to_processes (priv->codeslayer, "INDEX_PROJECTS", "Index Projects", 
+                               (GThreadFunc) create_projects_indexes, indexer);
 }
 
 static void
