@@ -110,9 +110,12 @@ static void
 editors_all_saved_action (JavaIndexer *indexer,
                           GList      *editors)
 {
+  JavaIndexerPrivate *priv;
   gboolean found;
   found = FALSE;
   
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+
   while (editors != NULL)
     {
       CodeSlayerEditor *editor = editors->data;
@@ -128,7 +131,10 @@ editors_all_saved_action (JavaIndexer *indexer,
     }
 
   if (found)
-    g_thread_create ((GThreadFunc) create_projects_indexes, indexer, FALSE, NULL);
+    {
+      codeslayer_add_to_processes (priv->codeslayer, "INDEX_PROJECTS", "Index Projects", 
+                                   (GThreadFunc) create_projects_indexes, indexer);
+    }
 }
 
 static void
@@ -143,7 +149,10 @@ index_projects_action (JavaIndexer *indexer)
 static void
 index_libs_action (JavaIndexer *indexer)
 {
-  g_thread_create ((GThreadFunc) create_libs_indexes, indexer, FALSE, NULL);
+  JavaIndexerPrivate *priv;
+  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  codeslayer_add_to_processes (priv->codeslayer, "INDEX_LIBS", "Index Libs", 
+                               (GThreadFunc) create_libs_indexes, indexer);
 }
 
 static void
