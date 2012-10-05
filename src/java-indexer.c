@@ -110,12 +110,9 @@ static void
 editors_all_saved_action (JavaIndexer *indexer,
                           GList      *editors)
 {
-  JavaIndexerPrivate *priv;
   gboolean found;
   found = FALSE;
   
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-
   while (editors != NULL)
     {
       CodeSlayerEditor *editor = editors->data;
@@ -131,28 +128,19 @@ editors_all_saved_action (JavaIndexer *indexer,
     }
 
   if (found)
-    {
-      codeslayer_add_to_processes (priv->codeslayer, "INDEX_PROJECTS", "Index Projects", 
-                                   (GThreadFunc) create_projects_indexes, indexer);
-    }
+    g_thread_new ("Index Projects", (GThreadFunc) create_projects_indexes, indexer);
 }
 
 static void
 index_projects_action (JavaIndexer *indexer)
 {
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  codeslayer_add_to_processes (priv->codeslayer, "INDEX_PROJECTS", "Index Projects", 
-                               (GThreadFunc) create_projects_indexes, indexer);
+  g_thread_new ("Index Projects", (GThreadFunc) create_projects_indexes, indexer);
 }
 
 static void
 index_libs_action (JavaIndexer *indexer)
 {
-  JavaIndexerPrivate *priv;
-  priv = JAVA_INDEXER_GET_PRIVATE (indexer);
-  codeslayer_add_to_processes (priv->codeslayer, "INDEX_LIBS", "Index Libs", 
-                               (GThreadFunc) create_libs_indexes, indexer);
+  g_thread_new ("Index Libs", (GThreadFunc) create_libs_indexes, indexer);
 }
 
 static void
@@ -163,8 +151,11 @@ create_projects_indexes (JavaIndexer *indexer)
   gchar *source_indexes_folders;
   gchar *input;
   gchar *output;
+  gint process_id;
   
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  process_id = codeslayer_add_to_processes (priv->codeslayer, "Index Projects", NULL, NULL);
   
   source_indexes_folders = get_source_indexes_folders (priv->codeslayer, priv->configurations);
   
@@ -182,12 +173,15 @@ create_projects_indexes (JavaIndexer *indexer)
       g_print ("output %s\n", output);    
       g_free (output);
     }
+    
+  codeslayer_remove_from_processes (priv->codeslayer, process_id);
 }
 
 static void
 create_libs_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
+  gint process_id;
 
   GString *string;
 
@@ -202,6 +196,8 @@ create_libs_indexes (JavaIndexer *indexer)
   gchar *output;
   
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
+  
+  process_id = codeslayer_add_to_processes (priv->codeslayer, "Index Libs", NULL, NULL);
   
   lib_indexes_folders = get_lib_indexes_folders (priv->codeslayer, priv->configurations);
   jdk_folder = java_tools_properties_get_jdk_folder (priv->tools_properties);
@@ -244,6 +240,8 @@ create_libs_indexes (JavaIndexer *indexer)
       g_print ("output %s\n", output);    
       g_free (output);
     }
+    
+  codeslayer_remove_from_processes (priv->codeslayer, process_id);
 }
 
 static void
