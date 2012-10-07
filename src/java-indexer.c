@@ -42,7 +42,8 @@ typedef struct _JavaIndexerPrivate JavaIndexerPrivate;
 struct _JavaIndexerPrivate
 {
   CodeSlayer          *codeslayer;
-  JavaClient          *client;
+  JavaClient          *client_projects;
+  JavaClient          *client_libs;
   JavaToolsProperties *tools_properties;
   JavaConfigurations  *configurations;
   gulong               saved_handler_id;
@@ -68,8 +69,11 @@ java_indexer_finalize (JavaIndexer *indexer)
   JavaIndexerPrivate *priv;
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  if (priv->client)
-    g_object_unref (priv->client);
+  if (priv->client_projects)
+    g_object_unref (priv->client_projects);
+  
+  if (priv->client_libs)
+    g_object_unref (priv->client_libs);
   
   g_signal_handler_disconnect (priv->codeslayer, priv->saved_handler_id);
   G_OBJECT_CLASS (java_indexer_parent_class)->finalize (G_OBJECT (indexer));
@@ -90,7 +94,8 @@ java_indexer_new (CodeSlayer          *codeslayer,
   priv->tools_properties = tools_properties;
   priv->configurations = configurations;
   
-  priv->client = java_client_new (codeslayer);
+  priv->client_projects = java_client_new (codeslayer);
+  priv->client_libs = java_client_new (codeslayer);
 
   priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
                                                      G_CALLBACK (editors_all_saved_action), indexer);
@@ -163,7 +168,7 @@ create_projects_indexes (JavaIndexer *indexer)
   
   g_print ("input %s\n", input);
 
-  output = java_client_send (priv->client, input);
+  output = java_client_send (priv->client_projects, input);
   
   g_free (source_indexes_folders);
   g_free (input);
@@ -230,7 +235,7 @@ create_libs_indexes (JavaIndexer *indexer)
   
   g_print ("input %s\n", input);
 
-  output = java_client_send (priv->client, input);
+  output = java_client_send (priv->client_libs, input);
   
   g_free (lib_indexes_folders);
   g_free (input);
