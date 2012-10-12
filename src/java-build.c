@@ -225,6 +225,10 @@ execute_compile (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
+  gint process_id;
+  
+  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
+                                            "Compile", NULL, NULL);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -232,6 +236,9 @@ execute_compile (JavaBuildPane *build_pane)
   command = g_strconcat ("ant -f ", ant_file, " compile 2>&1", NULL);
   run_command (build_pane, command);
   g_free (command);
+  
+  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
+                                    process_id);
 }
 
 static void
@@ -240,6 +247,10 @@ execute_clean (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
+  gint process_id;
+  
+  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
+                                            "Clean", NULL, NULL);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -247,6 +258,9 @@ execute_clean (JavaBuildPane *build_pane)
   command = g_strconcat ("ant -f ", ant_file, " clean 2>&1", NULL);
   run_command (build_pane, command);
   g_free (command);
+  
+  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
+                                    process_id);
 }
 
 static void
@@ -260,6 +274,10 @@ execute_test (JavaBuildPane *build_pane)
   gchar *command;
   gchar *substr;
   gchar *replace;
+  gint process_id;
+  
+  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
+                                            "Test", NULL, NULL);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   document = java_page_get_document (JAVA_PAGE (build_pane));
@@ -278,6 +296,9 @@ execute_test (JavaBuildPane *build_pane)
   g_free (command);
   g_free (substr);
   g_free (replace);
+  
+  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
+                                    process_id);
 }
 
 static void
@@ -286,6 +307,10 @@ execute_project_test (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
+  gint process_id;
+  
+  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
+                                            "Test Project", NULL, NULL);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -293,6 +318,9 @@ execute_project_test (JavaBuildPane *build_pane)
   command = g_strconcat ("ant -f ", ant_file, " testproject 2>&1", NULL);
   run_command (build_pane, command);
   g_free (command);
+  
+  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
+                                    process_id);
 }
 
 static JavaBuildPane*
@@ -363,7 +391,7 @@ get_build_pane_by_project (JavaBuild         *build,
   if (build_pane == NULL)
     {
       gchar *label;
-      build_pane = java_build_pane_new (page_type);
+      build_pane = java_build_pane_new (page_type, priv->codeslayer);
       if (page_type == JAVA_PAGE_TYPE_COMPILER)
         label = "Compiler";
       else if (page_type == JAVA_PAGE_TYPE_TESTER)

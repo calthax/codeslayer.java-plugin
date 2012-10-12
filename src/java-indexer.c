@@ -26,8 +26,8 @@ static void java_indexer_class_init    (JavaIndexerClass *klass);
 static void java_indexer_init          (JavaIndexer      *indexer);
 static void java_indexer_finalize      (JavaIndexer      *indexer);
 
-static void editors_all_saved_action   (JavaIndexer      *indexer,
-                                        GList            *editors);
+/*static void editors_all_saved_action   (JavaIndexer      *indexer,
+                                        GList            *editors);*/
 static void create_projects_indexes    (JavaIndexer      *indexer);
 static void create_libs_indexes        (JavaIndexer      *indexer);
 static void verify_dir_exists          (CodeSlayer       *codeslayer);
@@ -46,7 +46,7 @@ struct _JavaIndexerPrivate
   JavaClient          *client_libs;
   JavaToolsProperties *tools_properties;
   JavaConfigurations  *configurations;
-  gulong               saved_handler_id;
+  /*gulong               saved_handler_id;*/
   guint                event_source_id;
 };
 
@@ -75,7 +75,7 @@ java_indexer_finalize (JavaIndexer *indexer)
   if (priv->client_libs)
     g_object_unref (priv->client_libs);
   
-  g_signal_handler_disconnect (priv->codeslayer, priv->saved_handler_id);
+  /*g_signal_handler_disconnect (priv->codeslayer, priv->saved_handler_id);*/
   G_OBJECT_CLASS (java_indexer_parent_class)->finalize (G_OBJECT (indexer));
 }
 
@@ -97,8 +97,8 @@ java_indexer_new (CodeSlayer          *codeslayer,
   priv->client_projects = java_client_new (codeslayer);
   priv->client_libs = java_client_new (codeslayer);
 
-  priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
-                                                     G_CALLBACK (editors_all_saved_action), indexer);
+  /*priv->saved_handler_id = g_signal_connect_swapped (G_OBJECT (codeslayer), "editors-all-saved", 
+                                                     G_CALLBACK (editors_all_saved_action), indexer);*/
                                                      
   verify_dir_exists (codeslayer);
 
@@ -111,7 +111,7 @@ java_indexer_new (CodeSlayer          *codeslayer,
   return indexer;
 }
 
-static void 
+/*static void 
 editors_all_saved_action (JavaIndexer *indexer,
                           GList      *editors)
 {
@@ -134,7 +134,7 @@ editors_all_saved_action (JavaIndexer *indexer,
 
   if (found)
     g_thread_new ("Index Projects", (GThreadFunc) create_projects_indexes, indexer);
-}
+}*/
 
 static void
 index_projects_action (JavaIndexer *indexer)

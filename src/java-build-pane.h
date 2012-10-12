@@ -21,6 +21,7 @@
 
 #include <gtk/gtk.h>
 #include "java-page.h"
+#include <codeslayer/codeslayer.h>
 
 G_BEGIN_DECLS
 
@@ -45,9 +46,11 @@ struct _JavaBuildPaneClass
 
 GType java_build_pane_get_type (void) G_GNUC_CONST;
 
-GtkWidget*    java_build_pane_new            (JavaPageType    page_type);
+GtkWidget*    java_build_pane_new             (JavaPageType  page_type,
+                                               CodeSlayer   *codeslayer);
 
-GtkTextView*  java_build_pane_get_text_view  (JavaBuildPane *build_pane);
+GtkTextView*  java_build_pane_get_text_view   (JavaBuildPane *build_pane);
+CodeSlayer*   java_build_pane_get_codeslayer  (JavaBuildPane *build_pane);
 
 G_END_DECLS
 

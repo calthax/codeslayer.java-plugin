@@ -144,10 +144,10 @@ run_dialog (JavaSearch *search)
       GtkCellRenderer *renderer;
 
       priv->dialog = gtk_dialog_new_with_buttons ("Class Search", 
-                                            NULL,
-                                            GTK_DIALOG_MODAL,
-                                            GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
-                                            NULL);
+                                                  codeslayer_get_toplevel_window (priv->codeslayer),
+                                                  GTK_DIALOG_MODAL,
+                                                  GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
+                                                  NULL);
       gtk_window_set_skip_taskbar_hint (GTK_WINDOW (priv->dialog), TRUE);
       gtk_window_set_skip_pager_hint (GTK_WINDOW (priv->dialog), TRUE);
 

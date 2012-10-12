@@ -123,10 +123,13 @@ execute (JavaUsage *usage)
   gint line_number;
   gchar *input;
   gchar *output;
+  gint process_id;
 
   GtkTextIter start, end;
 
   priv = JAVA_USAGE_GET_PRIVATE (usage);
+  
+  process_id = codeslayer_add_to_processes (priv->codeslayer, "Method Usage", NULL, NULL);
 
   gdk_threads_enter ();  
   editor = codeslayer_get_active_editor (priv->codeslayer);
@@ -173,6 +176,8 @@ execute (JavaUsage *usage)
 
   g_free (symbol);
   g_free (input);
+  
+  codeslayer_remove_from_processes (priv->codeslayer, process_id);
 }
 
 static gchar* 

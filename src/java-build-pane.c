@@ -47,6 +47,7 @@ struct _JavaBuildPanePrivate
   JavaPageType        page_type;
   JavaConfiguration  *configuration;
   CodeSlayerDocument *document;
+  CodeSlayer         *codeslayer;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaBuildPane,
@@ -92,7 +93,8 @@ java_build_pane_finalize (JavaBuildPane *build_pane)
 }
 
 GtkWidget*
-java_build_pane_new (JavaPageType page_type)
+java_build_pane_new (JavaPageType  page_type,
+                     CodeSlayer   *codeslayer)
 {
   JavaBuildPanePrivate *priv;
   GtkWidget *build_pane;
@@ -100,6 +102,7 @@ java_build_pane_new (JavaPageType page_type)
   build_pane = g_object_new (java_build_pane_get_type (), NULL);
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
   priv->page_type = page_type;
+  priv->codeslayer = codeslayer;
   
   add_text_view (JAVA_BUILD_PANE (build_pane));
   add_buttons (JAVA_BUILD_PANE (build_pane));
@@ -208,4 +211,12 @@ java_build_pane_set_document (JavaBuildPane     *build_pane,
   JavaBuildPanePrivate *priv;
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
   priv->document = document;
-}                         
+}
+
+CodeSlayer*
+java_build_pane_get_codeslayer (JavaBuildPane *build_pane)
+{
+  JavaBuildPanePrivate *priv;
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+  return priv->codeslayer;  
+}
