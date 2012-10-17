@@ -30,6 +30,8 @@ static void compile_action                  (JavaProjectsPopup      *projects_po
                                              GList                   *selections);
 static void clean_action                    (JavaProjectsPopup      *projects_popup, 
                                              GList                   *selections);
+static void clean_compile_action            (JavaProjectsPopup      *projects_popup, 
+                                             GList                   *selections);
 static void test_project_action             (JavaProjectsPopup      *projects_popup, 
                                              GList                   *selections);
                                         
@@ -37,6 +39,7 @@ enum
 {
   COMPILE,
   CLEAN,
+  CLEAN_COMPILE,
   TEST_PROJECT,
   LAST_SIGNAL
 };
@@ -61,6 +64,14 @@ java_projects_popup_class_init (JavaProjectsPopupClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (JavaProjectsPopupClass, clean),
+                  NULL, NULL, 
+                  g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+  java_projects_popup_signals[CLEAN_COMPILE] =
+    g_signal_new ("clean-compile", 
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+                  G_STRUCT_OFFSET (JavaProjectsPopupClass, clean_compile),
                   NULL, NULL, 
                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
@@ -109,14 +120,18 @@ add_menu_items (JavaProjectsPopup *projects_popup,
 {
   GtkWidget *compile_item;
   GtkWidget *clean_item;
+  GtkWidget *clean_compile_item;
   GtkWidget *separator_item;
   GtkWidget *test_project_item;
 
-  compile_item = codeslayer_menu_item_new_with_label ("compile");
+  compile_item = codeslayer_menu_item_new_with_label ("Compile");
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), compile_item);
 
-  clean_item = codeslayer_menu_item_new_with_label ("clean");
+  clean_item = codeslayer_menu_item_new_with_label ("Clean");
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), clean_item);
+  
+  clean_compile_item = codeslayer_menu_item_new_with_label ("Clean & Compile");
+  gtk_menu_shell_append (GTK_MENU_SHELL (submenu), clean_compile_item);
   
   separator_item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append (GTK_MENU_SHELL (submenu), separator_item);
@@ -129,6 +144,9 @@ add_menu_items (JavaProjectsPopup *projects_popup,
    
   g_signal_connect_swapped (G_OBJECT (clean_item), "projects-menu-selected", 
                             G_CALLBACK (clean_action), projects_popup);
+   
+  g_signal_connect_swapped (G_OBJECT (clean_compile_item), "projects-menu-selected", 
+                            G_CALLBACK (clean_compile_action), projects_popup);
    
   g_signal_connect_swapped (G_OBJECT (test_project_item), "projects-menu-selected", 
                             G_CALLBACK (test_project_action), projects_popup);
@@ -146,6 +164,13 @@ clean_action (JavaProjectsPopup *projects_popup,
               GList             *selections) 
 {
   g_signal_emit_by_name ((gpointer) projects_popup, "clean", selections);
+}
+
+static void 
+clean_compile_action (JavaProjectsPopup *projects_popup, 
+                      GList             *selections) 
+{
+  g_signal_emit_by_name ((gpointer) projects_popup, "clean-compile", selections);
 }
 
 static void 

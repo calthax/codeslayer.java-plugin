@@ -34,6 +34,9 @@ static void project_compile_action                     (JavaBuild         *build
 static void clean_action                               (JavaBuild         *build);
 static void project_clean_action                       (JavaBuild         *build, 
                                                         GList             *selections);
+static void clean_compile_action                       (JavaBuild         *build);
+static void project_clean_compile_action               (JavaBuild         *build, 
+                                                        GList             *selections);
 static void test_action                                (JavaBuild         *build);
 static void project_test_action                        (JavaBuild         *build, 
                                                         GList             *selections);
@@ -43,6 +46,7 @@ static void execute                                    (JavaBuild         *build
                                                         GThreadFunc        thread_func);
 static void execute_clean                              (JavaBuildPane     *build_pane);
 static void execute_compile                            (JavaBuildPane     *build_pane);
+static void execute_clean_compile                      (JavaBuildPane     *build_pane);
 static void execute_test                               (JavaBuildPane     *build_pane);
 static void execute_project_test                       (JavaBuildPane     *build_pane);
 static void run_command                                (JavaBuildPane     *build_pane,
@@ -120,6 +124,12 @@ java_build_new (CodeSlayer         *codeslayer,
   g_signal_connect_swapped (G_OBJECT (projects_popup), "clean",
                             G_CALLBACK (project_clean_action), build);
 
+  g_signal_connect_swapped (G_OBJECT (menu), "clean-compile",
+                            G_CALLBACK (clean_compile_action), build);
+
+  g_signal_connect_swapped (G_OBJECT (projects_popup), "clean-compile",
+                            G_CALLBACK (project_clean_compile_action), build);
+
   g_signal_connect_swapped (G_OBJECT (menu), "test-file",
                             G_CALLBACK (test_action), build);
 
@@ -165,6 +175,25 @@ project_clean_action (JavaBuild *build,
   project = get_selections_project (selections);
   build_pane = get_build_pane_by_project (build, project, JAVA_PAGE_TYPE_COMPILER);
   execute (build, build_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean);
+}
+
+static void
+clean_compile_action (JavaBuild *build)
+{
+  JavaBuildPane *build_pane;  
+  build_pane = get_build_pane_by_active_editor (build, JAVA_PAGE_TYPE_COMPILER);
+  execute (build, build_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean_compile);
+}
+
+static void
+project_clean_compile_action (JavaBuild *build, 
+                              GList      *selections)
+{
+  JavaBuildPane *build_pane;
+  CodeSlayerProject *project;
+  project = get_selections_project (selections);
+  build_pane = get_build_pane_by_project (build, project, JAVA_PAGE_TYPE_COMPILER);
+  execute (build, build_pane, JAVA_PAGE_TYPE_COMPILER, (GThreadFunc) execute_clean_compile);
 }
 
 static void
@@ -228,7 +257,7 @@ execute_compile (JavaBuildPane *build_pane)
   gint process_id;
   
   process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
-                                            "Compile", NULL, NULL);
+                                            "Compile...", NULL, NULL);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -250,7 +279,7 @@ execute_clean (JavaBuildPane *build_pane)
   gint process_id;
   
   process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
-                                            "Clean", NULL, NULL);
+                                            "Clean...", NULL, NULL);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -261,6 +290,13 @@ execute_clean (JavaBuildPane *build_pane)
   
   codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
                                     process_id);
+}
+
+static void
+execute_clean_compile (JavaBuildPane *build_pane)
+{
+  execute_clean (build_pane);
+  execute_compile (build_pane);
 }
 
 static void

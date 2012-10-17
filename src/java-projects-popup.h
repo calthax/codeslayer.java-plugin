@@ -43,6 +43,7 @@ struct _JavaProjectsPopupClass
 
   void (*compile) (JavaProjectsPopup *projects_popup);
   void (*clean) (JavaProjectsPopup *projects_popup);
+  void (*clean_compile) (JavaProjectsPopup *projects_popup);
   void (*test_project) (JavaProjectsPopup *projects_popup);
 };
 
