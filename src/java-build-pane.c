@@ -80,10 +80,17 @@ static void
 java_build_pane_init (JavaBuildPane *build_pane) 
 {
   JavaBuildPanePrivate *priv;
+  GtkTextBuffer *buffer;
+
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+
   priv->text_view = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (priv->text_view), FALSE);
   gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (priv->text_view), GTK_WRAP_WORD);
+  
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->text_view));
+  gtk_text_buffer_create_tag (buffer, "underline", "underline", 
+                                    PANGO_UNDERLINE_SINGLE, NULL);
 }
 
 static void
