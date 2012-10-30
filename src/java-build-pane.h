@@ -51,6 +51,8 @@ GtkWidget*    java_build_pane_new             (JavaPageType  page_type,
 
 GtkTextView*  java_build_pane_get_text_view   (JavaBuildPane *build_pane);
 CodeSlayer*   java_build_pane_get_codeslayer  (JavaBuildPane *build_pane);
+void          java_build_pane_create_links    (JavaBuildPane     *build_pane);
+
 
 G_END_DECLS
 

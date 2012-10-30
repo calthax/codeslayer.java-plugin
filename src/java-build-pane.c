@@ -35,6 +35,9 @@ static void add_text_view                                    (JavaBuildPane     
 static void add_buttons                                      (JavaBuildPane      *build_pane);
 static void clear_action                                     (GtkWidget           *text_view);
                                                                
+static GList* find_matches                                   (gchar             *text);
+static void mark_matches                                     (GtkTextBuffer     *buffer, 
+                                                              GList             *matches);
 
 #define JAVA_BUILD_PANE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_BUILD_PANE_TYPE, JavaBuildPanePrivate))
@@ -226,4 +229,90 @@ java_build_pane_get_codeslayer (JavaBuildPane *build_pane)
   JavaBuildPanePrivate *priv;
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
   return priv->codeslayer;  
+}
+
+void
+java_build_pane_create_links (JavaBuildPane *build_pane)
+{
+  GtkTextView *text_view;
+  GtkTextBuffer *buffer;
+  GtkTextIter start;
+  GtkTextIter end;
+  gchar *text;
+  GList *matches;
+  
+  text_view = java_build_pane_get_text_view (build_pane);
+  buffer = gtk_text_view_get_buffer (text_view);
+
+  gtk_text_buffer_get_bounds (buffer, &start, &end);
+  
+  text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  
+  matches = find_matches (text);
+  mark_matches (buffer, matches);
+}
+
+static GList*
+find_matches (gchar *text)
+{
+  GList *results = NULL;
+  GRegex *regex;
+  GMatchInfo *match_info;
+  GError *error = NULL;
+  
+  regex = g_regex_new ("\\s(\\/.*?\\.java:\\d+)", 0, 0, NULL);
+  
+  g_regex_match_full (regex, text, -1, 0, 0, &match_info, &error);
+  
+  while (g_match_info_matches (match_info))
+    {
+      gchar *match_text = NULL;
+      match_text = g_match_info_fetch (match_info, 1);
+      
+      g_print ("match %s\n", match_text);
+      results = g_list_prepend (results, g_strdup (match_text));
+        
+      g_free (match_text);
+      g_match_info_next (match_info, &error);
+    }
+  
+  g_match_info_free (match_info);
+  g_regex_unref (regex);
+  
+  if (error != NULL)
+    {
+      g_printerr ("search text for completion word error: %s\n", error->message);
+      g_error_free (error);
+    }
+
+  return results;    
+}
+
+static void
+mark_matches (GtkTextBuffer *buffer, 
+              GList         *matches)
+{
+  GtkTextIter start, begin, end;
+  
+  gdk_threads_enter ();
+  gtk_text_buffer_get_start_iter (buffer, &start);
+  gdk_threads_leave ();
+  
+  while (matches != NULL)
+    {
+      gchar *match_text = matches->data;
+      
+      gdk_threads_enter ();
+      
+      if (gtk_text_iter_forward_search (&start, match_text, 
+                                        GTK_TEXT_SEARCH_TEXT_ONLY, 
+                                        &begin, &end, NULL))
+        {
+          gtk_text_buffer_apply_tag_by_name (buffer, "underline", &begin, &end);
+        }
+      
+      gdk_threads_leave ();                                              
+      
+      matches = g_list_next (matches);
+    }
 }
