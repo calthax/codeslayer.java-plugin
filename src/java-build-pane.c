@@ -33,11 +33,13 @@ static void java_build_pane_set_document                     (JavaBuildPane     
                                                                
 static void add_text_view                                    (JavaBuildPane      *build_pane);
 static void add_buttons                                      (JavaBuildPane      *build_pane);
-static void clear_action                                     (GtkWidget           *text_view);
+static void clear_action                                     (GtkWidget          *text_view);
                                                                
-static GList* find_matches                                   (gchar             *text);
-static void mark_matches                                     (GtkTextBuffer     *buffer, 
-                                                              GList             *matches);
+static GList* find_matches                                   (gchar              *text);
+static void mark_matches                                     (GtkTextBuffer      *buffer, 
+                                                              GList              *matches);
+static gboolean select_link_action                           (JavaBuildPane      *build_pane, 
+                                                              GdkEventButton     *event);
 
 #define JAVA_BUILD_PANE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_BUILD_PANE_TYPE, JavaBuildPanePrivate))
@@ -47,10 +49,12 @@ typedef struct _JavaBuildPanePrivate JavaBuildPanePrivate;
 struct _JavaBuildPanePrivate
 {
   GtkWidget          *text_view;
+  GtkTextBuffer      *buffer;
   JavaPageType        page_type;
   JavaConfiguration  *configuration;
   CodeSlayerDocument *document;
   CodeSlayer         *codeslayer;
+  gint                process_id;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaBuildPane,
@@ -83,7 +87,6 @@ static void
 java_build_pane_init (JavaBuildPane *build_pane) 
 {
   JavaBuildPanePrivate *priv;
-  GtkTextBuffer *buffer;
 
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
 
@@ -91,9 +94,12 @@ java_build_pane_init (JavaBuildPane *build_pane)
   gtk_text_view_set_editable (GTK_TEXT_VIEW (priv->text_view), FALSE);
   gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (priv->text_view), GTK_WRAP_WORD);
   
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->text_view));
-  gtk_text_buffer_create_tag (buffer, "underline", "underline", 
-                                    PANGO_UNDERLINE_SINGLE, NULL);
+  priv->buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->text_view));
+  gtk_text_buffer_create_tag (priv->buffer, "underline", "underline", 
+                              PANGO_UNDERLINE_SINGLE, NULL);
+                              
+  g_signal_connect_swapped (G_OBJECT (priv->text_view), "button-press-event",
+                            G_CALLBACK (select_link_action), build_pane);
 }
 
 static void
@@ -120,12 +126,46 @@ java_build_pane_new (JavaPageType  page_type,
   return build_pane;
 }
 
-GtkTextView*
-java_build_pane_get_text_view (JavaBuildPane *build_pane)
+void
+java_build_pane_clear_text (JavaBuildPane *build_pane)
 {
   JavaBuildPanePrivate *priv;
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
-  return GTK_TEXT_VIEW (priv->text_view);
+  gtk_text_buffer_set_text (priv->buffer, "", -1);
+}
+
+void
+java_build_pane_append_text (JavaBuildPane *build_pane, 
+                             gchar         *text)
+{
+  JavaBuildPanePrivate *priv;
+  GtkTextIter iter;
+  GtkTextMark *text_mark;
+
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+
+  gtk_text_buffer_get_end_iter (priv->buffer, &iter);
+  gtk_text_buffer_insert (priv->buffer, &iter, text, -1);
+  text_mark = gtk_text_buffer_create_mark (priv->buffer, NULL, &iter, TRUE);
+  gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (priv->text_view), 
+                                text_mark, 0.0, FALSE, 0, 0);
+}
+
+void
+java_build_pane_start_process (JavaBuildPane *build_pane, 
+                               gchar         *text)
+{
+  JavaBuildPanePrivate *priv;
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);  
+  priv->process_id = codeslayer_add_to_processes (priv->codeslayer, text, NULL, NULL);
+}
+
+void 
+java_build_pane_stop_process (JavaBuildPane *build_pane)
+{
+  JavaBuildPanePrivate *priv;
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);  
+  codeslayer_remove_from_processes (priv->codeslayer, priv->process_id);
 }
 
 static void 
@@ -223,33 +263,23 @@ java_build_pane_set_document (JavaBuildPane     *build_pane,
   priv->document = document;
 }
 
-CodeSlayer*
-java_build_pane_get_codeslayer (JavaBuildPane *build_pane)
-{
-  JavaBuildPanePrivate *priv;
-  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
-  return priv->codeslayer;  
-}
-
 void
 java_build_pane_create_links (JavaBuildPane *build_pane)
 {
-  GtkTextView *text_view;
-  GtkTextBuffer *buffer;
+  JavaBuildPanePrivate *priv;
   GtkTextIter start;
   GtkTextIter end;
   gchar *text;
   GList *matches;
-  
-  text_view = java_build_pane_get_text_view (build_pane);
-  buffer = gtk_text_view_get_buffer (text_view);
 
-  gtk_text_buffer_get_bounds (buffer, &start, &end);
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+
+  gtk_text_buffer_get_bounds (priv->buffer, &start, &end);
   
-  text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  text = gtk_text_buffer_get_text (priv->buffer, &start, &end, FALSE);
   
   matches = find_matches (text);
-  mark_matches (buffer, matches);
+  mark_matches (priv->buffer, matches);
 }
 
 static GList*
@@ -292,27 +322,62 @@ static void
 mark_matches (GtkTextBuffer *buffer, 
               GList         *matches)
 {
-  GtkTextIter start, begin, end;
-  
-  gdk_threads_enter ();
-  gtk_text_buffer_get_start_iter (buffer, &start);
-  gdk_threads_leave ();
-  
   while (matches != NULL)
     {
       gchar *match_text = matches->data;
-      
+      GtkTextIter start, begin, end;
+      gboolean success;
+
       gdk_threads_enter ();
       
-      if (gtk_text_iter_forward_search (&start, match_text, 
-                                        GTK_TEXT_SEARCH_TEXT_ONLY, 
-                                        &begin, &end, NULL))
+      gtk_text_buffer_get_start_iter (buffer, &start);
+      
+      success = gtk_text_iter_forward_search (&start, match_text, 
+                                              GTK_TEXT_SEARCH_TEXT_ONLY, 
+                                              &begin, &end, NULL);
+                                                    
+      do
         {
           gtk_text_buffer_apply_tag_by_name (buffer, "underline", &begin, &end);
+          gtk_text_iter_forward_char (&start);
+          success = gtk_text_iter_forward_search (&start, match_text, 
+                                                  GTK_TEXT_SEARCH_TEXT_ONLY, 
+                                                  &begin, &end, NULL);
+          start = begin;                                                  
         }
+      while (success);
       
       gdk_threads_leave ();                                              
       
       matches = g_list_next (matches);
     }
+}
+
+static gboolean
+select_link_action (JavaBuildPane  *build_pane, 
+                    GdkEventButton *event)
+{
+  JavaBuildPanePrivate *priv;
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+
+  if ((event->button == 1) && (event->type == GDK_BUTTON_PRESS))
+    {
+      GdkWindow *window;
+      GtkTextIter iter;
+      gint offset, x, y;
+
+      window = gtk_text_view_get_window (GTK_TEXT_VIEW (priv->text_view),
+                                         GTK_TEXT_WINDOW_TEXT);
+                                                                                                                
+      gdk_window_get_device_position (window, event->device, &x, &y, NULL);      
+      
+      gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (priv->text_view),
+                                          &iter, x, y);
+      
+      offset = gtk_text_iter_get_offset (&iter);
+    
+      g_print ("select_link_action %d\n", offset);
+    }
+
+  return FALSE;
 }

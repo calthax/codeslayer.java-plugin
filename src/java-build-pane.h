@@ -46,13 +46,16 @@ struct _JavaBuildPaneClass
 
 GType java_build_pane_get_type (void) G_GNUC_CONST;
 
-GtkWidget*    java_build_pane_new             (JavaPageType  page_type,
+GtkWidget*  java_build_pane_new             (JavaPageType  page_type,
                                                CodeSlayer   *codeslayer);
 
-GtkTextView*  java_build_pane_get_text_view   (JavaBuildPane *build_pane);
-CodeSlayer*   java_build_pane_get_codeslayer  (JavaBuildPane *build_pane);
-void          java_build_pane_create_links    (JavaBuildPane     *build_pane);
-
+void        java_build_pane_clear_text     (JavaBuildPane *build_pane);
+void        java_build_pane_append_text    (JavaBuildPane *build_pane, 
+                                            gchar         *text);
+void        java_build_pane_create_links   (JavaBuildPane *build_pane);
+void        java_build_pane_start_process  (JavaBuildPane *build_pane, 
+                                            gchar         *text);
+void        java_build_pane_stop_process   (JavaBuildPane *build_pane);
 
 G_END_DECLS
 

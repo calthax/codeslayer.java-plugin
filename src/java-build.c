@@ -254,10 +254,8 @@ execute_compile (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
-  gint process_id;
-  
-  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
-                                            "Compile...", NULL, NULL);
+
+  java_build_pane_start_process (build_pane, "Compile...");  
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -266,8 +264,7 @@ execute_compile (JavaBuildPane *build_pane)
   run_command (build_pane, command);
   g_free (command);
   
-  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
-                                    process_id);
+  java_build_pane_stop_process (build_pane);
 }
 
 static void
@@ -276,10 +273,8 @@ execute_clean (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
-  gint process_id;
   
-  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
-                                            "Clean...", NULL, NULL);
+  java_build_pane_start_process (build_pane, "Clean...");  
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -288,8 +283,7 @@ execute_clean (JavaBuildPane *build_pane)
   run_command (build_pane, command);
   g_free (command);
   
-  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
-                                    process_id);
+  java_build_pane_stop_process (build_pane);
 }
 
 static void
@@ -310,10 +304,8 @@ execute_test (JavaBuildPane *build_pane)
   gchar *command;
   gchar *substr;
   gchar *replace;
-  gint process_id;
   
-  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
-                                            "Test", NULL, NULL);
+  java_build_pane_start_process (build_pane, "Test...");  
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   document = java_page_get_document (JAVA_PAGE (build_pane));
@@ -333,8 +325,7 @@ execute_test (JavaBuildPane *build_pane)
   g_free (substr);
   g_free (replace);
   
-  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
-                                    process_id);
+  java_build_pane_stop_process (build_pane);
 }
 
 static void
@@ -343,10 +334,8 @@ execute_project_test (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
-  gint process_id;
   
-  process_id = codeslayer_add_to_processes (java_build_pane_get_codeslayer (build_pane), 
-                                            "Test Project", NULL, NULL);
+  java_build_pane_start_process (build_pane, "Test Project...");  
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -355,8 +344,7 @@ execute_project_test (JavaBuildPane *build_pane)
   run_command (build_pane, command);
   g_free (command);
   
-  codeslayer_remove_from_processes (java_build_pane_get_codeslayer (build_pane), 
-                                    process_id);
+  java_build_pane_stop_process (build_pane);
 }
 
 static JavaBuildPane*
@@ -445,15 +433,11 @@ static void
 run_command (JavaBuildPane *build_pane,
              gchar         *command)
 {
-  GtkTextBuffer *buffer;
-  GtkTextIter iter;
-  GtkTextMark *text_mark;
   char out[BUFSIZ];
   FILE *file;
   
   gdk_threads_enter ();
-  buffer = gtk_text_view_get_buffer (java_build_pane_get_text_view (build_pane));
-  gtk_text_buffer_set_text (buffer, "", -1);
+  java_build_pane_clear_text (build_pane);
   gdk_threads_leave ();
   
   file = popen (command, "r");
@@ -462,11 +446,7 @@ run_command (JavaBuildPane *build_pane,
       while (fgets (out, BUFSIZ, file))
         {
           gdk_threads_enter ();
-          gtk_text_buffer_get_end_iter (buffer, &iter);
-          gtk_text_buffer_insert (buffer, &iter, out, -1);
-          text_mark = gtk_text_buffer_create_mark (buffer, NULL, &iter, TRUE);
-          gtk_text_view_scroll_to_mark (java_build_pane_get_text_view (build_pane), 
-                                        text_mark, 0.0, FALSE, 0, 0);
+          java_build_pane_append_text (build_pane, out);
           gdk_threads_leave ();
         }
       pclose (file);
