@@ -40,6 +40,8 @@ static void mark_matches                                     (GtkTextBuffer     
                                                               GList              *matches);
 static gboolean select_link_action                           (JavaBuildPane      *build_pane, 
                                                               GdkEventButton     *event);
+static gboolean notify_link_action                           (JavaBuildPane      *build_pane, 
+                                                              GdkEventButton     *event);
 
 #define JAVA_BUILD_PANE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_BUILD_PANE_TYPE, JavaBuildPanePrivate))
@@ -50,6 +52,7 @@ struct _JavaBuildPanePrivate
 {
   GtkWidget          *text_view;
   GtkTextBuffer      *buffer;
+  GtkTextTag         *underline_tag;
   JavaPageType        page_type;
   JavaConfiguration  *configuration;
   CodeSlayerDocument *document;
@@ -95,11 +98,13 @@ java_build_pane_init (JavaBuildPane *build_pane)
   gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (priv->text_view), GTK_WRAP_WORD);
   
   priv->buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->text_view));
-  gtk_text_buffer_create_tag (priv->buffer, "underline", "underline", 
-                              PANGO_UNDERLINE_SINGLE, NULL);
+  priv->underline_tag = gtk_text_buffer_create_tag (priv->buffer, "underline", "underline", 
+                                               PANGO_UNDERLINE_SINGLE, NULL);
                               
   g_signal_connect_swapped (G_OBJECT (priv->text_view), "button-press-event",
                             G_CALLBACK (select_link_action), build_pane);
+  g_signal_connect_swapped (G_OBJECT (priv->text_view), "motion-notify-event",
+                            G_CALLBACK (notify_link_action), build_pane);
 }
 
 static void
@@ -364,20 +369,63 @@ select_link_action (JavaBuildPane  *build_pane,
     {
       GdkWindow *window;
       GtkTextIter iter;
-      gint offset, x, y;
+      gint offset, x, y, bx, by;
 
       window = gtk_text_view_get_window (GTK_TEXT_VIEW (priv->text_view),
                                          GTK_TEXT_WINDOW_TEXT);
                                                                                                                 
       gdk_window_get_device_position (window, event->device, &x, &y, NULL);      
       
+      gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (priv->text_view),
+                                             GTK_TEXT_WINDOW_TEXT,
+                                             x, y, &bx, &by);
+
       gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (priv->text_view),
-                                          &iter, x, y);
+                                          &iter, bx, by);
       
       offset = gtk_text_iter_get_offset (&iter);
     
       g_print ("select_link_action %d\n", offset);
     }
 
+  return FALSE;
+}
+
+static gboolean
+notify_link_action (JavaBuildPane  *build_pane, 
+                    GdkEventButton *event)
+{
+
+  JavaBuildPanePrivate *priv;
+  GdkWindow *window;
+  GtkTextIter iter;
+  gint x, y, bx, by;
+
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+
+  window = gtk_text_view_get_window (GTK_TEXT_VIEW (priv->text_view),
+                                     GTK_TEXT_WINDOW_TEXT);
+                                                                                                                
+  gdk_window_get_device_position (window, event->device, &x, &y, NULL);      
+
+  gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (priv->text_view),
+                                         GTK_TEXT_WINDOW_TEXT,
+                                         x, y, &bx, &by);
+      
+  gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (priv->text_view),
+                                      &iter, bx, by);
+
+  if (gtk_text_iter_has_tag (&iter, priv->underline_tag))
+    {
+      GdkCursor *cur;
+      cur = gdk_cursor_new (GDK_HAND1);
+      gdk_window_set_cursor (window, cur);
+      g_object_unref (cur);    
+    } 
+  else 
+    {
+      gdk_window_set_cursor (window, NULL);
+    }
+      
   return FALSE;
 }
