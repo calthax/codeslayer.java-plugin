@@ -16,7 +16,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
+#include <codeslayer/codeslayer-utils.h>
 #include "java-build-pane.h"
+
+typedef struct
+{
+  gchar *file_path;
+  gint   line_number;
+  gint   start_offset;
+  gint   end_offset;
+} Link;
 
 static void java_page_interface_init                         (gpointer             page, 
                                                               gpointer             data);
@@ -36,12 +46,19 @@ static void add_buttons                                      (JavaBuildPane     
 static void clear_action                                     (GtkWidget          *text_view);
                                                                
 static GList* find_matches                                   (gchar              *text);
-static void mark_matches                                     (GtkTextBuffer      *buffer, 
+static GList* mark_links                                     (JavaBuildPane      *build_pane, 
+                                                              GtkTextBuffer      *buffer, 
                                                               GList              *matches);
+static Link* create_link                                     (JavaBuildPane      *build_pane,
+                                                              gchar              *text,
+                                                              GtkTextIter        *begin, 
+                                                              GtkTextIter        *end);
 static gboolean select_link_action                           (JavaBuildPane      *build_pane, 
                                                               GdkEventButton     *event);
 static gboolean notify_link_action                           (JavaBuildPane      *build_pane, 
-                                                              GdkEventButton     *event);
+                                                              GdkEventButton     *event);                                                              
+static void clear_links                                      (JavaBuildPane      *build_pane);
+                                                              
 
 #define JAVA_BUILD_PANE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_BUILD_PANE_TYPE, JavaBuildPanePrivate))
@@ -58,6 +75,7 @@ struct _JavaBuildPanePrivate
   CodeSlayerDocument *document;
   CodeSlayer         *codeslayer;
   gint                process_id;
+  GList              *links;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaBuildPane,
@@ -92,6 +110,8 @@ java_build_pane_init (JavaBuildPane *build_pane)
   JavaBuildPanePrivate *priv;
 
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+  
+  priv->links = NULL;
 
   priv->text_view = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (priv->text_view), FALSE);
@@ -284,7 +304,34 @@ java_build_pane_create_links (JavaBuildPane *build_pane)
   text = gtk_text_buffer_get_text (priv->buffer, &start, &end, FALSE);
   
   matches = find_matches (text);
-  mark_matches (priv->buffer, matches);
+  clear_links (build_pane);
+  priv->links = mark_links (build_pane, priv->buffer, matches);
+  g_list_foreach (matches, (GFunc) g_free, NULL);
+}
+
+static void
+clear_links (JavaBuildPane *build_pane)
+{
+  JavaBuildPanePrivate *priv;
+  GList *list;
+  
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+
+  if (priv->links == NULL)
+    return;
+  
+  list = priv->links;
+  
+  while (list != NULL)
+    {
+      Link *link = list->data;
+      g_free (link->file_path);
+      g_free (link);
+      list = g_list_next (list);
+    }
+  
+  g_list_free (priv->links);
+  priv->links = NULL;
 }
 
 static GList*
@@ -323,39 +370,71 @@ find_matches (gchar *text)
   return results;    
 }
 
-static void
-mark_matches (GtkTextBuffer *buffer, 
-              GList         *matches)
+static GList*
+mark_links (JavaBuildPane *build_pane, 
+            GtkTextBuffer *buffer, 
+            GList         *matches)
 {
+  GList *results = NULL;
+
   while (matches != NULL)
     {
       gchar *match_text = matches->data;
       GtkTextIter start, begin, end;
-      gboolean success;
 
       gdk_threads_enter ();
       
       gtk_text_buffer_get_start_iter (buffer, &start);
       
-      success = gtk_text_iter_forward_search (&start, match_text, 
-                                              GTK_TEXT_SEARCH_TEXT_ONLY, 
-                                              &begin, &end, NULL);
-                                                    
-      do
+      while (gtk_text_iter_forward_search (&start, match_text, 
+                                           GTK_TEXT_SEARCH_TEXT_ONLY, 
+                                           &begin, &end, NULL))
         {
+          Link *link;
           gtk_text_buffer_apply_tag_by_name (buffer, "underline", &begin, &end);
+          
+          link = create_link (build_pane, match_text, &begin, &end);
+          if (link != NULL)
+            results = g_list_prepend (results, link);
+          
+          start = begin;
           gtk_text_iter_forward_char (&start);
-          success = gtk_text_iter_forward_search (&start, match_text, 
-                                                  GTK_TEXT_SEARCH_TEXT_ONLY, 
-                                                  &begin, &end, NULL);
-          start = begin;                                                  
         }
-      while (success);
       
       gdk_threads_leave ();                                              
       
       matches = g_list_next (matches);
     }
+    
+  return results;    
+}
+
+static Link*
+create_link (JavaBuildPane *build_pane,
+             gchar         *text,
+             GtkTextIter   *begin, 
+             GtkTextIter   *end)
+{
+  Link *link = NULL;
+  gchar **split, **tmp;
+  
+  split = g_strsplit (text, ":", 0);  
+  
+  if (split != NULL)
+    {
+      tmp = split;
+
+      link = g_malloc (sizeof (Link));
+      link->file_path = g_strdup (*tmp);
+      tmp++;
+      link->line_number = atoi(*tmp);
+      link->start_offset = gtk_text_iter_get_offset (begin);
+      link->end_offset = gtk_text_iter_get_offset (end);
+      
+      g_strfreev(split);
+    }
+
+  return link;
 }
 
 static gboolean
@@ -370,6 +449,7 @@ select_link_action (JavaBuildPane  *build_pane,
       GdkWindow *window;
       GtkTextIter iter;
       gint offset, x, y, bx, by;
+      GList *list;
 
       window = gtk_text_view_get_window (GTK_TEXT_VIEW (priv->text_view),
                                          GTK_TEXT_WINDOW_TEXT);
@@ -384,8 +464,31 @@ select_link_action (JavaBuildPane  *build_pane,
                                           &iter, bx, by);
       
       offset = gtk_text_iter_get_offset (&iter);
-    
-      g_print ("select_link_action %d\n", offset);
+      
+      list = priv->links;
+      
+      while (list != NULL)
+        {
+          Link *link = list->data;
+          
+          if (offset >= link->start_offset && offset <= link->end_offset)
+            {
+              CodeSlayerDocument *document;
+              CodeSlayerProject *project;
+              document = codeslayer_document_new ();
+              codeslayer_document_set_file_path (document, link->file_path);
+              codeslayer_document_set_line_number (document, link->line_number);
+              
+              project = codeslayer_get_project_by_file_path (priv->codeslayer, 
+                                                             link->file_path);
+              codeslayer_document_set_project (document, project);
+              
+              codeslayer_select_editor (priv->codeslayer, document);
+              g_object_unref (document);
+              return FALSE;
+            }
+          list = g_list_next (list);
+        }
     }
 
   return FALSE;
@@ -398,6 +501,7 @@ notify_link_action (JavaBuildPane  *build_pane,
 
   JavaBuildPanePrivate *priv;
   GdkWindow *window;
+  GdkCursor *cursor;
   GtkTextIter iter;
   gint x, y, bx, by;
 
@@ -415,16 +519,25 @@ notify_link_action (JavaBuildPane  *build_pane,
   gtk_text_view_get_iter_at_location (GTK_TEXT_VIEW (priv->text_view),
                                       &iter, bx, by);
 
+  cursor = gdk_window_get_cursor (window);
+
   if (gtk_text_iter_has_tag (&iter, priv->underline_tag))
     {
-      GdkCursor *cur;
-      cur = gdk_cursor_new (GDK_HAND1);
-      gdk_window_set_cursor (window, cur);
-      g_object_unref (cur);    
+      if (cursor == NULL || gdk_cursor_get_cursor_type (cursor) != GDK_HAND1)
+        {
+          cursor = gdk_cursor_new (GDK_HAND1);
+          gdk_window_set_cursor (window, cursor);
+          g_object_unref (cursor);    
+        }
     } 
   else 
     {
-      gdk_window_set_cursor (window, NULL);
+      if (cursor != NULL && gdk_cursor_get_cursor_type (cursor) != GDK_XTERM)
+        {
+          cursor = gdk_cursor_new (GDK_XTERM);
+          gdk_window_set_cursor (window, cursor);
+          g_object_unref (cursor);    
+        }
     }
       
   return FALSE;
