@@ -292,21 +292,21 @@ java_debugger_pane_refresh_rows (JavaDebuggerPane *debugger_pane,
           GtkTreeViewColumn *vcolumn;
           const gchar *name;          
           name = java_debugger_column_get_name (column);
-          gdk_threads_enter ();
+          /*gdk_threads_enter ();*/
           renderer = gtk_cell_renderer_text_new ();
           vcolumn = gtk_tree_view_column_new_with_attributes (name, renderer, "text", i, NULL);          
           gtk_tree_view_append_column (GTK_TREE_VIEW (priv->tree), vcolumn);          
-          gdk_threads_leave ();
+          /*gdk_threads_leave ();*/
           types[i] = G_TYPE_STRING;
           i++;
           columns = g_list_next (columns);
         }
       
-      gdk_threads_enter ();
+      /*gdk_threads_enter ();*/
       priv->store = gtk_list_store_newv (i, types);
       gtk_tree_view_set_model (GTK_TREE_VIEW (priv->tree), GTK_TREE_MODEL (priv->store));
       g_object_unref (priv->store);
-      gdk_threads_leave ();
+      /*gdk_threads_leave ();*/
       
       while (rows != NULL)
         {
@@ -314,18 +314,18 @@ java_debugger_pane_refresh_rows (JavaDebuggerPane *debugger_pane,
           GtkTreeIter iter;
           gint i = 0;
 
-          gdk_threads_enter ();
+          /*gdk_threads_enter ();*/
           gtk_list_store_append (priv->store, &iter);
-          gdk_threads_leave ();
+          /*gdk_threads_leave ();*/
 
           while (columns != NULL)
             {
               JavaDebuggerColumn *column = columns->data;
               const gchar *value;
               value = java_debugger_column_get_value (column);
-              gdk_threads_enter ();
+              /*gdk_threads_enter ();*/
               gtk_list_store_set (priv->store, &iter, i, value, -1);
-              gdk_threads_leave ();
+              /*gdk_threads_leave ();*/
               i++;
               columns = g_list_next (columns);
             }

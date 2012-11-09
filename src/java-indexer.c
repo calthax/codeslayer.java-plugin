@@ -22,6 +22,12 @@
 #include "java-configuration.h"
 #include "java-client.h"
 
+typedef struct
+{
+  CodeSlayer *codeslayer;
+  gint        process_id;
+} Process;
+
 static void java_indexer_class_init    (JavaIndexerClass *klass);
 static void java_indexer_init          (JavaIndexer      *indexer);
 static void java_indexer_finalize      (JavaIndexer      *indexer);
@@ -33,6 +39,10 @@ static void create_libs_indexes        (JavaIndexer      *indexer);
 static void verify_dir_exists          (CodeSlayer       *codeslayer);
 static void index_projects_action      (JavaIndexer      *indexer);
 static void index_libs_action          (JavaIndexer      *indexer);
+static void add_idle                   (gchar            *output, 
+                                        Process          *process);
+static gboolean stop_process           (Process          *process);
+static void destroy_process            (Process          *process);
 
 #define JAVA_INDEXER_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_INDEXER_TYPE, JavaIndexerPrivate))
@@ -47,7 +57,7 @@ struct _JavaIndexerPrivate
   JavaToolsProperties *tools_properties;
   JavaConfigurations  *configurations;
   /*gulong               saved_handler_id;*/
-  guint                event_source_id;
+  guint                event_source_id;  
 };
 
 G_DEFINE_TYPE (JavaIndexer, java_indexer, G_TYPE_OBJECT)
@@ -155,12 +165,13 @@ create_projects_indexes (JavaIndexer *indexer)
 
   gchar *source_indexes_folders;
   gchar *input;
-  gchar *output;
-  gint process_id;
-  
+  Process *process;
+
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  process_id = codeslayer_add_to_processes (priv->codeslayer, "Index Projects", NULL, NULL);
+  process = g_malloc (sizeof (Process));
+  process->codeslayer = priv->codeslayer;
+  process->process_id = codeslayer_add_to_processes (priv->codeslayer, "Index Projects", NULL, NULL);
   
   source_indexes_folders = get_source_indexes_folders (priv->codeslayer, priv->configurations);
   
@@ -168,25 +179,16 @@ create_projects_indexes (JavaIndexer *indexer)
   
   g_print ("input %s\n", input);
 
-  output = java_client_send (priv->client_projects, input);
+  java_client_send_with_callback (priv->client_projects, input, (ClientCallbackFunc) add_idle, process);
   
   g_free (source_indexes_folders);
   g_free (input);
-  
-  if (output != NULL)
-    {
-      g_print ("output %s\n", output);    
-      g_free (output);
-    }
-    
-  codeslayer_remove_from_processes (priv->codeslayer, process_id);
 }
 
 static void
 create_libs_indexes (JavaIndexer *indexer)
 {
   JavaIndexerPrivate *priv;
-  gint process_id;
 
   GString *string;
 
@@ -198,11 +200,13 @@ create_libs_indexes (JavaIndexer *indexer)
   const gchar *suppressions_file;
 
   gchar *input;
-  gchar *output;
+  Process *process;
   
   priv = JAVA_INDEXER_GET_PRIVATE (indexer);
   
-  process_id = codeslayer_add_to_processes (priv->codeslayer, "Index Libs", NULL, NULL);
+  process = g_malloc (sizeof (Process));
+  process->codeslayer = priv->codeslayer;
+  process->process_id = codeslayer_add_to_processes (priv->codeslayer, "Index Libs", NULL, NULL);
   
   lib_indexes_folders = get_lib_indexes_folders (priv->codeslayer, priv->configurations);
   jdk_folder = java_tools_properties_get_jdk_folder (priv->tools_properties);
@@ -235,18 +239,23 @@ create_libs_indexes (JavaIndexer *indexer)
   
   g_print ("input %s\n", input);
 
-  output = java_client_send (priv->client_libs, input);
+  java_client_send_with_callback (priv->client_libs, input, (ClientCallbackFunc) add_idle, process);
   
   g_free (lib_indexes_folders);
   g_free (input);
-  
-  if (output != NULL)
+}
+
+void
+add_idle (gchar   *text, 
+          Process *process)
+{
+  if (text != NULL)
     {
-      g_print ("output %s\n", output);    
-      g_free (output);
+      g_print ("output %s\n", text);    
+      g_free (text);
     }
     
-  codeslayer_remove_from_processes (priv->codeslayer, process_id);
+  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) stop_process, process, (GDestroyNotify)destroy_process);    
 }
 
 static void
@@ -266,4 +275,17 @@ verify_dir_exists (CodeSlayer *codeslayer)
   g_free (group_folder_path);    
   g_free (file_name);
   g_object_unref (file);
+}
+
+static gboolean 
+stop_process (Process *process)
+{
+  codeslayer_remove_from_processes (process->codeslayer, process->process_id);
+  return FALSE;
+}
+
+static void 
+destroy_process (Process *process)
+{
+  g_free (process);
 }

@@ -307,6 +307,7 @@ java_build_pane_create_links (JavaBuildPane *build_pane)
   clear_links (build_pane);
   priv->links = mark_links (build_pane, priv->buffer, matches);
   g_list_foreach (matches, (GFunc) g_free, NULL);
+  g_free (text);
 }
 
 static void
@@ -382,8 +383,6 @@ mark_links (JavaBuildPane *build_pane,
       gchar *match_text = matches->data;
       GtkTextIter start, begin, end;
 
-      gdk_threads_enter ();
-      
       gtk_text_buffer_get_start_iter (buffer, &start);
       
       while (gtk_text_iter_forward_search (&start, match_text, 
@@ -400,8 +399,6 @@ mark_links (JavaBuildPane *build_pane,
           start = begin;
           gtk_text_iter_forward_char (&start);
         }
-      
-      gdk_threads_leave ();                                              
       
       matches = g_list_next (matches);
     }

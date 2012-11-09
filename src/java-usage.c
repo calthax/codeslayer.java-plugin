@@ -25,6 +25,12 @@
 #include "java-page.h"
 #include "java-client.h"
 
+typedef struct
+{
+  JavaUsage *usage;
+  gchar     *text;
+} Output;
+
 static void java_usage_class_init              (JavaUsageClass  *klass);
 static void java_usage_init                    (JavaUsage       *usage);
 static void java_usage_finalize                (JavaUsage       *usage);
@@ -34,13 +40,15 @@ static gchar* get_input                        (JavaUsage       *usage,
                                                 const gchar     *file_path, 
                                                 gchar           *symbol, 
                                                 gint             line_number);
-static void render_output                      (JavaUsage       *usage,
-                                                gchar           *output);
 static GList* get_usage_methods_from_output    (gchar           *output);
 static gint sort_usage_methods                 (JavaUsageMethod *usage_method1, 
                                                 JavaUsageMethod *usage_method2);
 static JavaUsageMethod* get_java_usage_method  (gchar           *text);
-static void execute                            (JavaUsage       *usage);
+
+static void add_idle                           (gchar           *text, 
+                                                JavaUsage       *usage);
+static void destroy_output                     (Output          *output);
+static void render_output                      (Output          *output);
 
 #define JAVA_USAGE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_USAGE_TYPE, JavaUsagePrivate))
@@ -53,6 +61,7 @@ struct _JavaUsagePrivate
   GtkWidget *notebook;
   JavaConfigurations *configurations;
   JavaClient *client;
+  gint process_id;
 };
 
 G_DEFINE_TYPE (JavaUsage, java_usage, G_TYPE_OBJECT)
@@ -105,13 +114,7 @@ java_usage_new (CodeSlayer         *codeslayer,
 
 static void 
 method_usage_action (JavaUsage *usage)
-{
-  g_thread_create ((GThreadFunc) execute, usage, FALSE, NULL);
-}
-
-static void 
-execute (JavaUsage *usage)
-{
+{  
   JavaUsagePrivate *priv;
   CodeSlayerEditor *editor;
   const gchar *file_path;
@@ -122,18 +125,14 @@ execute (JavaUsage *usage)
   gchar *symbol;
   gint line_number;
   gchar *input;
-  gchar *output;
-  gint process_id;
 
   GtkTextIter start, end;
 
   priv = JAVA_USAGE_GET_PRIVATE (usage);
   
-  process_id = codeslayer_add_to_processes (priv->codeslayer, "Method Usage", NULL, NULL);
+  priv->process_id = codeslayer_add_to_processes (priv->codeslayer, "Method Usage", NULL, NULL);
 
-  gdk_threads_enter ();  
   editor = codeslayer_get_active_editor (priv->codeslayer);
-  gdk_threads_leave ();
   
   if (editor == NULL)
     return;
@@ -142,7 +141,6 @@ execute (JavaUsage *usage)
   if (!g_str_has_suffix (file_path, ".java"))
     return;
   
-  gdk_threads_enter ();  
   buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (editor));
 
   if (!gtk_text_buffer_get_selection_bounds (buffer, &start, &end))
@@ -156,28 +154,18 @@ execute (JavaUsage *usage)
 
   symbol = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
   line_number = gtk_text_iter_get_line (&start);
-  gdk_threads_leave ();
   
   if (symbol != NULL)
     g_strstrip (symbol);
   
   input = get_input (usage, file_path, symbol, line_number);
-
+  
   g_print ("input %s\n", input);
   
-  output = java_client_send (priv->client, input);
-  
-  if (output != NULL)
-    {
-      g_print ("output %s\n", output);
-      render_output (usage, output);
-      g_free (output);
-    }
-
+  java_client_send_with_callback (priv->client, input, (ClientCallbackFunc) add_idle, usage);
+                                              
   g_free (symbol);
-  g_free (input);
-  
-  codeslayer_remove_from_processes (priv->codeslayer, process_id);
+  g_free (input);                                         
 }
 
 static gchar* 
@@ -212,15 +200,34 @@ get_input (JavaUsage   *usage,
 }
 
 static void
-render_output (JavaUsage *usage,
-               gchar     *output)
+add_idle (gchar     *text, 
+          JavaUsage *usage)
+{
+  Output *output;
+  output = g_malloc (sizeof (Output));
+  output->usage = usage;
+  output->text = text;    
+  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) render_output, output, (GDestroyNotify)destroy_output);
+}
+
+static void 
+destroy_output (Output *output)
+{
+  g_free (output->text);
+  g_free (output);
+}
+
+static void
+render_output (Output *output)
 {
   JavaUsagePrivate *priv;
   GList *usage_methods;
   
-  priv = JAVA_USAGE_GET_PRIVATE (usage);
+  priv = JAVA_USAGE_GET_PRIVATE (output->usage);
   
-  usage_methods = get_usage_methods_from_output (output);
+  g_print ("output %s\n", output->text);
+  
+  usage_methods = get_usage_methods_from_output (output->text);
 
   if (usage_methods != NULL)
     {
@@ -231,28 +238,23 @@ render_output (JavaUsage *usage,
       if (usage_pane == NULL)
         {
           usage_pane = java_usage_pane_new (priv->codeslayer, JAVA_PAGE_TYPE_USAGE);
-          gdk_threads_enter ();
           java_notebook_add_page (JAVA_NOTEBOOK (priv->notebook), usage_pane, "Method Usage");
-          gdk_threads_leave ();
         }
       
-      gdk_threads_enter ();
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
       java_usage_pane_set_usage_methods (JAVA_USAGE_PANE (usage_pane), usage_methods);
       java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), JAVA_PAGE_TYPE_USAGE);
-      gdk_threads_leave ();
     }
   else
     {
       GtkWidget *usage_pane;
-
-      gdk_threads_enter ();
       usage_pane = java_notebook_get_page_by_type (JAVA_NOTEBOOK (priv->notebook), 
                                                    JAVA_PAGE_TYPE_USAGE);
       if (usage_pane != NULL)
         java_usage_pane_clear_usage_methods (JAVA_USAGE_PANE (usage_pane));
-      gdk_threads_leave ();
     }
+    
+  codeslayer_remove_from_processes (priv->codeslayer, priv->process_id);
 }
 
 static GList*

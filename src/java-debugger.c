@@ -630,9 +630,9 @@ channel_closed_action (JavaDebugger *debugger)
   priv = JAVA_DEBUGGER_GET_PRIVATE (debugger);
   java_debugger_pane_enable_toolbar (JAVA_DEBUGGER_PANE (priv->debugger_pane), 
                                      FALSE);
-  gdk_threads_enter ();
+  /*gdk_threads_enter ();*/
   remove_debugger_marks (priv->codeslayer);
-  gdk_threads_leave ();
+  /*gdk_threads_leave ();*/
 }
 
 static void
@@ -774,13 +774,13 @@ select_editor (CodeSlayer         *codeslayer,
   project = codeslayer_get_project_by_file_path (codeslayer, file_path);
   codeslayer_document_set_project (document, project);
 
-  gdk_threads_enter ();
+  /*gdk_threads_enter ();*/
   if (codeslayer_select_editor (codeslayer, document))
     {
       remove_debugger_marks (codeslayer);
       apply_debugger_marks (codeslayer, document);    
     }
-  gdk_threads_leave ();
+  /*gdk_threads_leave ();*/
 }
 
 static void

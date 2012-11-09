@@ -378,7 +378,11 @@ static gchar*
 get_conf_path (JavaToolsProperties *tools_properties)
 {
   JavaToolsPropertiesPrivate *priv;
+  gchar *group_folder_path;
+  gchar *result;
   priv = JAVA_TOOLS_PROPERTIES_GET_PRIVATE (tools_properties);
-  return g_build_filename (codeslayer_get_active_group_folder_path (priv->codeslayer),
-                           JAVA_TOOLS_PROPERTIES_FILE, NULL);
+  group_folder_path = codeslayer_get_active_group_folder_path (priv->codeslayer);  
+  result = g_build_filename (group_folder_path, JAVA_TOOLS_PROPERTIES_FILE, NULL);
+  g_free (group_folder_path);
+  return result;
 }

@@ -20,9 +20,19 @@
 #include <string.h>
 #include "java-client.h"
 
+typedef struct
+{
+  JavaClient         *client;
+  gchar              *input;
+  ClientCallbackFunc  func;
+  gpointer            data;
+} Message;
+
 static void java_client_class_init (JavaClientClass *klass);
 static void java_client_init       (JavaClient      *client);
 static void java_client_finalize   (JavaClient      *client);
+
+static void execute                (Message         *message);
                           
 #define JAVA_CLIENT_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_CLIENT_TYPE, JavaClientPrivate))
@@ -64,6 +74,9 @@ java_client_finalize (JavaClient *client)
   if (priv->socket)
     g_object_unref (priv->socket);    
     
+  /*if (priv->socket_connection)    
+    g_object_unref (priv->socket_connection);*/
+    
   G_OBJECT_CLASS (java_client_parent_class)->finalize (G_OBJECT(client));
 }
 
@@ -103,9 +116,34 @@ java_client_connect (JavaClient *client)
   g_socket_set_blocking (priv->socket, FALSE);
 }
 
+void
+java_client_send_with_callback (JavaClient         *client,
+                                gchar              *input,
+                                ClientCallbackFunc  func, 
+                                gpointer            data)
+{
+  Message *message;
+  message = g_malloc (sizeof (Message));
+  message->client = client;
+  message->input = g_strdup (input);
+  message->func = func;
+  message->data = data;
+  g_thread_new ("client-send", (GThreadFunc) execute, message);
+}
+
+static void
+execute (Message *message)
+{
+  gchar *output;
+  output = java_client_send (message->client, message->input); 
+  message->func (output, message->data);
+  g_free (message->input);
+  g_free (message);
+}
+
 gchar*
-java_client_send (JavaClient *client, 
-                  gchar      *message)
+java_client_send (JavaClient *client,
+                  gchar      *input)
 {
   JavaClientPrivate *priv;
   gchar buffer[1024];
@@ -127,7 +165,7 @@ java_client_send (JavaClient *client,
         }
     }
 
-  text = g_strconcat (message, "\n", NULL);
+  text = g_strconcat (input, "\n", NULL);
 
   g_socket_send (priv->socket, text, strlen(text), NULL, &error);
   

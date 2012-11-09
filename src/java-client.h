@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 #define IS_JAVA_CLIENT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), JAVA_CLIENT_TYPE))
 #define IS_JAVA_CLIENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), JAVA_CLIENT_TYPE))
 
+typedef void (*ClientCallbackFunc) (gchar *output, gpointer data);
+
 typedef struct _JavaClient JavaClient;
 typedef struct _JavaClientClass JavaClientClass;
 
@@ -45,11 +47,15 @@ struct _JavaClientClass
 
 GType java_client_get_type (void) G_GNUC_CONST;
 
-JavaClient*  java_client_new (CodeSlayer *codeslayer);
+JavaClient*  java_client_new                 (CodeSlayer         *codeslayer);
                   
-void   java_client_connect (JavaClient *client);
-gchar* java_client_send    (JavaClient *client, 
-                            gchar      *message);
+void         java_client_connect             (JavaClient         *client);
+gchar*       java_client_send                (JavaClient         *client, 
+                                              gchar              *input);
+void         java_client_send_with_callback  (JavaClient         *client, 
+                                              gchar              *input,
+                                              ClientCallbackFunc  func, 
+                                              gpointer            data);
 
 G_END_DECLS
 

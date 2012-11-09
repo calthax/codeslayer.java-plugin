@@ -24,6 +24,18 @@
 #include "java-configuration.h"
 #include "java-notebook.h"
 
+typedef struct
+{
+  JavaBuildPane *build_pane;
+  gchar *text;
+} Output;
+
+typedef struct
+{
+  JavaBuildPane *build_pane;
+  gchar *text;
+} Process;
+
 static void java_build_class_init                      (JavaBuildClass    *klass);
 static void java_build_init                            (JavaBuild         *build);
 static void java_build_finalize                        (JavaBuild         *build);
@@ -56,7 +68,15 @@ static JavaBuildPane* get_build_pane_by_active_editor  (JavaBuild         *build
                                                         JavaPageType       page_type);
 static JavaBuildPane* get_build_pane_by_project        (JavaBuild         *build, 
                                                         CodeSlayerProject *project,
-                                                        JavaPageType       page_type);
+                                                        JavaPageType       page_type);                                                        
+static gboolean clear_text                             (JavaBuildPane     *build_pane);
+static gboolean append_text                            (Output            *output);
+static void destroy_text                               (Output            *output);
+static gboolean  create_links                          (JavaBuildPane     *build_pane);
+
+static gboolean start_process                          (Process           *process);
+static gboolean stop_process                           (Process           *process);
+static void destroy_process                            (Process           *process);
                           
 #define JAVA_BUILD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_BUILD_TYPE, JavaBuildPrivate))
@@ -244,7 +264,7 @@ execute (JavaBuild     *build,
     {
       codeslayer_show_bottom_pane (priv->codeslayer, priv->notebook);
       java_notebook_select_page_by_type (JAVA_NOTEBOOK (priv->notebook), page_type);
-      g_thread_create (thread_func, build_pane, FALSE, NULL);
+      g_thread_new ("java-build", thread_func, build_pane);
     }
 }
 
@@ -254,8 +274,13 @@ execute_compile (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
+  Process *process;
 
-  java_build_pane_start_process (build_pane, "Compile...");  
+  process = g_malloc (sizeof (Process));
+  process->build_pane = build_pane;
+  process->text = g_strdup ("Compile...");
+
+  g_idle_add ((GSourceFunc) start_process, process);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -264,7 +289,7 @@ execute_compile (JavaBuildPane *build_pane)
   run_command (build_pane, command);
   g_free (command);
   
-  java_build_pane_stop_process (build_pane);
+  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) stop_process, process, (GDestroyNotify)destroy_process);
 }
 
 static void
@@ -273,8 +298,13 @@ execute_clean (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
-  
-  java_build_pane_start_process (build_pane, "Clean...");  
+  Process *process;
+
+  process = g_malloc (sizeof (Process));
+  process->build_pane = build_pane;
+  process->text = g_strdup ("Clean...");
+
+  g_idle_add ((GSourceFunc) start_process, process);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -283,7 +313,7 @@ execute_clean (JavaBuildPane *build_pane)
   run_command (build_pane, command);
   g_free (command);
   
-  java_build_pane_stop_process (build_pane);
+  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) stop_process, process, (GDestroyNotify)destroy_process);
 }
 
 static void
@@ -304,9 +334,14 @@ execute_test (JavaBuildPane *build_pane)
   gchar *command;
   gchar *substr;
   gchar *replace;
+  Process *process;
+
+  process = g_malloc (sizeof (Process));
+  process->build_pane = build_pane;
+  process->text = g_strdup ("Test...");
   
-  java_build_pane_start_process (build_pane, "Test...");  
-  
+  g_idle_add ((GSourceFunc) start_process, process);
+
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   document = java_page_get_document (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -325,7 +360,7 @@ execute_test (JavaBuildPane *build_pane)
   g_free (substr);
   g_free (replace);
   
-  java_build_pane_stop_process (build_pane);
+  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) stop_process, process, (GDestroyNotify)destroy_process);
 }
 
 static void
@@ -334,8 +369,13 @@ execute_project_test (JavaBuildPane *build_pane)
   JavaConfiguration *configuration;
   const gchar *ant_file;
   gchar *command;
+  Process *process;
+
+  process = g_malloc (sizeof (Process));
+  process->build_pane = build_pane;
+  process->text = g_strdup ("Test Project...");
   
-  java_build_pane_start_process (build_pane, "Test Project...");  
+  g_idle_add ((GSourceFunc) start_process, process);
   
   configuration = java_page_get_configuration (JAVA_PAGE (build_pane));
   ant_file = java_configuration_get_ant_file (configuration);
@@ -344,7 +384,7 @@ execute_project_test (JavaBuildPane *build_pane)
   run_command (build_pane, command);
   g_free (command);
   
-  java_build_pane_stop_process (build_pane);
+  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) stop_process, process, (GDestroyNotify)destroy_process);
 }
 
 static JavaBuildPane*
@@ -436,21 +476,70 @@ run_command (JavaBuildPane *build_pane,
   char out[BUFSIZ];
   FILE *file;
   
-  gdk_threads_enter ();
-  java_build_pane_clear_text (build_pane);
-  gdk_threads_leave ();
+  g_idle_add ((GSourceFunc) clear_text, build_pane);
   
   file = popen (command, "r");
   if (file != NULL)
     {
       while (fgets (out, BUFSIZ, file))
         {
-          gdk_threads_enter ();
-          java_build_pane_append_text (build_pane, out);
-          gdk_threads_leave ();
+          Output *output;
+          output = g_malloc (sizeof (Output));
+          output->build_pane = build_pane;
+          output->text = g_strdup (out);
+          g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, (GSourceFunc) append_text, output, (GDestroyNotify)destroy_text);
         }
       pclose (file);
     }
     
+  g_idle_add ((GSourceFunc) create_links, build_pane);  
+}
+
+static gboolean 
+start_process (Process *process)
+{
+  java_build_pane_start_process (process->build_pane, process->text);  
+  return FALSE;
+}
+
+static gboolean 
+stop_process (Process *process)
+{
+  java_build_pane_stop_process (process->build_pane);
+  return FALSE;
+}
+
+static void 
+destroy_process (Process *process)
+{
+  g_free (process->text);
+  g_free (process);
+}
+
+static gboolean 
+clear_text (JavaBuildPane *build_pane)
+{
+  java_build_pane_clear_text (build_pane);
+  return FALSE;
+}
+
+static gboolean 
+append_text (Output *output)
+{
+  java_build_pane_append_text (output->build_pane, output->text);
+  return FALSE;
+}
+
+static void 
+destroy_text (Output *output)
+{
+  g_free (output->text);
+  g_free (output);
+}
+
+static gboolean 
+create_links (JavaBuildPane *build_pane)
+{
   java_build_pane_create_links (build_pane);
+  return FALSE;
 }
