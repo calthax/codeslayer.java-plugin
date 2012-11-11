@@ -112,7 +112,7 @@ static void
 add_form (JavaProjectProperties *project_properties)
 {
   JavaProjectPropertiesPrivate *priv;
-  GtkWidget *table;
+  GtkWidget *grid;
 
   GtkWidget *ant_file_label;
   GtkWidget *ant_file_entry;
@@ -131,74 +131,75 @@ add_form (JavaProjectProperties *project_properties)
 
   priv = JAVA_PROJECT_PROPERTIES_GET_PRIVATE (project_properties);
 
-  table = gtk_table_new (4, 2, FALSE);
+  grid = gtk_grid_new ();
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 2);
 
   ant_file_label = gtk_label_new ("Ant File:");
   gtk_misc_set_alignment (GTK_MISC (ant_file_label), 1, .5);
-  gtk_table_attach (GTK_TABLE (table), ant_file_label, 
-                    0, 1, 0, 1, GTK_FILL, GTK_SHRINK, 4, 0);
+  gtk_misc_set_padding (GTK_MISC (ant_file_label), 4, 0);
+  gtk_grid_attach (GTK_GRID (grid), ant_file_label, 0, 0, 1, 1);
                     
   ant_file_entry = gtk_entry_new ();
   priv->ant_file_entry = ant_file_entry;
   gtk_entry_set_width_chars (GTK_ENTRY (ant_file_entry), 50);
   gtk_entry_set_icon_from_stock (GTK_ENTRY (ant_file_entry), 
                                  GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_FILE);
-  gtk_table_attach (GTK_TABLE (table), ant_file_entry, 1, 2, 0, 1,
-                    GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+  gtk_grid_attach_next_to (GTK_GRID (grid), ant_file_entry, ant_file_label, 
+                           GTK_POS_RIGHT, 1, 1);
                       
   build_folder_label = gtk_label_new ("Build Folder:");
   gtk_misc_set_alignment (GTK_MISC (build_folder_label), 1, .5);
-  gtk_table_attach (GTK_TABLE (table), build_folder_label, 
-                    0, 1, 2, 3, GTK_FILL, GTK_SHRINK, 4, 0);
+  gtk_misc_set_padding (GTK_MISC (build_folder_label), 4, 0);
+  gtk_grid_attach (GTK_GRID (grid), build_folder_label, 0, 1, 1, 1);
   
   build_folder_entry = gtk_entry_new ();
   priv->build_folder_entry = build_folder_entry;
   gtk_entry_set_width_chars (GTK_ENTRY (build_folder_entry), 50);
   gtk_entry_set_icon_from_stock (GTK_ENTRY (build_folder_entry), 
                                  GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIRECTORY);
-  gtk_table_attach (GTK_TABLE (table), build_folder_entry, 1, 2, 2, 3,
-                    GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+  gtk_grid_attach_next_to (GTK_GRID (grid), build_folder_entry, build_folder_label, 
+                           GTK_POS_RIGHT, 1, 1);
                       
   lib_folder_label = gtk_label_new ("Lib Folder:");
   gtk_misc_set_alignment (GTK_MISC (lib_folder_label), 1, .5);
-  gtk_table_attach (GTK_TABLE (table), lib_folder_label, 
-                    0, 1, 3, 4, GTK_FILL, GTK_SHRINK, 4, 0);
+  gtk_misc_set_padding (GTK_MISC (lib_folder_label), 4, 0);
+  gtk_grid_attach (GTK_GRID (grid), lib_folder_label, 0, 2, 1, 1);
   
   lib_folder_entry = gtk_entry_new ();
   priv->lib_folder_entry = lib_folder_entry;
   gtk_entry_set_width_chars (GTK_ENTRY (lib_folder_entry), 50);
   gtk_entry_set_icon_from_stock (GTK_ENTRY (lib_folder_entry), 
                                  GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIRECTORY);
-  gtk_table_attach (GTK_TABLE (table), lib_folder_entry, 1, 2, 3, 4,
-                    GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+  gtk_grid_attach_next_to (GTK_GRID (grid), lib_folder_entry, lib_folder_label, 
+                           GTK_POS_RIGHT, 1, 1);
                       
   source_folder_label = gtk_label_new ("Source Folder:");
   gtk_misc_set_alignment (GTK_MISC (source_folder_label), 1, .5);
-  gtk_table_attach (GTK_TABLE (table), source_folder_label, 
-                    0, 1, 4, 5, GTK_FILL, GTK_SHRINK, 4, 0);
+  gtk_misc_set_padding (GTK_MISC (source_folder_label), 4, 0);
+  gtk_grid_attach (GTK_GRID (grid), source_folder_label, 0, 3, 1, 1);
   
   source_folder_entry = gtk_entry_new ();
   priv->source_folder_entry = source_folder_entry;
   gtk_entry_set_width_chars (GTK_ENTRY (source_folder_entry), 50);
   gtk_entry_set_icon_from_stock (GTK_ENTRY (source_folder_entry), 
                                  GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIRECTORY);
-  gtk_table_attach (GTK_TABLE (table), source_folder_entry, 1, 2, 4, 5,
-                    GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+  gtk_grid_attach_next_to (GTK_GRID (grid), source_folder_entry, source_folder_label, 
+                           GTK_POS_RIGHT, 1, 1);
                       
   test_folder_label = gtk_label_new ("Test Folder:");
   gtk_misc_set_alignment (GTK_MISC (test_folder_label), 1, .5);
-  gtk_table_attach (GTK_TABLE (table), test_folder_label, 
-                    0, 1, 5, 6, GTK_FILL, GTK_SHRINK, 4, 0);
+  gtk_misc_set_padding (GTK_MISC (test_folder_label), 4, 0);
+  gtk_grid_attach (GTK_GRID (grid), test_folder_label, 0, 4, 1, 1);
   
   test_folder_entry = gtk_entry_new ();
   priv->test_folder_entry = test_folder_entry;
   gtk_entry_set_width_chars (GTK_ENTRY (test_folder_entry), 50);
   gtk_entry_set_icon_from_stock (GTK_ENTRY (test_folder_entry), 
                                  GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIRECTORY);
-  gtk_table_attach (GTK_TABLE (table), test_folder_entry, 1, 2, 5, 6,
-                    GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+  gtk_grid_attach_next_to (GTK_GRID (grid), test_folder_entry, test_folder_label, 
+                           GTK_POS_RIGHT, 1, 1);
                       
-  gtk_box_pack_start (GTK_BOX (project_properties), table, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (project_properties), grid, FALSE, FALSE, 3);
   
 
   g_signal_connect (G_OBJECT (ant_file_entry), "icon-press",

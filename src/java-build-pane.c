@@ -212,13 +212,14 @@ static void
 add_buttons (JavaBuildPane *build_pane)
 {
   JavaBuildPanePrivate *priv;
-  GtkWidget *table;
+  GtkWidget *grid;
   GtkWidget *clear_button;
   GtkWidget *clear_image;
   
   priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
 
-  table = gtk_table_new (1, 1, FALSE);
+  grid = gtk_grid_new ();
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 2);
   
   clear_button = gtk_button_new ();
   gtk_widget_set_tooltip_text (clear_button, "Clear");
@@ -229,10 +230,9 @@ add_buttons (JavaBuildPane *build_pane)
   gtk_container_add (GTK_CONTAINER (clear_button), clear_image);
   gtk_widget_set_can_focus (clear_button, FALSE);
   
-  gtk_table_attach (GTK_TABLE (table), clear_button, 
-                    0, 1, 0, 1, GTK_SHRINK, GTK_SHRINK, 0, 0);                                                         
+  gtk_grid_attach (GTK_GRID (grid), clear_button, 0, 0, 1, 1);
 
-  gtk_box_pack_start (GTK_BOX (build_pane), table, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (build_pane), grid, FALSE, FALSE, 2);
   
   g_signal_connect_swapped (G_OBJECT (clear_button), "clicked",
                             G_CALLBACK (clear_action), priv->text_view);

@@ -150,7 +150,7 @@ properties_action (JavaToolsProperties *tools_properties)
   if (priv->dialog == NULL)
     {
       GtkWidget *content_area;
-      GtkWidget *table;
+      GtkWidget *grid;
       GtkWidget  *jdk_folder_entry;
       GtkWidget *jdk_folder_label;
       GtkWidget  *suppressions_file_entry;  
@@ -167,12 +167,13 @@ properties_action (JavaToolsProperties *tools_properties)
 
       content_area = gtk_dialog_get_content_area (GTK_DIALOG (priv->dialog));
 
-      table = gtk_table_new (4, 2, FALSE);
+      grid = gtk_grid_new ();
+      gtk_grid_set_row_spacing (GTK_GRID (grid), 2);
 
       jdk_folder_label = gtk_label_new ("JDK Folder:");
       gtk_misc_set_alignment (GTK_MISC (jdk_folder_label), 1, .5);
-      gtk_table_attach (GTK_TABLE (table), jdk_folder_label, 0, 1, 0, 1, 
-                        GTK_FILL, GTK_FILL, 4, 1);
+      gtk_misc_set_padding (GTK_MISC (jdk_folder_label), 4, 0);
+      gtk_grid_attach (GTK_GRID (grid), jdk_folder_label, 0, 0, 1, 1);
 
       jdk_folder_entry = gtk_entry_new ();
       priv->jdk_folder_entry = jdk_folder_entry;
@@ -180,24 +181,24 @@ properties_action (JavaToolsProperties *tools_properties)
       gtk_entry_set_width_chars (GTK_ENTRY (jdk_folder_entry), 50);  
       gtk_entry_set_icon_from_stock (GTK_ENTRY (jdk_folder_entry), 
                                      GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIRECTORY);
-      gtk_table_attach (GTK_TABLE (table), jdk_folder_entry, 1, 2, 0, 1,
-                        GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+      gtk_grid_attach_next_to (GTK_GRID (grid), jdk_folder_entry, jdk_folder_label, 
+                               GTK_POS_RIGHT, 1, 1);
                         
       suppressions_file_label = gtk_label_new ("Suppressions File:");
       gtk_label_set_width_chars (GTK_LABEL (suppressions_file_label), 10);
-      gtk_misc_set_alignment (GTK_MISC (suppressions_file_label), .97, .50);
-      gtk_table_attach (GTK_TABLE (table), suppressions_file_label, 0, 1, 1, 2, 
-                        GTK_FILL, GTK_FILL, 4, 1);
+      gtk_misc_set_alignment (GTK_MISC (suppressions_file_label), 1, .50);
+      gtk_misc_set_padding (GTK_MISC (suppressions_file_label), 4, 0);
+      gtk_grid_attach (GTK_GRID (grid), suppressions_file_label, 0, 1, 1, 1);
 
       suppressions_file_entry = gtk_entry_new ();
       priv->suppressions_file_entry = suppressions_file_entry;
       gtk_entry_set_width_chars (GTK_ENTRY (suppressions_file_entry), 50);
       gtk_entry_set_icon_from_stock (GTK_ENTRY (suppressions_file_entry), 
                                      GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_FILE);
-      gtk_table_attach (GTK_TABLE (table), suppressions_file_entry, 1, 2, 1, 2,
-                        GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 4, 1);
+      gtk_grid_attach_next_to (GTK_GRID (grid), suppressions_file_entry, suppressions_file_label, 
+                               GTK_POS_RIGHT, 1, 1);
                         
-      gtk_box_pack_start (GTK_BOX (content_area), table, TRUE, TRUE, 0);
+      gtk_box_pack_start (GTK_BOX (content_area), grid, TRUE, TRUE, 0);
       gtk_widget_show_all (content_area);
       
       g_signal_connect (G_OBJECT (jdk_folder_entry), "icon-press",
