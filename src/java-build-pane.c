@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 #include <codeslayer/codeslayer-utils.h>
-#include <codeslayer/codeslayer-linker.h>
+#include <codeslayer/codeslayer-editor-linker.h>
 #include "java-build-pane.h"
 
 typedef struct
@@ -53,14 +53,14 @@ typedef struct _JavaBuildPanePrivate JavaBuildPanePrivate;
 
 struct _JavaBuildPanePrivate
 {
-  GtkWidget          *text_view;
-  GtkTextBuffer      *buffer;
-  JavaPageType        page_type;
-  JavaConfiguration  *configuration;
-  CodeSlayerDocument *document;
-  CodeSlayer         *codeslayer;
-  CodeSlayerLinker   *linker;
-  gint                process_id;
+  GtkWidget              *text_view;
+  GtkTextBuffer          *buffer;
+  JavaPageType            page_type;
+  JavaConfiguration      *configuration;
+  CodeSlayerDocument     *document;
+  CodeSlayer             *codeslayer;
+  CodeSlayerEditorLinker *linker;
+  gint                    process_id;
 };
 
 G_DEFINE_TYPE_EXTENDED (JavaBuildPane,
@@ -106,6 +106,11 @@ java_build_pane_init (JavaBuildPane *build_pane)
 static void
 java_build_pane_finalize (JavaBuildPane *build_pane)
 {
+  JavaBuildPanePrivate *priv;
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);
+  
+  g_object_unref (priv->linker);
+  
   G_OBJECT_CLASS (java_build_pane_parent_class)->finalize (G_OBJECT (build_pane));
 }
 
@@ -124,7 +129,7 @@ java_build_pane_new (JavaPageType  page_type,
   add_text_view (JAVA_BUILD_PANE (build_pane));
   add_buttons (JAVA_BUILD_PANE (build_pane));
   
-  priv->linker = codeslayer_linker_new (codeslayer, GTK_TEXT_VIEW (priv->text_view));  
+  priv->linker = codeslayer_editor_linker_new (codeslayer, GTK_TEXT_VIEW (priv->text_view));  
   
   return build_pane;
 }
