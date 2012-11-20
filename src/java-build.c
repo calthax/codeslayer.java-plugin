@@ -72,7 +72,6 @@ static JavaBuildPane* get_build_pane_by_project        (JavaBuild         *build
 static gboolean clear_text                             (JavaBuildPane     *build_pane);
 static gboolean append_text                            (Output            *output);
 static void destroy_text                               (Output            *output);
-static gboolean  create_links                          (JavaBuildPane     *build_pane);
 
 static gboolean start_process                          (Process           *process);
 static gboolean stop_process                           (Process           *process);
@@ -491,8 +490,6 @@ run_command (JavaBuildPane *build_pane,
         }
       pclose (file);
     }
-    
-  g_idle_add ((GSourceFunc) create_links, build_pane);  
 }
 
 static gboolean 
@@ -535,11 +532,4 @@ destroy_text (Output *output)
 {
   g_free (output->text);
   g_free (output);
-}
-
-static gboolean 
-create_links (JavaBuildPane *build_pane)
-{
-  java_build_pane_create_links (build_pane);
-  return FALSE;
 }
