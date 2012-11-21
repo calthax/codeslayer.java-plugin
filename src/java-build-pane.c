@@ -17,8 +17,6 @@
  */
 
 #include <stdlib.h>
-#include <codeslayer/codeslayer-utils.h>
-#include <codeslayer/codeslayer-editor-linker.h>
 #include "java-build-pane.h"
 
 typedef struct
@@ -129,7 +127,7 @@ java_build_pane_new (JavaPageType  page_type,
   add_text_view (JAVA_BUILD_PANE (build_pane));
   add_buttons (JAVA_BUILD_PANE (build_pane));
   
-  priv->linker = codeslayer_editor_linker_new (codeslayer, GTK_TEXT_VIEW (priv->text_view));  
+  priv->linker = codeslayer_get_editor_linker (codeslayer, GTK_TEXT_VIEW (priv->text_view));  
   
   return build_pane;
 }
