@@ -52,6 +52,7 @@ GtkWidget*  java_build_pane_new             (JavaPageType  page_type,
 void        java_build_pane_clear_text     (JavaBuildPane *build_pane);
 void        java_build_pane_append_text    (JavaBuildPane *build_pane, 
                                             gchar         *text);
+void        java_build_pane_create_links   (JavaBuildPane *build_pane);                                            
 void        java_build_pane_start_process  (JavaBuildPane *build_pane, 
                                             gchar         *text);
 void        java_build_pane_stop_process   (JavaBuildPane *build_pane);

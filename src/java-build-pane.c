@@ -158,6 +158,14 @@ java_build_pane_append_text (JavaBuildPane *build_pane,
 }
 
 void
+java_build_pane_create_links   (JavaBuildPane *build_pane)
+{
+  JavaBuildPanePrivate *priv;
+  priv = JAVA_BUILD_PANE_GET_PRIVATE (build_pane);  
+  codeslayer_editor_linker_create_links (priv->linker);
+}
+
+void
 java_build_pane_start_process (JavaBuildPane *build_pane, 
                                gchar         *text)
 {

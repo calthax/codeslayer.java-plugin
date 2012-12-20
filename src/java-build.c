@@ -76,6 +76,7 @@ static void destroy_text                               (Output            *outpu
 static gboolean start_process                          (Process           *process);
 static gboolean stop_process                           (Process           *process);
 static void destroy_process                            (Process           *process);
+static gboolean  create_links                          (JavaBuildPane     *build_pane);
                           
 #define JAVA_BUILD_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), JAVA_BUILD_TYPE, JavaBuildPrivate))
@@ -490,6 +491,8 @@ run_command (JavaBuildPane *build_pane,
         }
       pclose (file);
     }
+    
+  g_idle_add ((GSourceFunc) create_links, build_pane);      
 }
 
 static gboolean 
@@ -532,4 +535,11 @@ destroy_text (Output *output)
 {
   g_free (output->text);
   g_free (output);
+}
+
+static gboolean 
+create_links (JavaBuildPane *build_pane)
+{
+  java_build_pane_create_links (build_pane);
+  return FALSE;
 }
